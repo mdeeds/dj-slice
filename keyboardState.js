@@ -1,0 +1,29 @@
+class KeyboardState {
+  constructor() {
+    this.keysDown = new Set();
+    this.freshKeys = new Set();
+    const body = document.getElementsByTagName('body')[0];
+    body.addEventListener('keydown', (ev) => { this.handle(ev);});
+    body.addEventListener('keyup', (ev) => { this.handle(ev);});
+  }
+  
+  handle(ev) {
+    switch (ev.type) {
+      case 'down': this.keysDown.add(ev.code); this.freshKeys.add(ev.code); break;
+      case 'up': this.keysDown.delete(ev.code); break;
+    }
+  }
+  
+  isDown(code) {
+    return this.keysDown.has(code);
+  }
+  
+  justPressed(code) {
+    if (this.freshKeys.has(code)) {
+      this.freshKeys.delete(code);
+      return true;
+    } else {
+      return false;
+    }
+  }
+}

@@ -26,7 +26,7 @@ class FlyingBlock {
 }
 
 class PlayableBlocks {
-  constructor() {
+  constructor(keyboardState) {
     const sceneEl = document.querySelector("a-scene");
     this.clips = [];
     this.clips.push(
@@ -49,9 +49,9 @@ class PlayableBlocks {
         "https://cdn.glitch.com/19df276e-5dfe-4bab-915a-410c481a8b0d%2Freality.wav?v=1631392757731"
       )
     );
-    let theta = -Math.PI;
+    let theta = -Math.PI + 3 * Math.PI / 8;
+    
     for (const clip of this.clips) {
-      theta += (2 * Math.PI) / 16;
       const box = document.createElement("a-box");
       box.object3D.position.set(Math.cos(theta) * 4, 0.5, Math.sin(theta) * 4);
       box.setAttribute("color", "#55f");
@@ -67,16 +67,16 @@ class PlayableBlocks {
         box.setAttribute("color", "#5f5");
       });
       box.addEventListener("mousedown", () => {
-        box.object3D.position.add({ x: 0, y: 0.5, z: 0 });
       });
       box.classList.add("clickable");
-      box.setAttribute("event-set__mouseenter", "scale: 1.2 1.2 1.2");
+      theta += (2 * Math.PI) / 16;
     }
   }
 }
 
 class FlyingBlocks {
   constructor() {
+    this.sceneEl = document.querySelector("a-scene");
     this.cameraQuaternion = new THREE.Quaternion();
     this.frameNumber = 0;
     this.beatNumber = 0;
@@ -84,26 +84,11 @@ class FlyingBlocks {
   }
 
   tick(time, timeDelta) {
-    const sceneEl = document.querySelector("a-scene");
     const camera = document.querySelector("a-camera");
     camera.object3D.getWorldQuaternion(this.cameraQuaternion);
     this.cameraQuaternion.normalize();
     const a = this.cameraQuaternion.toArray();
     const cameraAngle = -2 * Math.atan2(a[1], a[3]) - 0.5 * Math.PI;
-
-    if (this.frameNumber % 60 === 0) {
-      ++this.beatNumber;
-      let b = 1;
-      for (let i = 0; i < 16; ++i) {
-        if (this.beatNumber % b === 0) {
-          this.flyingBlocks.push(new FlyingBlock(sceneEl, i));
-        }
-        b = b * 2;
-        if (b > 16) {
-          b = 1;
-        }
-      }
-    }
     for (let i = 0; i < this.flyingBlocks.length; ) {
       const fb = this.flyingBlocks[i];
       fb.render(cameraAngle);
@@ -114,5 +99,11 @@ class FlyingBlocks {
       }
     }
     ++this.frameNumber;
+  }
+  
+  getFactory() {
+    return (trackIndex) => {
+      this.flyingBlocks.push(new FlyingBlock(this.sceneEl, trackIndex));
+    }
   }
 }

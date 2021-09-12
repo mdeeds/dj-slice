@@ -4,17 +4,23 @@
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="sequence.js"></script>
     <script src="blocks.js"></script>
+    <script src="keyboardState.js"></script>
     <script>
       let playables = null;
       let fbs = null;
+      let seq = null;
+      let keyboardState = null;
 
       AFRAME.registerComponent("go", {
         init: function() {
-          playables = new PlayableBlocks();
+          keyboardState = new KeyboardState();
+          playables = new PlayableBlocks(keyboardState);
           fbs = new FlyingBlocks();
+          seq = new Sequence(fbs.getFactory());
         },
-        tick: function() {
-          fbs.tick();
+        tick: function(timeMs, timeDeltaMs) {
+          fbs.tick(timeMs, timeDeltaMs);
+          seq.tick(timeMs, timeDeltaMs);
         }
       });
     </script>
@@ -31,12 +37,17 @@
         shadow="receive: true"
         position="0 -1 0"
         rotation="-90 0 0"
-        width="30"
-        height="30"
+        width="3"
+        height="3"
         color="#555"
       ></a-plane>
-      <a-sky color="#111"></a-sky>
-      <a-camera position="0 3 0"></a-camera>
+      <a-assets>
+        <img
+          id="sky"
+          src="https://cdn.glitch.com/3756e4ee-523b-499b-826f-149f20346e70%2F103688299_2678085658962303_8126255696346979900_n.jpg?v=1631462262242"
+        />
+      </a-assets>
+      <a-sky src="#sky"></a-sky> <a-camera position="0 3 0"></a-camera>
       <a-entity
         id="leftHand"
         laser-controls="hand: left"
