@@ -1,67 +1,50 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="sequence.js"></script>
-    <script src="blocks.js"></script>
-    <script src="keyboardState.js"></script>
-    <script>
-      let playables = null;
-      let fbs = null;
-      let seq = null;
-      let keyboardState = null;
 
-      AFRAME.registerComponent("go", {
-        init: function() {
-          keyboardState = new KeyboardState();
-          playables = new PlayableBlocks(keyboardState);
-          fbs = new FlyingBlocks();
-          seq = new Sequence(fbs.getFactory());
-        },
-        tick: function(timeMs, timeDeltaMs) {
-          fbs.tick(timeMs, timeDeltaMs);
-          seq.tick(timeMs, timeDeltaMs);
-        }
-      });
-    </script>
-  </head>
-  <body>
-    <audio></audio>
-    <a-scene go="1" cursor="rayOrigin: mouse" background="black">
-      <a-entity light="type: ambient; color: #777"></a-entity>
-      <a-entity
-        light="type:directional; color: #777"
-        position="-3 4 5"
-      ></a-entity>
-      <a-plane
-        shadow="receive: true"
-        position="0 -1 0"
-        rotation="-90 0 0"
-        width="3"
-        height="3"
-        color="#555"
-      ></a-plane>
-      <a-assets>
-        <img
-          id="sky"
-          src="https://cdn.glitch.com/3756e4ee-523b-499b-826f-149f20346e70%2F103688299_2678085658962303_8126255696346979900_n.jpg?v=1631462262242"
-        />
-      </a-assets>
-      <a-sky src="#sky"></a-sky> <a-camera position="0 3 0"></a-camera>
-      <a-entity
-        id="leftHand"
-        laser-controls="hand: left"
-        raycaster="objects: clickable; far: 5;"
-        line="color: #CCCCCC"
-        pointer
-      ></a-entity>
-      <a-entity
-        id="rightHand"
-        laser-controls="hand: right"
-        raycaster="objects: clickable; far: 5;"
-        line="color: #CCCCCC"
-        pointer
-      ></a-entity>
-    </a-scene>
-  </body>
+<head>
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="sequence.js"></script>
+  <script src="blocks.js"></script>
+  <script src="keyboardState.js"></script>
+  <script>
+    let playables = null;
+    let fbs = null;
+    let seq = null;
+    let keyboardState = null;
+
+    AFRAME.registerComponent("go", {
+      init: function () {
+        keyboardState = new KeyboardState();
+        playables = new PlayableBlocks(keyboardState);
+        fbs = new FlyingBlocks();
+        seq = new Sequence(fbs.getFactory());
+      },
+      tick: function (timeMs, timeDeltaMs) {
+        fbs.tick(timeMs, timeDeltaMs);
+        seq.tick(timeMs, timeDeltaMs);
+        playables.tick(timeMs, timeDeltaMs);
+      }
+    });
+  </script>
+</head>
+
+<body>
+  <audio></audio>
+  <a-scene go="1" cursor="rayOrigin: mouse" background="black">
+    <a-entity light="type: ambient; color: #777"></a-entity>
+    <a-entity light="type:directional; color: #777" position="-3 4 5"></a-entity>
+    <a-plane shadow="receive: true" position="0 -1 0" rotation="-90 0 0" width="3" height="3" color="#555"></a-plane>
+    <a-assets>
+      <img crossorigin="anonymous" id="sky"
+        src="https://cdn.glitch.com/3756e4ee-523b-499b-826f-149f20346e70%2F103688299_2678085658962303_8126255696346979900_n.jpg?v=1631462262242" />
+    </a-assets>
+    <a-sky src="#sky"></a-sky>
+    <a-camera position="0 3 0"></a-camera>
+    <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: clickable; far: 5;" line="color: #CCCCCC"
+      pointer></a-entity>
+    <a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: clickable; far: 5;" line="color: #CCCCCC"
+      pointer></a-entity>
+  </a-scene>
+</body>
+
 </html>
