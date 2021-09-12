@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="sequence.js"></script>
+    <script src="blocks.js"></script>
+    <script>
+      let playables = null;
+      let fbs = null;
+
+      AFRAME.registerComponent("go", {
+        init: function() {
+          playables = new PlayableBlocks();
+          fbs = new FlyingBlocks();
+        },
+        tick: function() {
+          fbs.tick();
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <audio></audio>
+    <a-scene go="1" cursor="rayOrigin: mouse" background="black">
+      <a-entity light="type: ambient; color: #777"></a-entity>
+      <a-entity
+        light="type:directional; color: #777"
+        position="-3 4 5"
+      ></a-entity>
+      <a-plane
+        shadow="receive: true"
+        position="0 -1 0"
+        rotation="-90 0 0"
+        width="30"
+        height="30"
+        color="#555"
+      ></a-plane>
+      <a-sky color="#111"></a-sky>
+      <a-camera position="0 3 0"></a-camera>
+      <a-entity
+        id="leftHand"
+        laser-controls="hand: left"
+        raycaster="objects: clickable; far: 5;"
+        line="color: #CCCCCC"
+        pointer
+      ></a-entity>
+      <a-entity
+        id="rightHand"
+        laser-controls="hand: right"
+        raycaster="objects: clickable; far: 5;"
+        line="color: #CCCCCC"
+        pointer
+      ></a-entity>
+    </a-scene>
+  </body>
+</html>
