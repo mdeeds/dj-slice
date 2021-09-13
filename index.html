@@ -33,7 +33,10 @@
   <a-scene go="1" cursor="rayOrigin: mouse" background="black">
     <a-entity light="type: ambient; color: #777"></a-entity>
     <a-entity light="type:directional; color: #777" position="-3 4 5"></a-entity>
-    <a-plane shadow="receive: true" position="0 -1 0" rotation="-90 0 0" width="3" height="3" color="#555"></a-plane>
+    <a-torus position="0 -4 0" radius="5.2" radius-tubular="0.2" rotation="90 0 0" color="#669">
+    </a-torus>
+    <a-cylinder position="0 -3.8 0" radius="5" height="0.4" color="#66a" opacity="0.5"></a-cylinder>
+    </a-plane>
     <a-assets>
       <img crossorigin="anonymous" id="sky"
         src="https://cdn.glitch.com/3756e4ee-523b-499b-826f-149f20346e70%2F103688299_2678085658962303_8126255696346979900_n.jpg?v=1631462262242" />
