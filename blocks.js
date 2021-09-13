@@ -67,22 +67,58 @@ class PlayableBlock {
   }
 }
 
+function importLevel1(sceneEl, pbs) {
+  pbs.splice(0);
+  pbs.push(new PlayableBlock(keyboardState, 'Digit1',
+    "https://cdn.glitch.com/19df276e-5dfe-4bab-915a-410c481a8b0d%2Fkick.wav?v=1631392733145",
+    sceneEl, 3));
+  pbs.push(new PlayableBlock(keyboardState, 'Digit2',
+    "https://cdn.glitch.com/19df276e-5dfe-4bab-915a-410c481a8b0d%2Fhats.wav?v=1631392739980",
+    sceneEl, 4));
+  pbs.push(new PlayableBlock(keyboardState, 'Digit3',
+    "https://cdn.glitch.com/19df276e-5dfe-4bab-915a-410c481a8b0d%2Fvirtual.wav?v=1631392748787",
+    sceneEl, 5));
+  pbs.push(new PlayableBlock(keyboardState, 'Digit4',
+    "https://cdn.glitch.com/19df276e-5dfe-4bab-915a-410c481a8b0d%2Freality.wav?v=1631392757731",
+    sceneEl, 6));
+}
+
+function importLevel2(sceneEl, pbs) {
+  pbs.splice(0);
+  pbs.push(new PlayableBlock(keyboardState, 'Digit0',
+    "samples/rimshot4.mp3",
+    sceneEl, 2));
+  pbs.push(new PlayableBlock(keyboardState, 'Digit1',
+    "samples/bass-drum.mp3",
+    sceneEl, 3));
+  pbs.push(new PlayableBlock(keyboardState, 'Digit2',
+    "samples/snare-drum.mp3",
+    sceneEl, 4));
+  pbs.push(new PlayableBlock(keyboardState, 'Digit3',
+    "samples/handclap.mp3",
+    sceneEl, 5));
+  pbs.push(new PlayableBlock(keyboardState, 'Digit4',
+    "samples/shaker.mp3",
+    sceneEl, 6));
+  pbs.push(new PlayableBlock(keyboardState, 'Digit5',
+    "samples/tom-run.mp3",
+    sceneEl, 7));
+  pbs.push(new PlayableBlock(keyboardState, 'Digit6',
+    "samples/beep.mp3",
+    sceneEl, 8));
+  pbs.push(new PlayableBlock(keyboardState, 'Digit7',
+    "samples/cymbol.mp3",
+    sceneEl, 9));
+  pbs.push(new PlayableBlock(keyboardState, 'Digit8',
+    "samples/bass.mp3",
+    sceneEl, 10));
+}
+
 class PlayableBlocks {
   constructor(keyboardState) {
     const sceneEl = document.querySelector("a-scene");
     this.pbs = [];
-    this.pbs.push(new PlayableBlock(keyboardState, 'Digit1',
-      "https://cdn.glitch.com/19df276e-5dfe-4bab-915a-410c481a8b0d%2Fkick.wav?v=1631392733145",
-      sceneEl, 3));
-    this.pbs.push(new PlayableBlock(keyboardState, 'Digit2',
-      "https://cdn.glitch.com/19df276e-5dfe-4bab-915a-410c481a8b0d%2Fhats.wav?v=1631392739980",
-      sceneEl, 4));
-    this.pbs.push(new PlayableBlock(keyboardState, 'Digit3',
-      "https://cdn.glitch.com/19df276e-5dfe-4bab-915a-410c481a8b0d%2Fvirtual.wav?v=1631392748787",
-      sceneEl, 5));
-    this.pbs.push(new PlayableBlock(keyboardState, 'Digit4',
-      "https://cdn.glitch.com/19df276e-5dfe-4bab-915a-410c481a8b0d%2Freality.wav?v=1631392757731",
-      sceneEl, 6));
+    importLevel2(sceneEl, this.pbs);
   }
 
   tick(timeMs, timeDeltaMs) {
