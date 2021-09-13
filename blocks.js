@@ -3,9 +3,11 @@ function indexToTheta(index) {
 }
 
 class FlyingBlock {
-  constructor(scene, n) {
+  constructor(scene, n, startFlyingMs, endFlyingMs) {
     this.box = document.createElement("a-box");
     this.toTheta = indexToTheta(n);
+    this.startFlyingMs = startFlyingMs;
+    this.endFlyingMs = endFlyingMs;
     this.p = 0;
     this.box.object3D.rotation.set(0, -this.toTheta, 0);
     scene.appendChild(this.box);
@@ -21,10 +23,15 @@ class FlyingBlock {
       (r * r) / 80,
       Math.sin(t) * r
     );
-    this.p += 0.005;
-    if (this.p >= 1.0) {
+  }
+  tick(timeMs, timeDeltaMs) {
+    if (timeMs > this.endFlyingMs) {
       this.box.remove();
       this.box = null;
+      this.p = 0;
+    } else {
+      this.p = (timeMs - this.startFlyingMs) /
+        (this.endFlyingMs - this.startFlyingMs);
     }
   }
 }
@@ -52,17 +59,33 @@ class PlayableBlock {
     this.box.addEventListener("mousedown", () => {
     });
     this.box.classList.add("clickable");
+    this.elapsedMs = 0;
+    this.bpm = 110;
+    this.millisecondsPerBeat = 1000 * 60 / this.bpm;
   }
 
   tick(timeMs, timeDeltaMs) {
+    this.elapsedMs += timeDeltaMs;
     const prevAngle = this.box.object3D.rotation.toArray()[1];
-    const bpm = 96;
-    const quarterTurnDuration = 1000 * 60 / bpm;
+    const quarterTurnDuration = 1000 * 60 / this.bpm;
     this.box.object3D.rotation.set(
       0, prevAngle + Math.PI / 2 * timeDeltaMs / quarterTurnDuration, 0);
     if (this.keyboardState.justPressed(this.code)) {
-      this.audio.currentTime = 0;
-      this.audio.play();
+      const currentBeat = Math.round(this.elapsedMs / this.millisecondsPerBeat);
+      const beatMs = currentBeat * this.millisecondsPerBeat;
+      if (beatMs < timeMs) {
+        this.audio.currentTime = (timeMs - beatMs) / 1000;
+        this.audio.play();
+      } else {
+        this.audio.currentTime = 0;
+        this.audio.play();
+        // TODO: Use WebAudio API instead for better timing.  THis timeout
+        // does not perform well.
+        // setTimeout(() => {
+        //   this.audio.currentTime = 0;
+        //   this.audio.play();
+        // }, (beatMs - timeMs));
+      }
     }
   }
 }
@@ -87,31 +110,31 @@ function importLevel2(sceneEl, pbs) {
   pbs.splice(0);
   pbs.push(new PlayableBlock(keyboardState, 'Digit0',
     "samples/rimshot4.mp3",
-    sceneEl, 2));
+    sceneEl, 1));
   pbs.push(new PlayableBlock(keyboardState, 'Digit1',
+    "samples/bass.mp3",
+    sceneEl, 2));
+  pbs.push(new PlayableBlock(keyboardState, 'Digit2',
     "samples/bass-drum.mp3",
     sceneEl, 3));
-  pbs.push(new PlayableBlock(keyboardState, 'Digit2',
+  pbs.push(new PlayableBlock(keyboardState, 'Digit3',
     "samples/snare-drum.mp3",
     sceneEl, 4));
-  pbs.push(new PlayableBlock(keyboardState, 'Digit3',
+  pbs.push(new PlayableBlock(keyboardState, 'Digit4',
     "samples/handclap.mp3",
     sceneEl, 5));
-  pbs.push(new PlayableBlock(keyboardState, 'Digit4',
+  pbs.push(new PlayableBlock(keyboardState, 'Digit5',
     "samples/shaker.mp3",
     sceneEl, 6));
-  pbs.push(new PlayableBlock(keyboardState, 'Digit5',
+  pbs.push(new PlayableBlock(keyboardState, 'Digit6',
     "samples/tom-run.mp3",
     sceneEl, 7));
-  pbs.push(new PlayableBlock(keyboardState, 'Digit6',
+  pbs.push(new PlayableBlock(keyboardState, 'Digit7',
     "samples/beep.mp3",
     sceneEl, 8));
-  pbs.push(new PlayableBlock(keyboardState, 'Digit7',
+  pbs.push(new PlayableBlock(keyboardState, 'Digit8',
     "samples/cymbol.mp3",
     sceneEl, 9));
-  pbs.push(new PlayableBlock(keyboardState, 'Digit8',
-    "samples/bass.mp3",
-    sceneEl, 10));
 }
 
 class PlayableBlocks {
@@ -145,6 +168,7 @@ class FlyingBlocks {
     const cameraAngle = -2 * Math.atan2(a[1], a[3]) - 0.5 * Math.PI;
     for (let i = 0; i < this.flyingBlocks.length;) {
       const fb = this.flyingBlocks[i];
+      fb.tick(timeMs, timeDeltaMs);
       fb.render(cameraAngle);
       if (fb.box) {
         ++i;
@@ -156,8 +180,10 @@ class FlyingBlocks {
   }
 
   getFactory() {
-    return (trackIndex) => {
-      this.flyingBlocks.push(new FlyingBlock(this.sceneEl, trackIndex));
+    return (trackIndex, startFlyingMs) => {
+      this.flyingBlocks.push(
+        new FlyingBlock(this.sceneEl, trackIndex,
+          startFlyingMs, startFlyingMs + 4000));
     }
   }
 }
