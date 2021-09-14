@@ -1,13 +1,13 @@
 class Sequence {
-  constructor(blockFactory) {
+  constructor(blockFactory, gameTime) {
     this.blockFactory = blockFactory;
-    this.elapsedMs = 0;
+    this.gameTime = gameTime;
     this.lastBeat = -1;
     this.bpm = 110;
     this.tracks = [
       "",  // 0
       "1   ",  // 1
-      "    1       1       1       1       1   ",  // 2
+      "    1               1               1   ",  // 2
       "        1   1   1   1   1   1   1   1   ",  // 3
       "          1   1   1   1   1   1   1   1 ",  // 4
       "                21 1 1 121 1 1 121 1 1 1",  // 5
@@ -23,11 +23,11 @@ class Sequence {
     // e              oo  oo  oo  oo
     // +                oooo    oooo
     // a                    oooooooo
+    this.running = false;
   }
 
   tick(timeMs, timeDeltaMs) {
-    this.elapsedMs += timeDeltaMs;
-    const currentBeat = Math.trunc(this.elapsedMs / this.millisecondsPerBeat);
+    const currentBeat = Math.trunc(this.gameTime.elapsedMs / this.millisecondsPerBeat);
     const beatMs = currentBeat * this.millisecondsPerBeat;
     while (currentBeat > this.lastBeat) {
       ++this.lastBeat;

@@ -3,8 +3,12 @@ function indexToTheta(index) {
 }
 
 class FlyingBlock {
-  constructor(scene, n, startFlyingMs, endFlyingMs) {
+  constructor(scene, n, startFlyingMs, endFlyingMs, gameTime) {
+    this.gameTime = gameTime;
     this.box = document.createElement("a-box");
+    this.box.setAttribute('width', '0.5');
+    this.box.setAttribute('height', '0.5');
+    this.box.setAttribute('depth', '0.5');
     this.toTheta = indexToTheta(n);
     this.startFlyingMs = startFlyingMs;
     this.endFlyingMs = endFlyingMs;
@@ -16,34 +20,36 @@ class FlyingBlock {
     if (!this.box) {
       return;
     }
-    const r = (1 - this.p) * 50 + this.p * 4;
+    const r = (1 - this.p) * 50 + this.p * 3;
     const t = (1 - this.p) * cameraAngle + this.p * this.toTheta;
     this.box.object3D.position.set(
       Math.cos(t) * r,
-      (r * r) / 80,
+      (r * r) / 80 + 1.5,
       Math.sin(t) * r
     );
   }
   tick(timeMs, timeDeltaMs) {
-    if (timeMs > this.endFlyingMs) {
+    if (this.gameTime.elapsedMs > this.endFlyingMs) {
       this.box.remove();
       this.box = null;
       this.p = 0;
     } else {
-      this.p = (timeMs - this.startFlyingMs) /
+      this.p = (this.gameTime.elapsedMs - this.startFlyingMs) /
         (this.endFlyingMs - this.startFlyingMs);
     }
   }
 }
 
 class PlayableBlock {
-  constructor(keyboardState, keyCode, url, sceneEl, trackIndex) {
+  constructor(keyboardState, keyCode, url, sceneEl, trackIndex, gameTime) {
     this.keyboardState = keyboardState;
     this.code = keyCode;
+    this.gameTime = gameTime;
     const theta = indexToTheta(trackIndex);
     this.audio = new Audio(url);
-    this.box = document.createElement("a-box");
-    this.box.object3D.position.set(Math.cos(theta) * 4, 0.5, Math.sin(theta) * 4);
+    this.box = document.createElement("a-sphere");
+    this.box.setAttribute('radius', '0.2');
+    this.box.object3D.position.set(Math.cos(theta) * 3, 1.5, Math.sin(theta) * 3);
     this.box.setAttribute("color", "#55f");
     this.box.setAttribute("opacity", 0.5);
     this.box.object3D.rotation.set(0, -theta, 0);
@@ -59,19 +65,17 @@ class PlayableBlock {
     this.box.addEventListener("mousedown", () => {
     });
     this.box.classList.add("clickable");
-    this.elapsedMs = 0;
     this.bpm = 110;
     this.millisecondsPerBeat = 1000 * 60 / this.bpm;
   }
 
   tick(timeMs, timeDeltaMs) {
-    this.elapsedMs += timeDeltaMs;
     const prevAngle = this.box.object3D.rotation.toArray()[1];
     const quarterTurnDuration = 1000 * 60 / this.bpm;
     this.box.object3D.rotation.set(
       0, prevAngle + Math.PI / 2 * timeDeltaMs / quarterTurnDuration, 0);
     if (this.keyboardState.justPressed(this.code)) {
-      const currentBeat = Math.round(this.elapsedMs / this.millisecondsPerBeat);
+      const currentBeat = Math.round(this.gameTime.elapsedMs / this.millisecondsPerBeat);
       const beatMs = currentBeat * this.millisecondsPerBeat;
       if (beatMs < timeMs) {
         this.audio.currentTime = (timeMs - beatMs) / 1000;
@@ -90,58 +94,58 @@ class PlayableBlock {
   }
 }
 
-function importLevel1(sceneEl, pbs) {
+function importLevel1(sceneEl, pbs, gameTime) {
   pbs.splice(0);
   pbs.push(new PlayableBlock(keyboardState, 'Digit1',
     "https://cdn.glitch.com/19df276e-5dfe-4bab-915a-410c481a8b0d%2Fkick.wav?v=1631392733145",
-    sceneEl, 3));
+    sceneEl, 3, gameTime));
   pbs.push(new PlayableBlock(keyboardState, 'Digit2',
     "https://cdn.glitch.com/19df276e-5dfe-4bab-915a-410c481a8b0d%2Fhats.wav?v=1631392739980",
-    sceneEl, 4));
+    sceneEl, 4, gameTime));
   pbs.push(new PlayableBlock(keyboardState, 'Digit3',
     "https://cdn.glitch.com/19df276e-5dfe-4bab-915a-410c481a8b0d%2Fvirtual.wav?v=1631392748787",
-    sceneEl, 5));
+    sceneEl, 5, gameTime));
   pbs.push(new PlayableBlock(keyboardState, 'Digit4',
     "https://cdn.glitch.com/19df276e-5dfe-4bab-915a-410c481a8b0d%2Freality.wav?v=1631392757731",
-    sceneEl, 6));
+    sceneEl, 6, gameTime));
 }
 
-function importLevel2(sceneEl, pbs) {
+function importLevel2(sceneEl, pbs, gameTime) {
   pbs.splice(0);
   pbs.push(new PlayableBlock(keyboardState, 'Digit0',
     "samples/rimshot4.mp3",
-    sceneEl, 1));
+    sceneEl, 1, gameTime));
   pbs.push(new PlayableBlock(keyboardState, 'Digit1',
     "samples/bass.mp3",
-    sceneEl, 2));
+    sceneEl, 2, gameTime));
   pbs.push(new PlayableBlock(keyboardState, 'Digit2',
     "samples/bass-drum.mp3",
-    sceneEl, 3));
+    sceneEl, 3, gameTime));
   pbs.push(new PlayableBlock(keyboardState, 'Digit3',
     "samples/snare-drum.mp3",
-    sceneEl, 4));
+    sceneEl, 4, gameTime));
   pbs.push(new PlayableBlock(keyboardState, 'Digit4',
     "samples/handclap.mp3",
-    sceneEl, 5));
+    sceneEl, 5, gameTime));
   pbs.push(new PlayableBlock(keyboardState, 'Digit5',
     "samples/shaker.mp3",
-    sceneEl, 6));
+    sceneEl, 6, gameTime));
   pbs.push(new PlayableBlock(keyboardState, 'Digit6',
     "samples/tom-run.mp3",
-    sceneEl, 7));
+    sceneEl, 7, gameTime));
   pbs.push(new PlayableBlock(keyboardState, 'Digit7',
     "samples/beep.mp3",
-    sceneEl, 8));
+    sceneEl, 8, gameTime));
   pbs.push(new PlayableBlock(keyboardState, 'Digit8',
     "samples/cymbol.mp3",
-    sceneEl, 9));
+    sceneEl, 9, gameTime));
 }
 
 class PlayableBlocks {
-  constructor(keyboardState) {
+  constructor(keyboardState, gameTime) {
     const sceneEl = document.querySelector("a-scene");
     this.pbs = [];
-    importLevel2(sceneEl, this.pbs);
+    importLevel2(sceneEl, this.pbs, gameTime);
   }
 
   tick(timeMs, timeDeltaMs) {
@@ -152,7 +156,8 @@ class PlayableBlocks {
 }
 
 class FlyingBlocks {
-  constructor() {
+  constructor(gameTime) {
+    this.gameTime = gameTime;
     this.sceneEl = document.querySelector("a-scene");
     this.cameraQuaternion = new THREE.Quaternion();
     this.frameNumber = 0;
@@ -183,7 +188,7 @@ class FlyingBlocks {
     return (trackIndex, startFlyingMs) => {
       this.flyingBlocks.push(
         new FlyingBlock(this.sceneEl, trackIndex,
-          startFlyingMs, startFlyingMs + 4000));
+          startFlyingMs, startFlyingMs + 4000, this.gameTime));
     }
   }
 }
