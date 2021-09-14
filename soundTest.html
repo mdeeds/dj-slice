@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sound Test</title>
+  <style>
+    #play {
+      border-radius: 2px;
+      border-style: outset;
+      border-color: blue;
+      border-width: 3px;
+    }
+  </style>
+  <script>
+    function getData(audioCtx) {
+      const request = new XMLHttpRequest();
+      request.open('GET', 'samples/handclap.mp3', true);
+      request.responseType = 'arraybuffer';
+      return new Promise((resolve, reject) => {
+        request.onload = () => {
+          const audioData = request.response;
+          audioCtx.decodeAudioData(audioData, function (buffer) {
+            resolve(buffer);
+          },
+            reject);
+        }
+        request.send();
+      });
+    }
+
+    function getAudioContext() {
+      return new Promise((resolve, reject) => {
+        const context = new window.AudioContext();
+        if (context.state === 'running') {
+          resolve(context);
+        } else {
+          setTimeout(async () => {
+            resolve(await getAudioContext());
+          }, 500);
+        }
+      });
+    }
+
+    async function go() {
+      const body = document.getElementsByTagName('body')[0];
+      const startTimeEl = document.getElementById('starttime');
+      const startOffsetEl = document.getElementById('startoffset');
+      const playEl = document.getElementById('play');
+
+      const audioCtx = await getAudioContext();
+      const buffer = await getData(audioCtx);
+
+      playEl.addEventListener('click', (ev) => {
+        const audioNode = audioCtx.createBufferSource();
+        audioNode.buffer = buffer;
+        audioNode.connect(audioCtx.destination);
+        const startTime = parseFloat(startTimeEl.value);
+        const startOffset = parseFloat(startOffsetEl.value);
+        audioNode.start(audioCtx.currentTime + startTime, startOffset);
+      });
+    }
+
+  </script>
+
+</head>
+
+<body onload="go()">
+  Start this many seconds in the future:
+  <textarea id='starttime'>0</textarea>
+  <br />
+
+  Start this far into the sample:
+  <textarea id='startoffset'>0</textarea>
+  <br />
+
+  <span id="play">Play</span>
+
+</body>
+
+</html>
