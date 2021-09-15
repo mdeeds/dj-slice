@@ -4,6 +4,8 @@
 <head>
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="sequence.js"></script>
+  <script src="scene.js"></script>
+  <script src="sample.js"></script>
   <script src="blocks.js"></script>
   <script src="keyboardState.js"></script>
   <script src="gameTime.js"></script>
@@ -13,12 +15,14 @@
     let seq = null;
     let keyboardState = null;
     let gameTime = null;
+    let scene = null;
 
     AFRAME.registerComponent("go", {
       init: function () {
         gameTime = new GameTime(/*bpm=*/110);
+        scene = new Scene(gameTime);
         keyboardState = new KeyboardState();
-        playables = new PlayableBlocks(keyboardState, gameTime);
+        playables = new PlayableBlocks(gameTime, scene);
         fbs = new FlyingBlocks(gameTime);
         seq = new Sequence(fbs.getFactory(), gameTime);
       },

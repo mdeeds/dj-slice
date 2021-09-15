@@ -45,17 +45,17 @@ class FlyingBlock {
     );
   }
   tick(timeMs, timeDeltaMs) {
-    const perfection =
+    this.perfection =
       (this.gameTime.elapsedMs - this.endFlyingMs) / this.timing;
-    if (perfection > 1.0) {
+    if (this.perfection > 1.0) {
       this.box.remove();
       this.box = null;
       this.p = 0;
-    } else if (perfection > 0.25) {
+    } else if (this.perfection > 0.25) {
       this.setColor('#f00');
-    } else if (perfection > -0.25) {
+    } else if (this.perfection > -0.25) {
       this.setColor('#ff0');
-    } else if (perfection > -1) {
+    } else if (this.perfection > -1) {
       this.setColor('#0f0');
     } else {
       this.setColor('#ccc');
@@ -82,63 +82,11 @@ async function getContext() {
   });
 }
 
-class Sample {
-  constructor(url, gameTime) {
-    this.url = url;
-    this.gameTime = gameTime;
-    this.audioCtx = null;
-    this.buffer = null;
-    this.init();
-  }
-
-  async init() {
-    this.buffer = await this.getData();
-  }
-
-  async getData() {
-    this.audioCtx = await getContext();
-    const request = new XMLHttpRequest();
-    request.open('GET', this.url, true);
-    request.responseType = 'arraybuffer';
-    return new Promise((resolve, reject) => {
-      request.onload = () => {
-        const audioData = request.response;
-        this.audioCtx.decodeAudioData(audioData, function (buffer) {
-          resolve(buffer);
-        },
-          reject);
-      }
-      request.send();
-    });
-  }
-
-  _play(audioTimeS) {
-    if (!this.audioCtx || !this.buffer) {
-      return;
-    }
-    const audioNode = this.audioCtx.createBufferSource();
-    audioNode.buffer = this.buffer;
-    audioNode.connect(this.audioCtx.destination);
-    const nowAudioTime = this.audioCtx.currentTime;
-    const timeInFuture = audioTimeS - nowAudioTime;
-    audioNode.start(nowAudioTime + Math.max(timeInFuture, 0),
-      Math.max(0, -timeInFuture));
-  }
-
-  playQuantized(gameTimeMs) {
-    const audioTimeS = this.gameTime.getAudioTimeForGameTime(gameTimeMs);
-    const quantizedAudioTimeS = this.gameTime.roundQuantizeAudioTime(audioTimeS);
-    this._play(quantizedAudioTimeS);
-  }
-}
-
 class PlayableBlock {
-  constructor(keyboardState, keyCode, url, sceneEl, trackIndex, gameTime) {
-    this.keyboardState = keyboardState;
-    this.code = keyCode;
+  constructor(sceneEl, trackIndex, gameTime, scene) {
     this.gameTime = gameTime;
+    this.scene = scene;
     const theta = indexToTheta(trackIndex);
-    this.sample = new Sample(url, gameTime);
     this.box = document.createElement("a-sphere");
     this.box.setAttribute('radius', '0.2');
     this.box.object3D.position.set(Math.cos(theta) * 3, 1.5, Math.sin(theta) * 3);
@@ -148,14 +96,13 @@ class PlayableBlock {
     sceneEl.appendChild(this.box);
     this.box.addEventListener("mouseenter", () => {
       this.box.setAttribute("color", "#f55");
-      this.sample.playQuantized(this.gameTime.elapsedMs);
+      this.scene.triggerTrack(trackIndex, this.gameTime.elapsedMs);
     });
     this.box.addEventListener("mouseleave", () => {
       this.box.setAttribute("color", "#5f5");
     });
     this.box.addEventListener("mousedown", () => {
     });
-    // this.box.classList.add("clickable");
     this.bpm = 110;
     this.millisecondsPerBeat = 1000 * 60 / this.bpm;
   }
@@ -165,64 +112,18 @@ class PlayableBlock {
     const quarterTurnDuration = 1000 * 60 / this.bpm;
     this.box.object3D.rotation.set(
       0, prevAngle + Math.PI / 2 * timeDeltaMs / quarterTurnDuration, 0);
-    if (this.keyboardState.justPressed(this.code)) {
-      this.sample.playQuantized(this.gameTime.elapsedMs);
-    }
   }
 }
 
-function importLevel1(sceneEl, pbs, gameTime) {
-  pbs.splice(0);
-  pbs.push(new PlayableBlock(keyboardState, 'Digit1',
-    "https://cdn.glitch.com/19df276e-5dfe-4bab-915a-410c481a8b0d%2Fkick.wav?v=1631392733145",
-    sceneEl, 3, gameTime));
-  pbs.push(new PlayableBlock(keyboardState, 'Digit2',
-    "https://cdn.glitch.com/19df276e-5dfe-4bab-915a-410c481a8b0d%2Fhats.wav?v=1631392739980",
-    sceneEl, 4, gameTime));
-  pbs.push(new PlayableBlock(keyboardState, 'Digit3',
-    "https://cdn.glitch.com/19df276e-5dfe-4bab-915a-410c481a8b0d%2Fvirtual.wav?v=1631392748787",
-    sceneEl, 5, gameTime));
-  pbs.push(new PlayableBlock(keyboardState, 'Digit4',
-    "https://cdn.glitch.com/19df276e-5dfe-4bab-915a-410c481a8b0d%2Freality.wav?v=1631392757731",
-    sceneEl, 6, gameTime));
-}
-
-function importLevel2(sceneEl, pbs, gameTime) {
-  pbs.splice(0);
-  pbs.push(new PlayableBlock(keyboardState, 'Digit0',
-    "samples/rimshot4.mp3",
-    sceneEl, 1, gameTime));
-  pbs.push(new PlayableBlock(keyboardState, 'Digit1',
-    "samples/bass.mp3",
-    sceneEl, 2, gameTime));
-  pbs.push(new PlayableBlock(keyboardState, 'Digit2',
-    "samples/bass-drum.mp3",
-    sceneEl, 3, gameTime));
-  pbs.push(new PlayableBlock(keyboardState, 'Digit3',
-    "samples/snare-drum.mp3",
-    sceneEl, 4, gameTime));
-  pbs.push(new PlayableBlock(keyboardState, 'Digit4',
-    "samples/handclap.mp3",
-    sceneEl, 5, gameTime));
-  pbs.push(new PlayableBlock(keyboardState, 'Digit5',
-    "samples/shaker.mp3",
-    sceneEl, 6, gameTime));
-  pbs.push(new PlayableBlock(keyboardState, 'Digit6',
-    "samples/tom-run.mp3",
-    sceneEl, 7, gameTime));
-  pbs.push(new PlayableBlock(keyboardState, 'Digit7',
-    "samples/beep.mp3",
-    sceneEl, 8, gameTime));
-  pbs.push(new PlayableBlock(keyboardState, 'Digit8',
-    "samples/cymbol.mp3",
-    sceneEl, 9, gameTime));
-}
-
 class PlayableBlocks {
-  constructor(keyboardState, gameTime) {
+  constructor(gameTime, scene) {
     const sceneEl = document.querySelector("a-scene");
     this.pbs = [];
-    importLevel2(sceneEl, this.pbs, gameTime);
+    for (let trackIndex = 0; trackIndex < 16; ++trackIndex) {
+      if (scene.getSample(trackIndex)) {
+        this.pbs.push(new PlayableBlock(sceneEl, trackIndex, gameTime, scene));
+      }
+    }
   }
 
   tick(timeMs, timeDeltaMs) {
@@ -266,6 +167,7 @@ class FlyingBlocks {
       this.flyingBlocks.push(
         new FlyingBlock(this.sceneEl, trackIndex,
           startFlyingMs, startFlyingMs + 4000, this.gameTime));
+      //TODO: end flying needs to be on the beat.
     }
   }
 }

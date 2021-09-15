@@ -24,10 +24,18 @@ class GameTime {
     return this.audioCtxZero + gameMs / 1000;
   }
 
+  getAudioTimeNow() {
+    return this.audioCtxZero + this.elapsedMs / 1000;
+  }
+
   roundQuantizeAudioTime(audioTimeS) {
     const secondsPerBeat = 60 / this.bpm;
     const beat = Math.round(audioTimeS / secondsPerBeat);
     return beat * secondsPerBeat;
+  }
+
+  getRoundQuantizedAudioTimeNow() {
+    return this.roundQuantizeAudioTime(this.getAudioTimeNow());
   }
 
   tick(timeMs, timeDeltaMs) {
