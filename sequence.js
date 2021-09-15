@@ -3,7 +3,7 @@ class Sequence {
     this.blockFactory = blockFactory;
     this.gameTime = gameTime;
     this.lastBeat = -1;
-    this.bpm = 110;
+    this.bpm = gameTime.bpm;
     this.tracks = [
       "",  // 0
       "1   ",  // 1
@@ -12,9 +12,9 @@ class Sequence {
       "          1   1   1   1   1   1   1   1 ",  // 4
       "                21 1 1 121 1 1 121 1 1 1",  // 5
       "                ",  // 6
-      "                                         1",  // 7
+      "                                             1",  // 7
       "                ",  // 8
-      "                                           1",  // 9
+      "                                               1",  // 9
     ];
     this.millisecondsPerBeat = 1000 * 60 / this.bpm;
     this.millisecondsPerSubdivision = this.millisecondsPerBeat / 4;

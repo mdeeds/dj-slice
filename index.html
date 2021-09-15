@@ -16,7 +16,7 @@
 
     AFRAME.registerComponent("go", {
       init: function () {
-        gameTime = new GameTime();
+        gameTime = new GameTime(/*bpm=*/110);
         keyboardState = new KeyboardState();
         playables = new PlayableBlocks(keyboardState, gameTime);
         fbs = new FlyingBlocks(gameTime);
@@ -46,8 +46,7 @@
 
 <body>
   <audio></audio>
-  <!-- cursor="rayOrigin: mouse" -->
-  <a-scene go="1" background="black">
+  <a-scene go="1" background="black" cursor="rayOrigin: mouse">
     <a-entity light="type: ambient; color: #777"></a-entity>
     <a-entity light="type:directional; color: #777" position="-3 4 5"></a-entity>
     <a-torus position="0 -0.2 0" radius="5.2" radius-tubular="0.2" rotation="90 0 0" color="#669">
@@ -59,11 +58,10 @@
     </a-assets>
     <a-sky src="#sky"></a-sky>
     <a-camera position="0 3 0"></a-camera>
-    <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 5;" line="color: #CCCCCC"
+    <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 5;" line="color: #44d"
       pointer></a-entity>
-    <a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 5;" line="color: #CCCCCC"
+    <a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 5;" line="color: #d44"
       pointer></a-entity>
-    <a-entity cursor raycaster="far: 5; interval: 1000; objects: .clickable"></a-entity>
     <a-sphere startblock="1" id='startblock' class='clickable' radius="0.5" position="0 3 -2" color="#f29"></a-sphere>
   </a-scene>
 </body>

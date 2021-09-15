@@ -6,16 +6,32 @@ class FlyingBlock {
   constructor(scene, n, startFlyingMs, endFlyingMs, gameTime) {
     this.gameTime = gameTime;
     this.box = document.createElement("a-box");
-    this.box.setAttribute('width', '0.5');
-    this.box.setAttribute('height', '0.5');
-    this.box.setAttribute('depth', '0.5');
+    this.setSize(0.3);
+    this.setColor('#ccc');
     this.toTheta = indexToTheta(n);
     this.startFlyingMs = startFlyingMs;
     this.endFlyingMs = endFlyingMs;
     this.p = 0;
     this.box.object3D.rotation.set(0, -this.toTheta, 0);
     scene.appendChild(this.box);
+    this.timing = 1000 * 60 / gameTime.bpm / 2;
   }
+
+  setSize(size) {
+    if (this.size != size) {
+      this.box.setAttribute('width', size);
+      this.box.setAttribute('height', size);
+      this.box.setAttribute('depth', size);
+    }
+  }
+
+  setColor(color) {
+    if (this.color != color) {
+      this.box.setAttribute('color', color);
+      this.color = color;
+    }
+  }
+
   render(cameraAngle) {
     if (!this.box) {
       return;
@@ -24,19 +40,95 @@ class FlyingBlock {
     const t = (1 - this.p) * cameraAngle + this.p * this.toTheta;
     this.box.object3D.position.set(
       Math.cos(t) * r,
-      (r * r) / 80 + 1.5,
+      (r * r) / 80 + 3,
       Math.sin(t) * r
     );
   }
   tick(timeMs, timeDeltaMs) {
-    if (this.gameTime.elapsedMs > this.endFlyingMs) {
+    const perfection =
+      (this.gameTime.elapsedMs - this.endFlyingMs) / this.timing;
+    if (perfection > 1.0) {
       this.box.remove();
       this.box = null;
       this.p = 0;
+    } else if (perfection > 0.25) {
+      this.setColor('#f00');
+    } else if (perfection > -0.25) {
+      this.setColor('#ff0');
+    } else if (perfection > -1) {
+      this.setColor('#0f0');
     } else {
-      this.p = (this.gameTime.elapsedMs - this.startFlyingMs) /
-        (this.endFlyingMs - this.startFlyingMs);
+      this.setColor('#ccc');
     }
+    this.p = (this.gameTime.elapsedMs - this.startFlyingMs) /
+      (this.endFlyingMs - this.startFlyingMs);
+  }
+}
+
+var _audioCtx = null;
+async function getContext() {
+  if (_audioCtx) {
+    return _audioCtx;
+  }
+  return new Promise((resolve) => {
+    const context = new window.AudioContext();
+    if (context.state === 'running') {
+      resolve(context);
+    } else {
+      setTimeout(async () => {
+        resolve(await getContext());
+      }, 500);
+    }
+  });
+}
+
+class Sample {
+  constructor(url, gameTime) {
+    this.url = url;
+    this.gameTime = gameTime;
+    this.audioCtx = null;
+    this.buffer = null;
+    this.init();
+  }
+
+  async init() {
+    this.buffer = await this.getData();
+  }
+
+  async getData() {
+    this.audioCtx = await getContext();
+    const request = new XMLHttpRequest();
+    request.open('GET', this.url, true);
+    request.responseType = 'arraybuffer';
+    return new Promise((resolve, reject) => {
+      request.onload = () => {
+        const audioData = request.response;
+        this.audioCtx.decodeAudioData(audioData, function (buffer) {
+          resolve(buffer);
+        },
+          reject);
+      }
+      request.send();
+    });
+  }
+
+  _play(audioTimeS) {
+    if (!this.audioCtx || !this.buffer) {
+      return;
+    }
+    const audioNode = this.audioCtx.createBufferSource();
+    audioNode.buffer = this.buffer;
+    audioNode.connect(this.audioCtx.destination);
+    const nowAudioTime = this.audioCtx.currentTime;
+    const timeInFuture = audioTimeS - nowAudioTime;
+    audioNode.start(nowAudioTime + Math.max(timeInFuture, 0),
+      Math.max(0, -timeInFuture));
+  }
+
+  playQuantized(gameTimeMs) {
+    const audioTimeS = this.gameTime.getAudioTimeForGameTime(gameTimeMs);
+    const quantizedAudioTimeS = this.gameTime.roundQuantizeAudioTime(audioTimeS);
+    this._play(quantizedAudioTimeS);
   }
 }
 
@@ -46,7 +138,7 @@ class PlayableBlock {
     this.code = keyCode;
     this.gameTime = gameTime;
     const theta = indexToTheta(trackIndex);
-    this.audio = new Audio(url);
+    this.sample = new Sample(url, gameTime);
     this.box = document.createElement("a-sphere");
     this.box.setAttribute('radius', '0.2');
     this.box.object3D.position.set(Math.cos(theta) * 3, 1.5, Math.sin(theta) * 3);
@@ -56,15 +148,14 @@ class PlayableBlock {
     sceneEl.appendChild(this.box);
     this.box.addEventListener("mouseenter", () => {
       this.box.setAttribute("color", "#f55");
-      this.audio.currentTime = 0;
-      this.audio.play();
+      this.sample.playQuantized(this.gameTime.elapsedMs);
     });
     this.box.addEventListener("mouseleave", () => {
       this.box.setAttribute("color", "#5f5");
     });
     this.box.addEventListener("mousedown", () => {
     });
-    this.box.classList.add("clickable");
+    // this.box.classList.add("clickable");
     this.bpm = 110;
     this.millisecondsPerBeat = 1000 * 60 / this.bpm;
   }
@@ -75,21 +166,7 @@ class PlayableBlock {
     this.box.object3D.rotation.set(
       0, prevAngle + Math.PI / 2 * timeDeltaMs / quarterTurnDuration, 0);
     if (this.keyboardState.justPressed(this.code)) {
-      const currentBeat = Math.round(this.gameTime.elapsedMs / this.millisecondsPerBeat);
-      const beatMs = currentBeat * this.millisecondsPerBeat;
-      if (beatMs < timeMs) {
-        this.audio.currentTime = (timeMs - beatMs) / 1000;
-        this.audio.play();
-      } else {
-        this.audio.currentTime = 0;
-        this.audio.play();
-        // TODO: Use WebAudio API instead for better timing.  THis timeout
-        // does not perform well.
-        // setTimeout(() => {
-        //   this.audio.currentTime = 0;
-        //   this.audio.play();
-        // }, (beatMs - timeMs));
-      }
+      this.sample.playQuantized(this.gameTime.elapsedMs);
     }
   }
 }

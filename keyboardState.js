@@ -9,7 +9,6 @@ class KeyboardState {
   }
 
   handle(ev) {
-    console.log(`${ev.type}: ${ev.code}`);
     switch (ev.type) {
       case 'keydown':
         if (!this.keysDown.has(ev.code)) {
@@ -28,7 +27,6 @@ class KeyboardState {
   justPressed(code) {
     if (this.freshKeys.has(code)) {
       this.freshKeys.delete(code);
-      console.log(`Got: ${code}`);
       return true;
     } else {
       return false;
