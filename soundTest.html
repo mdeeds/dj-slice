@@ -22,11 +22,9 @@
       return new Promise((resolve, reject) => {
         request.onload = () => {
           const audioData = request.response;
-          audioCtx.decodeAudioData(audioData, function (buffer) {
-            resolve(buffer);
-          },
-            reject);
-        }
+          audioCtx.decodeAudioData(audioData,
+            resolve, reject);
+        };
         request.send();
       });
     }
