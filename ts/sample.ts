@@ -1,4 +1,12 @@
-class Sample {
+import { Common } from "./common";
+import { GameTime } from "./gameTime";
+
+export class Sample {
+  private url: string;
+  private gameTime: GameTime;
+  private audioCtx: AudioContext;
+  private buffer: AudioBuffer;
+
   constructor(url, gameTime) {
     this.url = url;
     this.gameTime = gameTime;
@@ -11,8 +19,8 @@ class Sample {
     this.buffer = await this.getData();
   }
 
-  async getData() {
-    this.audioCtx = await getContext();
+  async getData(): Promise<AudioBuffer> {
+    this.audioCtx = await Common.getContext();
     const request = new XMLHttpRequest();
     request.open('GET', this.url, true);
     request.responseType = 'arraybuffer';

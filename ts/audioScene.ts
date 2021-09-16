@@ -1,4 +1,9 @@
-class Scene {
+import { GameTime } from "./gameTime";
+import { Sample } from "./sample";
+
+export class AudioScene {
+  private gameTime: GameTime;
+  private samples: Sample[];
   constructor(gameTime) {
     this.gameTime = gameTime;
     this.samples = [];
@@ -14,13 +19,13 @@ class Scene {
       this.gameTime));
     this.samples.push(new Sample(
       "https://cdn.glitch.com/19df276e-5dfe-4bab-915a-410c481a8b0d%2Fhats.wav?v=1631392739980",
-      gameTime));
+      this.gameTime));
     this.samples.push(new Sample(
       "https://cdn.glitch.com/19df276e-5dfe-4bab-915a-410c481a8b0d%2Fvirtual.wav?v=1631392748787",
-      gameTime));
+      this.gameTime));
     this.samples.push(new Sample(
       "https://cdn.glitch.com/19df276e-5dfe-4bab-915a-410c481a8b0d%2Freality.wav?v=1631392757731",
-      gameTime));
+      this.gameTime));
   }
 
   loadScene2() {
@@ -39,7 +44,7 @@ class Scene {
   triggerTrack(track) {
     const sample = this.samples[track];
     if (sample) {
-      sample.playQuantized(this.gameTime.elapsedMs);
+      sample.playQuantized(this.gameTime.getElapsedMs());
     }
   }
 

@@ -1,9 +1,20 @@
-class Sequence {
-  constructor(blockFactory, gameTime) {
+import { BlockFactory } from "./flyingBlocks";
+import { GameTime } from "./gameTime";
+
+export class Sequence {
+  private blockFactory: BlockFactory;
+  private gameTime: GameTime;
+  private lastBeat: number;
+  private tracks: string[];
+  private bpm: number;
+  private millisecondsPerBeat: number;
+  private millisecondsPerSubdivision: number;
+  private nibbles: string;
+  private running: boolean;
+  constructor(blockFactory: BlockFactory, gameTime: GameTime) {
     this.blockFactory = blockFactory;
     this.gameTime = gameTime;
     this.lastBeat = -1;
-    this.bpm = gameTime.bpm;
     this.tracks = [
       "",  // 0
       "1   ",  // 1
@@ -16,6 +27,7 @@ class Sequence {
       "                ",  // 8
       "                                               1",  // 9
     ];
+    this.bpm = gameTime.getBpm();
     this.millisecondsPerBeat = 1000 * 60 / this.bpm;
     this.millisecondsPerSubdivision = this.millisecondsPerBeat / 4;
     this.nibbles = "0123456789abcdef";
@@ -26,8 +38,8 @@ class Sequence {
     this.running = false;
   }
 
-  tick(timeMs, timeDeltaMs) {
-    const currentBeat = Math.trunc(this.gameTime.elapsedMs / this.millisecondsPerBeat);
+  tick(timeMs: number, timeDeltaMs: number) {
+    const currentBeat = Math.trunc(this.gameTime.getElapsedMs() / this.millisecondsPerBeat);
     const beatMs = currentBeat * this.millisecondsPerBeat;
     while (currentBeat > this.lastBeat) {
       ++this.lastBeat;

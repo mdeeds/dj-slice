@@ -1,4 +1,11 @@
-class GameTime {
+import { Common } from "./common";
+
+export class GameTime {
+  private bpm: number;
+  private elapsedMs: number;
+  private running: boolean;
+  private audioCtx: AudioContext;
+  private audioCtxZero: number;
   constructor(bpm) {
     console.assert(bpm);
     this.bpm = bpm;
@@ -10,7 +17,7 @@ class GameTime {
   }
 
   async init() {
-    this.audioCtx = await getContext();
+    this.audioCtx = await Common.getContext();
   }
 
   start() {
@@ -18,6 +25,14 @@ class GameTime {
       this.running = true;
       this.audioCtxZero = this.audioCtx.currentTime - this.elapsedMs * 1000;
     }
+  }
+
+  getBpm() {
+    return this.bpm;
+  }
+
+  getElapsedMs() {
+    return this.elapsedMs;
   }
 
   getAudioTimeForGameTime(gameMs) {

@@ -1,14 +1,17 @@
-class KeyboardState {
-  constructor(scene) {
+import { AudioScene } from "./audioScene";
+
+export class KeyboardState {
+  private scene: AudioScene;
+  private keysDown: Set<string> = new Set<string>();
+  constructor(scene: AudioScene) {
     this.scene = scene;
     console.log('initializing keyboard');
-    this.keysDown = new Set();
     const body = document.getElementsByTagName('body')[0];
     body.addEventListener('keydown', (ev) => { this.handle(ev); });
     body.addEventListener('keyup', (ev) => { this.handle(ev); });
   }
 
-  handle(ev) {
+  handle(ev: KeyboardEvent) {
     switch (ev.type) {
       case 'keydown':
         if (!this.keysDown.has(ev.code)) {
@@ -20,7 +23,7 @@ class KeyboardState {
     }
   }
 
-  handleTracks(code) {
+  handleTracks(code: string) {
     switch (code) {
       case 'Digit0': this.scene.triggerTrack(0); break;
       case 'Digit1': this.scene.triggerTrack(1); break;
@@ -35,7 +38,7 @@ class KeyboardState {
     }
   }
 
-  isDown(code) {
+  isDown(code: string) {
     return this.keysDown.has(code);
   }
 }
