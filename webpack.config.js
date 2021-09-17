@@ -3,6 +3,7 @@ const HtmlWebPackPlugin = require("html-webpack-plugin");
 module.exports = {
   entry: {
     main: "./src/index.js",
+    open: "./src/open.js",
   },
   output: {
     path: __dirname + "/dist",
@@ -34,7 +35,13 @@ module.exports = {
   plugins: [
     new HtmlWebPackPlugin({
       template: "./src/index.html",
-      filename: "./index.html"
+      filename: "./index.html",
+      chunks: ['index']
+    }),
+    new HtmlWebPackPlugin({
+      filename: 'open.html',
+      template: 'src/open.html',
+      chunks: ['open']
     })
   ],
   module: {  // If I remove this, webpack fails. \(~n~)/
