@@ -41,11 +41,15 @@ export class AudioScene {
     this.samples.push(new Sample("samples/cymbol.mp3", this.gameTime));
   }
 
-  triggerTrack(track) {
+  triggerTrackAt(track: number, gameTimeMs: number) {
     const sample = this.samples[track];
     if (sample) {
-      sample.playQuantized(this.gameTime.getElapsedMs());
+      sample.playQuantized(gameTimeMs);
     }
+  }
+
+  triggerTrack(track) {
+    this.triggerTrackAt(track, this.gameTime.getElapsedMs());
   }
 
   getSample(track) {

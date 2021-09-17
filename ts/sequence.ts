@@ -1,3 +1,4 @@
+import { AudioScene } from "./audioScene";
 import { BlockFactory } from "./flyingBlocks";
 import { GameTime } from "./gameTime";
 
@@ -11,9 +12,11 @@ export class Sequence {
   private millisecondsPerSubdivision: number;
   private nibbles: string;
   private running: boolean;
+  private audioScene: AudioScene;
   constructor(blockFactory: BlockFactory, gameTime: GameTime) {
     this.blockFactory = blockFactory;
     this.gameTime = gameTime;
+    this.audioScene = new AudioScene(gameTime);
     this.lastBeat = -1;
     this.tracks = [
       "",  // 0
@@ -21,11 +24,11 @@ export class Sequence {
       "    1               1               1   ",  // 2
       "        1   1   1   1   1   1   1   1   ",  // 3
       "          1   1   1   1   1   1   1   1 ",  // 4
-      "                21 1 1 121 1 1 121 1 1 1",  // 5
-      "                ",  // 6
-      "                                             1",  // 7
+      "           5   5   5 5 5   5   5   5 555",  // 5
+      "        11551119115511191155111911551119      ",  // 6
+      "                                               1",  // 7
       "                ",  // 8
-      "                                               1",  // 9
+      "                                                 1",  // 9
     ];
     this.bpm = gameTime.getBpm();
     this.millisecondsPerBeat = 1000 * 60 / this.bpm;
@@ -38,9 +41,18 @@ export class Sequence {
     this.running = false;
   }
 
+  getScene(): AudioScene {
+    return this.audioScene;
+  }
+
+  private enqueue(trackIndex: number, beatMs: number) {
+    this.blockFactory(trackIndex, beatMs);
+    this.audioScene.triggerTrackAt(trackIndex, beatMs);
+  }
+
   tick(timeMs: number, timeDeltaMs: number) {
     const currentBeat = Math.trunc(this.gameTime.getElapsedMs() / this.millisecondsPerBeat);
-    const beatMs = currentBeat * this.millisecondsPerBeat;
+    const beatMs = currentBeat * this.millisecondsPerBeat + 4000;
     while (currentBeat > this.lastBeat) {
       ++this.lastBeat;
       for (let trackIndex = 0; trackIndex < this.tracks.length; ++trackIndex) {
@@ -54,16 +66,16 @@ export class Sequence {
           continue;
         }
         if (nibble & 0x1) {
-          this.blockFactory(trackIndex, beatMs);
+          this.enqueue(trackIndex, beatMs);
         }
         if (nibble & 0x2) {
-          this.blockFactory(trackIndex, beatMs + d);
+          this.enqueue(trackIndex, beatMs + d);
         }
         if (nibble & 0x4) {
-          this.blockFactory(trackIndex, beatMs + 2 * d);
+          this.enqueue(trackIndex, beatMs + 2 * d);
         }
         if (nibble & 0x8) {
-          this.blockFactory(trackIndex, beatMs + 3 * d);
+          this.enqueue(trackIndex, beatMs + 3 * d);
         }
       }
     }

@@ -41,10 +41,10 @@ export class FlyingBlocks {
   }
 
   getFactory(): BlockFactory {
-    return (trackIndex: number, startFlyingMs: number) => {
+    return (trackIndex: number, endFlyingMs: number) => {
       this.flyingBlocks.push(
         new FlyingBlock(this.sceneEl, trackIndex,
-          startFlyingMs, startFlyingMs + 4000, this.gameTime));
+          endFlyingMs - 4000, endFlyingMs, this.gameTime));
       //TODO: end flying needs to be on the beat.
     }
   }

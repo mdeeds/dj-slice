@@ -7,7 +7,6 @@ import { Sequence } from "./sequence";
 import * as aframe from "aframe";
 
 var gameTime: GameTime = null;
-var scene: AudioScene = null;
 var keyboardState: KeyboardState = null;
 var playables: PlayableBlocks = null;
 var fbs: FlyingBlocks = null;
@@ -18,11 +17,10 @@ console.log("AAAAA: 1");
 AFRAME.registerComponent("go", {
   init: function () {
     gameTime = new GameTime(/*bpm=*/110);
-    scene = new AudioScene(gameTime);
-    keyboardState = new KeyboardState(scene);
-    playables = new PlayableBlocks(gameTime, scene);
     fbs = new FlyingBlocks(gameTime);
     seq = new Sequence(fbs.getFactory(), gameTime);
+    keyboardState = new KeyboardState(seq.getScene());
+    playables = new PlayableBlocks(gameTime, seq.getScene());
   },
   tick: function (timeMs, timeDeltaMs) {
     fbs.tick(timeMs, timeDeltaMs);

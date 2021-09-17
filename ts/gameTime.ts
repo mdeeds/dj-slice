@@ -44,7 +44,7 @@ export class GameTime {
   }
 
   roundQuantizeAudioTime(audioTimeS) {
-    const secondsPerBeat = 60 / this.bpm;
+    const secondsPerBeat = 60 / this.bpm / 4;
     const beat = Math.round(audioTimeS / secondsPerBeat);
     return beat * secondsPerBeat;
   }
@@ -53,7 +53,7 @@ export class GameTime {
     return this.roundQuantizeAudioTime(this.getAudioTimeNow());
   }
 
-  tick(timeMs, timeDeltaMs) {
+  tick(timeMs: number, timeDeltaMs: number) {
     if (this.running) {
       this.elapsedMs += timeDeltaMs;
     }
