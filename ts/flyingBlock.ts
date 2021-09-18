@@ -50,11 +50,14 @@ export class FlyingBlock {
     if (!this.box) {
       return;
     }
-    const r = (1 - this.p) * 50 + this.p * 3;
-    const t = (1 - this.p) * cameraAngle + this.p * this.toTheta;
+
+    const a1 = Math.min(1.00, this.p);
+    const a2 = Math.max(0.0, this.p - 1.0);
+    const r = (1 - a1) * 50 + a1 * 3;
+    const t = (1 - a1) * cameraAngle + a1 * this.toTheta;
     this.box.object3D.position.set(
       Math.cos(t) * r,
-      (r * r) / 80 + 3,
+      (r * r) / 80 + 3 - 30 * a2,
       Math.sin(t) * r
     );
   }
