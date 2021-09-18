@@ -2,7 +2,7 @@ const HtmlWebPackPlugin = require("html-webpack-plugin");
 
 module.exports = {
   entry: {
-    main: "./src/index.js",
+    index: "./src/index.js",
     open: "./src/open.js",
   },
   output: {
@@ -34,11 +34,13 @@ module.exports = {
   },
   plugins: [
     new HtmlWebPackPlugin({
+      name: "index",
       template: "./src/index.html",
-      filename: "./index.html",
+      filename: "index.html",
       chunks: ['index']
     }),
     new HtmlWebPackPlugin({
+      name: "open",
       filename: 'open.html',
       template: 'src/open.html',
       chunks: ['open']
