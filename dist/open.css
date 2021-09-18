@@ -1,0 +1,14 @@
+#selection {
+  position: absolute;
+  left: 50px;
+  top: 50px;
+  z-index: 1;
+}
+
+#peaks {
+  position: absolute;
+  left: 50px;
+  top: 50px;
+  z-index: 2;
+}
+
