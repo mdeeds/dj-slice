@@ -104,31 +104,28 @@ class Granules {
       const width = this.getXForPoint(i + 1, canvas) -
         this.getXForPoint(i, canvas);
       if (i === this.activePoint) {
-        ctx.fillStyle = '#66f';
-        ctx.fillRect(
-          this.getXForPoint(i, canvas), 0,
-          width, canvas.height);
+        ctx.fillStyle = '#aaf';
+      } else if (i % 2 === 0) {
+        ctx.fillStyle = '#aaa';
       } else {
-        ctx.fillStyle = '#88d';
-        ctx.fillRect(
-          this.getXForPoint(i, canvas) + 10, 10,
-          width - 20, canvas.height - 20);
+        ctx.fillStyle = '#ddd'
       }
+      ctx.fillRect(
+        this.getXForPoint(i, canvas), 0,
+        width, canvas.height); 1
     }
   }
 
   changeStart(delta: number) {
-    this.controlPoints[this.activePoint] += delta;
+    this.controlPoints[this.activePoint] =
+      Math.max(0, this.controlPoints[this.activePoint] + delta);
   }
   changeEnd(delta: number) {
     this.controlPoints[this.activePoint + 1] += delta;
   }
-  next() {
-    if (this.activePoint >= this.controlPoints.length - 2) {
-      this.activePoint = 0;
-    } else {
-      this.activePoint++;
-    }
+  next(dir: number) {
+    this.activePoint += dir;
+    this.activePoint = this.activePoint % (this.controlPoints.length - 1);
   }
 
   play() {
@@ -177,7 +174,13 @@ async function go() {
       case 'ArrowRight': granules.changeStart(0.01); break;
       case 'ArrowDown': granules.changeEnd(-0.01); break;
       case 'ArrowUp': granules.changeEnd(0.01); break;
-      case 'Tab': granules.next(); break;
+      case 'Tab':
+        if (ev.shiftKey) {
+          granules.next(-1);
+        } else {
+          granules.next(1);
+        }
+        break;
       case 'Space': granules.play(); break;
     }
     if (actionTaken) {
