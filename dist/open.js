@@ -364,12 +364,6 @@ class Sample {
         audioNode.connect(this.audioCtx.destination);
         const nowAudioTime = this.audioCtx.currentTime;
         const timeInFuture = audioTimeS - nowAudioTime;
-        if (timeInFuture < 0) {
-            console.log(`Late: @${audioTimeS.toFixed(2)}`);
-        }
-        else {
-            console.log(`Early: @${audioTimeS.toFixed(2)}`);
-        }
         audioNode.start(nowAudioTime + Math.max(timeInFuture, 0), Math.max(0, -timeInFuture));
     }
     playQuantized(gameTimeMs) {
