@@ -1,4 +1,4 @@
-import { AFrame, Entity } from "aframe";
+import * as AFRAME from "aframe";
 import { Common } from "./common";
 import { GameTime } from "./gameTime";
 import { AudioScene } from "./audioScene";
@@ -6,9 +6,10 @@ import { AudioScene } from "./audioScene";
 export class PlayableBlock {
   private gameTime: GameTime;
   private scene: AudioScene;
-  private box: Entity;
+  private box: AFRAME.Entity;
 
-  constructor(sceneEl, trackIndex, gameTime, scene) {
+  constructor(sceneEl: AFRAME.Scene, trackIndex: number,
+    gameTime: GameTime, scene: AudioScene) {
     this.gameTime = gameTime;
     this.scene = scene;
     const theta = Common.indexToTheta(trackIndex);
