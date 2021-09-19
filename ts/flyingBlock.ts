@@ -1,5 +1,8 @@
+import { BattedBlock } from "./battedBlock";
 import { Common } from "./common";
 import { GameTime } from "./gameTime";
+import * as AFRAME from "aframe";
+import { RenderCollection } from "./renderCollection";
 
 export class FlyingBlock {
   private gameTime: GameTime;
@@ -12,9 +15,13 @@ export class FlyingBlock {
   private timing: number;
   private color: string;
   private perfection: number;
+  private renderCollection: RenderCollection;
 
-  constructor(sceneEl: HTMLElement, n: number, startFlyingMs: number, endFlyingMs: number, gameTime: GameTime) {
+  constructor(sceneEl: AFRAME.Scene, n: number,
+    startFlyingMs: number, endFlyingMs: number,
+    gameTime: GameTime, renderCollection: RenderCollection) {
     this.gameTime = gameTime;
+    this.renderCollection = renderCollection;
     this.box = document.createElement("a-box");
     this.setSize(0.3);
     this.setColor('#ccc');
@@ -25,10 +32,19 @@ export class FlyingBlock {
     this.box.object3D.rotation.set(0, -this.toTheta, 0);
     sceneEl.appendChild(this.box);
     this.timing = 1000 * 60 / gameTime.getBpm() / 2;
+    this.box.addEventListener("mouseenter", () => {
+      if (this.perfection >= -1 && this.perfection <= 1) {
+        const batted = new BattedBlock(
+          sceneEl, this.box.object3D.position, this.color, this.perfection);
+        this.renderCollection.add(batted);
+        this.box.remove();
+        this.box = null;
+      }
+    });
   }
 
   setSize(size: number) {
-    if (this.size != size) {
+    if (!!this.box && this.size != size) {
       this.box.setAttribute('width', size);
       this.box.setAttribute('height', size);
       this.box.setAttribute('depth', size);
@@ -36,7 +52,7 @@ export class FlyingBlock {
   }
 
   setColor(color: string) {
-    if (this.color != color) {
+    if (!!this.box && this.color != color) {
       this.box.setAttribute('color', color);
       this.color = color;
     }
@@ -50,17 +66,17 @@ export class FlyingBlock {
     if (!this.box) {
       return;
     }
-
     const a1 = Math.min(1.00, this.p);
     const a2 = Math.max(0.0, this.p - 1.0);
     const r = (1 - a1) * 50 + a1 * 3;
     const t = (1 - a1) * cameraAngle + a1 * this.toTheta;
     this.box.object3D.position.set(
       Math.cos(t) * r,
-      (r * r) / 80 + 3 - 30 * a2,
+      (r * r) / 80 + 3 - 10 * a2,
       Math.sin(t) * r
     );
   }
+
   tick(timeMs: number, timeDeltaMs: number) {
     this.perfection =
       (this.gameTime.getElapsedMs() - this.endFlyingMs) / this.timing;

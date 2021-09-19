@@ -2,9 +2,9 @@ import { FlyingBlocks } from "./flyingBlocks";
 import { GameTime } from "./gameTime";
 import { KeyboardState } from "./keyboardState";
 import { PlayableBlocks } from "./playableBlocks";
-import { AudioScene } from "./audioScene";
 import { Sequence } from "./sequence";
-import * as aframe from "aframe";
+import * as AFRAME from "aframe";
+import { RenderCollection } from "./renderCollection";
 
 var gameTime: GameTime = null;
 var keyboardState: KeyboardState = null;
@@ -12,21 +12,26 @@ var playables: PlayableBlocks = null;
 var fbs: FlyingBlocks = null;
 var seq: Sequence = null;
 
+var renderCollection: RenderCollection = null;
+
 console.log("AAAAA: 1");
 
 AFRAME.registerComponent("go", {
   init: function () {
+    renderCollection = new RenderCollection();
     gameTime = new GameTime(/*bpm=*/110);
-    fbs = new FlyingBlocks(gameTime);
+    fbs = new FlyingBlocks(gameTime, renderCollection);
     seq = new Sequence(fbs.getFactory(), gameTime);
     keyboardState = new KeyboardState(seq.getScene());
     playables = new PlayableBlocks(gameTime, seq.getScene());
   },
   tick: function (timeMs, timeDeltaMs) {
+    renderCollection.tick(timeMs, timeDeltaMs);
     fbs.tick(timeMs, timeDeltaMs);
     seq.tick(timeMs, timeDeltaMs);
     playables.tick(timeMs, timeDeltaMs);
     gameTime.tick(timeMs, timeDeltaMs);
+    renderCollection.render();
   }
 });
 

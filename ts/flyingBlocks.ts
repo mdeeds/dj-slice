@@ -1,23 +1,23 @@
 import { FlyingBlock } from "./flyingBlock";
 import { GameTime } from "./gameTime";
-import { THREE } from "aframe";
+import * as THREE from "three";
+import * as AFRAME from "aframe";
+import { RenderCollection } from "./renderCollection";
 
 export type BlockFactory = (trackIndex: number, startFlyingMs: number) => void;
 
 export class FlyingBlocks {
   private gameTime: GameTime;
-  private sceneEl: HTMLElement;
-  private frameNumber: number;
-  private beatNumber: number;
+  private sceneEl: AFRAME.Scene;
   private flyingBlocks: FlyingBlock[];
-  private cameraQuaternion: any;
+  private cameraQuaternion: THREE.Quaternion;
+  private renderCollection: RenderCollection;
 
-  constructor(gameTime) {
+  constructor(gameTime: GameTime, renderCollection: RenderCollection) {
     this.gameTime = gameTime;
+    this.renderCollection = renderCollection;
     this.sceneEl = document.querySelector("a-scene");
     this.cameraQuaternion = new THREE.Quaternion();
-    this.frameNumber = 0;
-    this.beatNumber = 0;
     this.flyingBlocks = [];
   }
 
@@ -37,14 +37,14 @@ export class FlyingBlocks {
         this.flyingBlocks.splice(i, 1);
       }
     }
-    ++this.frameNumber;
   }
 
   getFactory(): BlockFactory {
     return (trackIndex: number, endFlyingMs: number) => {
       this.flyingBlocks.push(
         new FlyingBlock(this.sceneEl, trackIndex,
-          endFlyingMs - 4000, endFlyingMs, this.gameTime));
+          endFlyingMs - 4000, endFlyingMs, this.gameTime,
+          this.renderCollection));
       //TODO: end flying needs to be on the beat.
     }
   }
