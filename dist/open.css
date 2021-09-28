@@ -5,10 +5,17 @@
   z-index: 1;
 }
 
-#peaks {
+#bars {
   position: absolute;
   left: 50px;
   top: 50px;
   z-index: 2;
+}
+
+#peaks {
+  position: absolute;
+  left: 50px;
+  top: 50px;
+  z-index: 0;
 }
 
