@@ -35,8 +35,6 @@ AFRAME.registerComponent("go", {
   }
 });
 
-console.log("AAAAA: 2");
-
 AFRAME.registerComponent("startblock", {
   init: function () {
     console.log('StartBlock');
@@ -49,7 +47,37 @@ AFRAME.registerComponent("startblock", {
   },
 });
 
-console.log("AAAAA: 3");
+AFRAME.registerComponent("link1", {
+  init: function () {
+    console.log('link1');
+    const start = document.querySelector('#link1');
+    start.addEventListener("click", () => {
+      window.location.href = "https://www.google.com/?q=navigate+away";
+      start.remove();
+    });
+  },
+});
+
+AFRAME.registerComponent("link2", {
+  init: function () {
+    console.log('link2');
+    const start = document.querySelector('#link2');
+    start.addEventListener("click", () => {
+      window.open("https://www.google.com/?q=new+tab").focus();
+    });
+  },
+});
+
+
+AFRAME.registerComponent("link3", {
+  init: function () {
+    console.log('link3');
+    const start = document.querySelector('#link3');
+    start.addEventListener("click", () => {
+      window.open("https://www.google.com/?q=new+tab+blank", "_blank").focus();
+    });
+  },
+});
 
 const body = document.getElementsByTagName('body')[0];
 body.innerHTML = `
@@ -69,6 +97,9 @@ body.innerHTML = `
   pointer></a-entity>
 <a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 5;" line="color: #d44"
   pointer></a-entity>
-<a-sphere startblock="1" id='startblock' class='clickable' radius="0.5" position="0 3 -2" color="#f29"></a-sphere>
+  <a-sphere startblock="1" id='startblock' class='clickable' radius="0.5" position="0 3 -2" color="#f29"></a-sphere>
+  <a-sphere link1="1" id='link1' class='clickable' radius="0.2" position="1 2 2" color="#04f"></a-sphere>
+  <a-sphere link2="1" id='link2' class='clickable' radius="0.2" position="0 2 2" color="#099"></a-sphere>
+  <a-sphere link3="1" id='link3' class='clickable' radius="0.2" position="-1 2 2" color="#0f4"></a-sphere>
 </a-scene>
 `;

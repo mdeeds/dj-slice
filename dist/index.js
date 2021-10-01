@@ -176,19 +176,24 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FlyingBlock = void 0;
 const battedBlock_1 = __webpack_require__(774);
 const common_1 = __webpack_require__(648);
+/**
+ * A block which is flying toward the player and has not been played yet.
+ */
 class FlyingBlock {
     constructor(sceneEl, n, startFlyingMs, endFlyingMs, gameTime, renderCollection) {
         this.gameTime = gameTime;
         this.renderCollection = renderCollection;
         this.box = document.createElement("a-box");
         this.setSize(0.3);
-        this.setColor('#ccc');
+        this.setColor('#ccc'); // Initial color
         this.toTheta = common_1.Common.indexToTheta(n);
         this.startFlyingMs = startFlyingMs;
         this.endFlyingMs = endFlyingMs;
         this.p = 0;
         this.box.object3D.rotation.set(0, -this.toTheta, 0);
         sceneEl.appendChild(this.box);
+        // This is the tollerance we have for striking a block.  If you are earlier
+        // or later than this, it doesn't count.  I've made this one eighth note.
         this.timing = 1000 * 60 / gameTime.getBpm() / 2;
         this.box.addEventListener("mouseenter", () => {
             if (this.perfection >= -1 && this.perfection <= 1) {
@@ -207,6 +212,8 @@ class FlyingBlock {
         }
     }
     setColor(color) {
+        // We cache the color because changing an attribute is pretty
+        // expensive - the color has to be parsed again, and this modifies the DOM.
         if (!!this.box && this.color != color) {
             this.box.setAttribute('color', color);
             this.color = color;
@@ -219,11 +226,16 @@ class FlyingBlock {
         if (!this.box) {
             return;
         }
+        // a1 is the percentage of the trip toward the player.  0 = far away, 
+        // 1 = at the player.  The 'p' will go above 1 to allow the player to hit
+        // the block a little late.
         const a1 = Math.min(1.00, this.p);
+        // a2 is the percentage of the trip beyond the perfect moment.
         const a2 = Math.max(0.0, this.p - 1.0);
         const r = (1 - a1) * 50 + a1 * 3;
         const t = (1 - a1) * cameraAngle + a1 * this.toTheta;
-        this.box.object3D.position.set(Math.cos(t) * r, (r * r) / 80 + 3 - 10 * a2, Math.sin(t) * r);
+        this.box.object3D.position.set(Math.cos(t) * r, (r * r) / 80 + 3 - 10 * a2, // We shift the block down as it gets too late.
+        Math.sin(t) * r);
     }
     tick(timeMs, timeDeltaMs) {
         this.perfection =
@@ -234,16 +246,16 @@ class FlyingBlock {
             this.p = 0;
         }
         else if (this.perfection > 0.25) {
-            this.setColor('#f00');
+            this.setColor('#f00'); // Early color
         }
         else if (this.perfection > -0.25) {
-            this.setColor('#ff0');
+            this.setColor('#ff0'); // On time color
         }
         else if (this.perfection > -1) {
-            this.setColor('#0f0');
+            this.setColor('#0f0'); // Late color
         }
         else {
-            this.setColor('#ccc');
+            this.setColor('#ccc'); // Flying color
         }
         this.p = (this.gameTime.getElapsedMs() - this.startFlyingMs) /
             (this.endFlyingMs - this.startFlyingMs);
@@ -446,7 +458,6 @@ AFRAME.registerComponent("go", {
         renderCollection.render();
     }
 });
-console.log("AAAAA: 2");
 AFRAME.registerComponent("startblock", {
     init: function () {
         console.log('StartBlock');
@@ -458,7 +469,34 @@ AFRAME.registerComponent("startblock", {
         });
     },
 });
-console.log("AAAAA: 3");
+AFRAME.registerComponent("link1", {
+    init: function () {
+        console.log('link1');
+        const start = document.querySelector('#link1');
+        start.addEventListener("click", () => {
+            window.location.href = "https://www.google.com/?q=navigate+away";
+            start.remove();
+        });
+    },
+});
+AFRAME.registerComponent("link2", {
+    init: function () {
+        console.log('link2');
+        const start = document.querySelector('#link2');
+        start.addEventListener("click", () => {
+            window.open("https://www.google.com/?q=new+tab").focus();
+        });
+    },
+});
+AFRAME.registerComponent("link3", {
+    init: function () {
+        console.log('link3');
+        const start = document.querySelector('#link3');
+        start.addEventListener("click", () => {
+            window.open("https://www.google.com/?q=new+tab+blank", "_blank").focus();
+        });
+    },
+});
 const body = document.getElementsByTagName('body')[0];
 body.innerHTML = `
 <a-scene go="1" background="black" cursor="rayOrigin: mouse">
@@ -477,7 +515,10 @@ body.innerHTML = `
   pointer></a-entity>
 <a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 5;" line="color: #d44"
   pointer></a-entity>
-<a-sphere startblock="1" id='startblock' class='clickable' radius="0.5" position="0 3 -2" color="#f29"></a-sphere>
+  <a-sphere startblock="1" id='startblock' class='clickable' radius="0.5" position="0 3 -2" color="#f29"></a-sphere>
+  <a-sphere link1="1" id='link1' class='clickable' radius="0.2" position="1 2 2" color="#04f"></a-sphere>
+  <a-sphere link2="1" id='link2' class='clickable' radius="0.2" position="0 2 2" color="#099"></a-sphere>
+  <a-sphere link3="1" id='link3' class='clickable' radius="0.2" position="-1 2 2" color="#0f4"></a-sphere>
 </a-scene>
 `;
 //# sourceMappingURL=index.js.map
