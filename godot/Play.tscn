@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=9 format=2]
 
 [ext_resource path="res://FallingBlock.gd" type="Script" id=1]
 [ext_resource path="res://BlockSpatial.gd" type="Script" id=2]
@@ -12,6 +12,12 @@ size = Vector3( 100, 2, 100 )
 [sub_resource type="BoxShape" id=3]
 
 [sub_resource type="CubeMesh" id=4]
+
+[sub_resource type="CubeMesh" id=5]
+size = Vector3( 0.1, 0.1, 0.1 )
+
+[sub_resource type="CubeMesh" id=6]
+size = Vector3( 0.1, 0.1, 0.1 )
 
 [node name="Spatial" type="Spatial"]
 
@@ -44,4 +50,22 @@ shape = SubResource( 3 )
 
 [node name="MeshInstance" type="MeshInstance" parent="BlockSpatial/FallingBlock"]
 mesh = SubResource( 4 )
+material/0 = null
+
+[node name="ARVROrigin" type="ARVROrigin" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 10 )
+
+[node name="ARVRCamera" type="ARVRCamera" parent="ARVROrigin"]
+
+[node name="Left" type="ARVRController" parent="ARVROrigin"]
+
+[node name="MeshInstance" type="MeshInstance" parent="ARVROrigin/Left"]
+mesh = SubResource( 5 )
+material/0 = null
+
+[node name="Right" type="ARVRController" parent="ARVROrigin"]
+controller_id = 2
+
+[node name="MeshInstance" type="MeshInstance" parent="ARVROrigin/Right"]
+mesh = SubResource( 6 )
 material/0 = null
