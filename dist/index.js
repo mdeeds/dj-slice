@@ -127039,8 +127039,10 @@ class PlayableBlock {
         this.gameTime = gameTime;
         this.scene = scene;
         const theta = common_1.Common.indexToTheta(trackIndex);
-        this.box = document.createElement("a-sphere");
-        this.box.setAttribute('radius', '0.2');
+        //this.box = document.createElement("a-sphere");
+        //this.box.setAttribute('radius', '0.2');
+        this.box = document.createElement("a-entity");
+        this.box.setAttribute("obj-model", "obj: url(obj/octohedron.obj); mtl: url(obj/octohedron.mtl)");
         //this.box.object3D.position.set(Math.cos(theta) * 3, 1.5, Math.sin(theta) * 3);
         this.box.object3D.position.set(Math.cos(theta) * 1, 1, Math.sin(theta) * 1);
         this.box.setAttribute("color", "#55f");
