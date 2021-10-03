@@ -92,7 +92,7 @@ body.innerHTML = `
   <img crossorigin="anonymous" id="sky" src="img/canvas.png" />
 </a-assets>
 <a-sky src="#sky"></a-sky>
-<a-camera position="0 3 0"></a-camera>
+<a-camera position="0 3 0"></a-camewra>
 <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 5;" line="color: #44d"
   pointer></a-entity>
 <a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 5;" line="color: #d44"
