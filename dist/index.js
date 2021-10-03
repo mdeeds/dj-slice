@@ -126946,6 +126946,8 @@ body.innerHTML = `
   <a-sphere link1="1" id='link1' class='clickable' radius="0.2" position="1 2 2" color="#04f"></a-sphere>
   <a-sphere link2="1" id='link2' class='clickable' radius="0.2" position="0 2 2" color="#099"></a-sphere>
   <a-sphere link3="1" id='link3' class='clickable' radius="0.2" position="-1 2 2" color="#0f4"></a-sphere>
+  <a-entity obj-model="obj: url(obj/octohedron.obj); mtl: url(obj/octohedron.mtl)" position="0 1 1"></a-entity>
+
 </a-scene>
 `;
 //# sourceMappingURL=index.js.map
