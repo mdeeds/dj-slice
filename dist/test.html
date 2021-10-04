@@ -6,9 +6,14 @@
 
 <body>
     <a-scene>
-        <a-entity obj-model="obj: url(obj/sample-neon.obj);" position="0 1 -1" rotation="-90 0 0" color="#0000FF"
-            material="shader: flat" scale="0.2 0.2 0.2">
-        </a-entity>
+        <a-entity obj-model="obj: url(obj/triggers.obj);" position="0 1 -1" rotation="90 0 0" color="#0000FF"
+            material="shader: flat"></a-entity>
+        <a-cylinder radius="0.4" height="0.1" src="img/output.png" color="#ffffff" position="-2 1 -1" rotation="90 0 0"
+            material="transparent: true; opacity: 0.5">
+        </a-cylinder>
+        <a-box color="white" depth="0.01" height="0.8" width="0.01" material="shader: flat" position="-2 1 -0.95"
+            animation="property: rotation; to: 0 0 -360; loop: true; dur: 10000">
+        </a-box>
         <a-sky color="#000011"></a-sky>
     </a-scene>
 </body>
