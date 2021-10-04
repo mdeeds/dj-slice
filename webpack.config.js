@@ -4,6 +4,7 @@ module.exports = {
   entry: {
     index: "./src/index.js",
     open: "./src/open.js",
+    loops: "./src/loops.js",
   },
   output: {
     path: __dirname + "/dist",
@@ -44,7 +45,13 @@ module.exports = {
       filename: 'open.html',
       template: 'src/open.html',
       chunks: ['open']
-    })
+    }),
+    new HtmlWebPackPlugin({
+      name: "loops",
+      filename: 'loops.html',
+      template: 'src/loops.html',
+      chunks: ['loops']
+    }),
   ],
   module: {  // If I remove this, webpack fails. \(~n~)/
     rules: [
