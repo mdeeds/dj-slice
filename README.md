@@ -23,6 +23,7 @@ npm install -g three
 npm install -g aframe
 npm install -g @types/aframe
 npm i --save-dev @types/aframe
+npm install -g fft-js --save-dev
 ```
 
 ### Building and deploying
