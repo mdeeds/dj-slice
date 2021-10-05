@@ -27,11 +27,61 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const AFRAME = __importStar(__webpack_require__(449));
+function renderToCanvas(i, canvas) {
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (i % 2 == 1) {
+        ctx.fillStyle = 'red';
+    }
+    else {
+        ctx.fillStyle = 'orange';
+    }
+    ctx.fillRect(64, 64, 256, 256);
+}
+function renderToUrl(i) {
+    const canvas = document.createElement('canvas');
+    renderToCanvas(i, canvas);
+    return canvas.toDataURL();
+}
+function cy1(scene) {
+    const c = document.createElement('a-cylinder');
+    c.setAttribute('height', '0.1');
+    c.setAttribute('radius', '1.5');
+    c.setAttribute('position', "-2, 1, -3");
+    c.setAttribute('material', `shader: flat; src: url(${renderToUrl(0)})`);
+    function g(i) {
+        c.setAttribute('material', `shader: flat; src: url(${renderToUrl(i)})`);
+        setTimeout(() => { g(i + 1); }, 500);
+    }
+    g(0);
+    scene.appendChild(c);
+}
+function cy2(scene) {
+    const canvas = document.createElement('canvas');
+    scene.appendChild(canvas);
+    canvas.id = 'tex';
+    renderToCanvas(3, canvas);
+    const c = document.createElement('a-cylinder');
+    c.setAttribute('height', '0.1');
+    c.setAttribute('radius', '1.5');
+    c.setAttribute('position', "-2, 1, -3");
+    c.setAttribute('material', `shader: flat; src: #tex`);
+    scene.appendChild(c);
+    function g(i) {
+        renderToCanvas(i, canvas);
+        setTimeout(() => { g(i + 1); }, 500);
+    }
+    g(0);
+}
 AFRAME.registerComponent("go", {
     init: function () {
         const o = document.getElementById('octohedron');
         const obj = o.object3D;
         obj.position.set(0, 1, -2);
+        const scene = document.querySelector('a-scene');
+        cy1(scene);
     },
     tick: function (timeMs, timeDeltaMs) {
     }
@@ -53,6 +103,7 @@ body.innerHTML = `
   pointer></a-entity>
 
 <a-entity id='octohedron' obj-model="obj: #octohedron-obj; mtl: #octohedron-mtl"></a-entity>
+
 </a-scene>
 `;
 //# sourceMappingURL=loops.js.map
