@@ -1,161 +1,7 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 244:
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const AFRAME = __importStar(__webpack_require__(449));
-function renderToCanvas(i, canvas) {
-    canvas.width = 512;
-    canvas.height = 512;
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (i % 2 == 1) {
-        ctx.fillStyle = 'red';
-    }
-    else {
-        ctx.fillStyle = 'orange';
-    }
-    ctx.fillRect(64, 64, 256, 256);
-}
-function renderToUrl(i) {
-    const canvas = document.createElement('canvas');
-    renderToCanvas(i, canvas);
-    return canvas.toDataURL();
-}
-function cy0(scene) {
-    const c = document.createElement('a-cylinder');
-    c.setAttribute('height', '0.1');
-    c.setAttribute('radius', '1.5');
-    c.setAttribute('position', "0, -0.1, 0");
-    c.setAttribute('material', `color: crimson`);
-    scene.appendChild(c);
-}
-function cy1(scene) {
-    const c = document.createElement('a-cylinder');
-    c.setAttribute('height', '0.1');
-    c.setAttribute('radius', '1.5');
-    c.setAttribute('position', "-2, 1, -3");
-    c.setAttribute('material', `shader: flat; src: url(${renderToUrl(0)})`);
-    function g(i) {
-        c.setAttribute('material', `shader: flat; src: url(${renderToUrl(i)})`);
-        setTimeout(() => { g(i + 1); }, 500);
-    }
-    g(0);
-    scene.appendChild(c);
-}
-function cy2(scene) {
-    const canvas = document.createElement('canvas');
-    scene.appendChild(canvas);
-    canvas.id = 'tex';
-    renderToCanvas(3, canvas);
-    const c = document.createElement('a-cylinder');
-    c.setAttribute('height', '0.1');
-    c.setAttribute('radius', '1.5');
-    c.setAttribute('position', "-2, 1, -3");
-    c.setAttribute('material', `shader: flat; src: #tex`);
-    scene.appendChild(c);
-    function g(i) {
-        renderToCanvas(i, canvas);
-        setTimeout(() => { g(i + 1); }, 500);
-    }
-    g(0);
-}
-var imageEntity = null;
-var lastBeat = -1;
-AFRAME.registerComponent("go", {
-    init: function () {
-        const o = document.getElementById('octohedron');
-        const obj = o.object3D;
-        obj.position.set(0, 1, -2);
-        const scene = document.querySelector('a-scene');
-        cy0(scene);
-        const assets = document.querySelector('a-assets');
-        {
-            const htmlImage = document.createElement('img');
-            htmlImage.setAttribute('src', `img/output.png`);
-            htmlImage.id = `sample`;
-            assets.appendChild(htmlImage);
-            imageEntity = document.createElement('a-image');
-            imageEntity.setAttribute('src', '#sample');
-            imageEntity.setAttribute('width', '0.2');
-            imageEntity.setAttribute('height', '0.2');
-            imageEntity.setAttribute('position', '0, 1.5, -1.02');
-            imageEntity.setAttribute('rotation', '0 0 90');
-            scene.appendChild(imageEntity);
-        }
-        let idNumber = 0;
-        for (const i of [1, 2, 3, 4]) {
-            for (const j of [1, 2, 3, 4]) {
-                const htmlImage = document.createElement('img');
-                htmlImage.setAttribute('src', `img/dial/dial_${i}_${j}.png`);
-                htmlImage.id = `dial${idNumber++}`;
-                assets.appendChild(htmlImage);
-            }
-        }
-        imageEntity = document.createElement('a-image');
-        imageEntity.setAttribute('src', '#dial0');
-        imageEntity.setAttribute('width', '0.2');
-        imageEntity.setAttribute('height', '0.2');
-        imageEntity.setAttribute('position', '0, 1.5, -1');
-        imageEntity.setAttribute('rotation', '0 0 90');
-        scene.appendChild(imageEntity);
-    },
-    tick: function (timeMs, timeDeltaMs) {
-        const beat = Math.trunc(timeMs / 500) % 16;
-        if (lastBeat != beat) {
-            imageEntity.setAttribute('src', `#dial${beat}`);
-            lastBeat = beat;
-        }
-    }
-});
-const body = document.getElementsByTagName('body')[0];
-body.innerHTML = `
-<a-scene go="1" background="black" cursor="rayOrigin: mouse">
-<a-assets>
-  <a-asset-item id="octohedron-obj" src="obj/octohedron.obj"></a-asset-item>
-  <a-asset-item id="octohedron-mtl" src="obj/octohedron.mtl"></a-asset-item>
-</a-assets>
-
-<a-entity light="type: ambient; color: #777"></a-entity>
-<a-entity light="type:directional; color: #777" position="-3 4 5"></a-entity>
-<a-camera position="0 1.6 0"></a-camera>
-<a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 5;" line="color: #44d"
-  pointer></a-entity>
-<a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 5;" line="color: #d44"
-  pointer></a-entity>
-
-<a-entity id='octohedron' obj-model="obj: #octohedron-obj; mtl: #octohedron-mtl"></a-entity>
-
-</a-scene>
-`;
-//# sourceMappingURL=loops.js.map
-
-/***/ }),
-
-/***/ 449:
+/***/ 569:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 (function(f){if(true){module.exports=f()}else { var g; }})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c=undefined;if(!f&&c)return require(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u=undefined,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(_dereq_,module,exports){
@@ -54535,7 +54381,7 @@ var NoSleep = function () {
 }();
 module.exports = NoSleep;
       }),
-      (function(module, exports, __nested_webpack_require_1744804__) {
+      (function(module, exports, __webpack_require__) {
 module.exports = 'data:video/mp4;base64,AAAAIGZ0eXBtcDQyAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAACKBtZGF0AAAC8wYF///v3EXpvebZSLeWLNgg2SPu73gyNjQgLSBjb3JlIDE0MiByMjQ3OSBkZDc5YTYxIC0gSC4yNjQvTVBFRy00IEFWQyBjb2RlYyAtIENvcHlsZWZ0IDIwMDMtMjAxNCAtIGh0dHA6Ly93d3cudmlkZW9sYW4ub3JnL3gyNjQuaHRtbCAtIG9wdGlvbnM6IGNhYmFjPTEgcmVmPTEgZGVibG9jaz0xOjA6MCBhbmFseXNlPTB4MToweDExMSBtZT1oZXggc3VibWU9MiBwc3k9MSBwc3lfcmQ9MS4wMDowLjAwIG1peGVkX3JlZj0wIG1lX3JhbmdlPTE2IGNocm9tYV9tZT0xIHRyZWxsaXM9MCA4eDhkY3Q9MCBjcW09MCBkZWFkem9uZT0yMSwxMSBmYXN0X3Bza2lwPTEgY2hyb21hX3FwX29mZnNldD0wIHRocmVhZHM9NiBsb29rYWhlYWRfdGhyZWFkcz0xIHNsaWNlZF90aHJlYWRzPTAgbnI9MCBkZWNpbWF0ZT0xIGludGVybGFjZWQ9MCBibHVyYXlfY29tcGF0PTAgY29uc3RyYWluZWRfaW50cmE9MCBiZnJhbWVzPTMgYl9weXJhbWlkPTIgYl9hZGFwdD0xIGJfYmlhcz0wIGRpcmVjdD0xIHdlaWdodGI9MSBvcGVuX2dvcD0wIHdlaWdodHA9MSBrZXlpbnQ9MzAwIGtleWludF9taW49MzAgc2NlbmVjdXQ9NDAgaW50cmFfcmVmcmVzaD0wIHJjX2xvb2thaGVhZD0xMCByYz1jcmYgbWJ0cmVlPTEgY3JmPTIwLjAgcWNvbXA9MC42MCBxcG1pbj0wIHFwbWF4PTY5IHFwc3RlcD00IHZidl9tYXhyYXRlPTIwMDAwIHZidl9idWZzaXplPTI1MDAwIGNyZl9tYXg9MC4wIG5hbF9ocmQ9bm9uZSBmaWxsZXI9MCBpcF9yYXRpbz0xLjQwIGFxPTE6MS4wMACAAAAAOWWIhAA3//p+C7v8tDDSTjf97w55i3SbRPO4ZY+hkjD5hbkAkL3zpJ6h/LR1CAABzgB1kqqzUorlhQAAAAxBmiQYhn/+qZYADLgAAAAJQZ5CQhX/AAj5IQAD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';
       })
          ]);
@@ -76308,6 +76154,161 @@ module.exports = getWakeLock();
 //# sourceMappingURL=aframe-master.js.map
 
 
+/***/ }),
+
+/***/ 244:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const AFRAME = __importStar(__webpack_require__(569));
+function renderToCanvas(i, canvas) {
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (i % 2 == 1) {
+        ctx.fillStyle = 'red';
+    }
+    else {
+        ctx.fillStyle = 'orange';
+    }
+    ctx.fillRect(64, 64, 256, 256);
+}
+function renderToUrl(i) {
+    const canvas = document.createElement('canvas');
+    renderToCanvas(i, canvas);
+    return canvas.toDataURL();
+}
+function cy0(scene) {
+    const c = document.createElement('a-cylinder');
+    c.setAttribute('height', '0.1');
+    c.setAttribute('radius', '1.5');
+    c.setAttribute('position', "0, -0.1, 0");
+    c.setAttribute('material', `color: crimson`);
+    scene.appendChild(c);
+}
+function cy1(scene) {
+    const c = document.createElement('a-cylinder');
+    c.setAttribute('height', '0.1');
+    c.setAttribute('radius', '1.5');
+    c.setAttribute('position', "-2, 1, -3");
+    c.setAttribute('material', `shader: flat; src: url(${renderToUrl(0)})`);
+    function g(i) {
+        c.setAttribute('material', `shader: flat; src: url(${renderToUrl(i)})`);
+        setTimeout(() => { g(i + 1); }, 500);
+    }
+    g(0);
+    scene.appendChild(c);
+}
+function cy2(scene) {
+    const canvas = document.createElement('canvas');
+    scene.appendChild(canvas);
+    canvas.id = 'tex';
+    renderToCanvas(3, canvas);
+    const c = document.createElement('a-cylinder');
+    c.setAttribute('height', '0.1');
+    c.setAttribute('radius', '1.5');
+    c.setAttribute('position', "-2, 1, -3");
+    c.setAttribute('material', `shader: flat; src: #tex`);
+    scene.appendChild(c);
+    function g(i) {
+        renderToCanvas(i, canvas);
+        setTimeout(() => { g(i + 1); }, 500);
+    }
+    g(0);
+}
+var imageEntity = null;
+var lastBeat = -1;
+AFRAME.registerComponent("go", {
+    init: function () {
+        const o = document.getElementById('octohedron');
+        const obj = o.object3D;
+        obj.position.set(0, 1, -2);
+        const scene = document.querySelector('a-scene');
+        cy0(scene);
+        const assets = document.querySelector('a-assets');
+        {
+            const htmlImage = document.createElement('img');
+            htmlImage.setAttribute('src', `img/output.png`);
+            htmlImage.id = `sample`;
+            assets.appendChild(htmlImage);
+            imageEntity = document.createElement('a-image');
+            imageEntity.setAttribute('src', '#sample');
+            imageEntity.setAttribute('width', '0.2');
+            imageEntity.setAttribute('height', '0.2');
+            imageEntity.setAttribute('position', '0, 1.5, -1.02');
+            imageEntity.setAttribute('rotation', '0 0 90');
+            scene.appendChild(imageEntity);
+        }
+        let idNumber = 0;
+        for (const i of [1, 2, 3, 4]) {
+            for (const j of [1, 2, 3, 4]) {
+                const htmlImage = document.createElement('img');
+                htmlImage.setAttribute('src', `img/dial/dial_${i}_${j}.png`);
+                htmlImage.id = `dial${idNumber++}`;
+                assets.appendChild(htmlImage);
+            }
+        }
+        imageEntity = document.createElement('a-image');
+        imageEntity.setAttribute('src', '#dial0');
+        imageEntity.setAttribute('width', '0.2');
+        imageEntity.setAttribute('height', '0.2');
+        imageEntity.setAttribute('position', '0, 1.5, -1');
+        imageEntity.setAttribute('rotation', '0 0 90');
+        scene.appendChild(imageEntity);
+    },
+    tick: function (timeMs, timeDeltaMs) {
+        const beat = Math.trunc(timeMs / 500) % 16;
+        if (lastBeat != beat) {
+            imageEntity.setAttribute('src', `#dial${beat}`);
+            lastBeat = beat;
+        }
+    }
+});
+const body = document.getElementsByTagName('body')[0];
+body.innerHTML = `
+<a-scene go="1" background="black" cursor="rayOrigin: mouse">
+<a-assets>
+  <a-asset-item id="octohedron-obj" src="obj/octohedron.obj"></a-asset-item>
+  <a-asset-item id="octohedron-mtl" src="obj/octohedron.mtl"></a-asset-item>
+</a-assets>
+
+<a-sky src = "https://cdn.eso.org/images/screen/eso0932a.jpg"></a-sky>
+<a-entity light="type: ambient; color: #777"></a-entity>
+<a-entity light="type:directional; color: #777" position="-3 4 5"></a-entity>
+<a-camera position="0 1.6 0"></a-camera>
+<a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 5;" line="color: #44d"
+  pointer></a-entity>
+<a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 5;" line="color: #d44"
+  pointer></a-entity>
+
+<a-entity id='octohedron' obj-model="obj: #octohedron-obj; mtl: #octohedron-mtl"></a-entity>
+
+</a-scene>
+`;
+//# sourceMappingURL=loops.js.map
+
 /***/ })
 
 /******/ 	});
@@ -76318,8 +76319,9 @@ module.exports = getWakeLock();
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
 /******/ 		// Check if module is in cache
-/******/ 		if(__webpack_module_cache__[moduleId]) {
-/******/ 			return __webpack_module_cache__[moduleId].exports;
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
@@ -76349,10 +76351,12 @@ module.exports = getWakeLock();
 /******/ 	})();
 /******/ 	
 /************************************************************************/
+/******/ 	
 /******/ 	// startup
-/******/ 	// Load entry module
+/******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	__webpack_require__(244);
+/******/ 	var __webpack_exports__ = __webpack_require__(244);
+/******/ 	
 /******/ })()
 ;
 //# sourceMappingURL=loops.js.map
