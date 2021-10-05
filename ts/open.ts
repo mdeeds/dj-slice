@@ -1,6 +1,7 @@
 import { Common } from "./common";
 import { GameTime } from "./gameTime";
 import { Sample } from "./sample";
+import * as FFT from "fft-js";
 
 const url = new URL(document.URL);
 
@@ -28,6 +29,71 @@ function transients(frames: Float32Array): number[] {
   }
   return result;
 }
+
+function topNIndexes(arr: number[] | Float32Array, n: number): number[] {
+  const kvs = [];
+  for (const [i, x] of arr.entries()) {
+    kvs.push({ k: i, v: x });
+  }
+  kvs.sort((a, b) => { return b.v - a.v; });
+  const result = [];
+  for (let i = 0; i < n; ++i) {
+    result.push(kvs[i].k);
+  }
+  return result;
+}
+
+function foldFrequencies(magnitudes: number[]) {
+  const target = new Float32Array(magnitudes.length);
+  for (let base = 1; base < magnitudes.length; ++base) {
+    for (let source = base; source < magnitudes.length; source += base) {
+      target[base] += magnitudes[source];
+    }
+  }
+  return target;
+}
+
+function renderWave(canvas: HTMLCanvasElement, buffer: Float32Array,
+  audioCtx: AudioContext) {
+  console.log('render');
+  const windowSize = 16384;
+  const ctx = canvas.getContext('2d');
+
+  let offset = 0;
+  let t = Math.PI;
+  const numFFTs = buffer.length / windowSize * 16;
+  while (offset + windowSize < buffer.length) {
+    const samples = new Float32Array(windowSize);
+    for (let i = 0; i < windowSize; ++i) {
+      samples[i] = buffer[i + offset];
+    }
+    const fourier = FFT.fft(samples);
+    const frequencies = FFT.util.fftFreq(fourier, audioCtx.sampleRate);
+    const rawMagnitudes = FFT.util.fftMag(fourier);
+    const magnitudes = foldFrequencies(rawMagnitudes);
+
+    const indices = topNIndexes(magnitudes, 12);
+    ctx.fillStyle = '#444';
+    for (const index of indices) {
+      const freq = frequencies[index];
+      if (freq == 0) {
+        continue;
+      }
+      const mag = magnitudes[index];
+      const r = 60 * Math.log(freq);
+      const x = r * Math.cos(t) + canvas.width / 2;
+      const y = r * Math.sin(t) + canvas.height / 2;
+      ctx.beginPath();
+      ctx.arc(x, y, mag / 50, -Math.PI, Math.PI);
+      ctx.fill();
+    }
+
+    t -= 2 * Math.PI / numFFTs * (10 / 12);
+    // Overlapping windows
+    offset += Math.round(windowSize / 16);
+  }
+}
+
 
 function renderBuffer(
   ctx: CanvasRenderingContext2D,
@@ -219,6 +285,15 @@ async function go() {
   const frames = buffer.getChannelData(0);
   const bpm = getBpmFromFrames(frames.length, audioCtx);
   const granules = new Granules(buffer, audioCtx);
+
+  const waveCanvas = document.createElement('canvas') as
+    any as HTMLCanvasElement;
+  waveCanvas.width = 1000;
+  waveCanvas.height = 1000;
+  waveCanvas.style.setProperty('position', 'absolute');
+  waveCanvas.style.setProperty('top', '500px');
+  renderWave(waveCanvas, frames, audioCtx);
+  body.appendChild(waveCanvas);
 
   peaksCtx.clearRect(0, 0, peaksCanvas.width, peaksCanvas.height);
   renderBuffer(peaksCtx, peaksCanvas, audioCtx, frames, bpm);
