@@ -45,6 +45,14 @@ function renderToUrl(i) {
     renderToCanvas(i, canvas);
     return canvas.toDataURL();
 }
+function cy0(scene) {
+    const c = document.createElement('a-cylinder');
+    c.setAttribute('height', '0.1');
+    c.setAttribute('radius', '1.5');
+    c.setAttribute('position', "0, -0.1, 0");
+    c.setAttribute('material', `color: crimson`);
+    scene.appendChild(c);
+}
 function cy1(scene) {
     const c = document.createElement('a-cylinder');
     c.setAttribute('height', '0.1');
@@ -75,15 +83,52 @@ function cy2(scene) {
     }
     g(0);
 }
+var imageEntity = null;
+var lastBeat = -1;
 AFRAME.registerComponent("go", {
     init: function () {
         const o = document.getElementById('octohedron');
         const obj = o.object3D;
         obj.position.set(0, 1, -2);
         const scene = document.querySelector('a-scene');
-        cy1(scene);
+        cy0(scene);
+        const assets = document.querySelector('a-assets');
+        {
+            const htmlImage = document.createElement('img');
+            htmlImage.setAttribute('src', `img/output.png`);
+            htmlImage.id = `sample`;
+            assets.appendChild(htmlImage);
+            imageEntity = document.createElement('a-image');
+            imageEntity.setAttribute('src', '#sample');
+            imageEntity.setAttribute('width', '0.2');
+            imageEntity.setAttribute('height', '0.2');
+            imageEntity.setAttribute('position', '0, 1.5, -1.02');
+            imageEntity.setAttribute('rotation', '0 0 90');
+            scene.appendChild(imageEntity);
+        }
+        let idNumber = 0;
+        for (const i of [1, 2, 3, 4]) {
+            for (const j of [1, 2, 3, 4]) {
+                const htmlImage = document.createElement('img');
+                htmlImage.setAttribute('src', `img/dial/dial_${i}_${j}.png`);
+                htmlImage.id = `dial${idNumber++}`;
+                assets.appendChild(htmlImage);
+            }
+        }
+        imageEntity = document.createElement('a-image');
+        imageEntity.setAttribute('src', '#dial0');
+        imageEntity.setAttribute('width', '0.2');
+        imageEntity.setAttribute('height', '0.2');
+        imageEntity.setAttribute('position', '0, 1.5, -1');
+        imageEntity.setAttribute('rotation', '0 0 90');
+        scene.appendChild(imageEntity);
     },
     tick: function (timeMs, timeDeltaMs) {
+        const beat = Math.trunc(timeMs / 500) % 16;
+        if (lastBeat != beat) {
+            imageEntity.setAttribute('src', `#dial${beat}`);
+            lastBeat = beat;
+        }
     }
 });
 const body = document.getElementsByTagName('body')[0];
@@ -96,7 +141,7 @@ body.innerHTML = `
 
 <a-entity light="type: ambient; color: #777"></a-entity>
 <a-entity light="type:directional; color: #777" position="-3 4 5"></a-entity>
-<a-camera position="0 3 0"></a-camera>
+<a-camera position="0 1.6 0"></a-camera>
 <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 5;" line="color: #44d"
   pointer></a-entity>
 <a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 5;" line="color: #d44"
