@@ -37,44 +37,44 @@ def save_spectrogram(fname, spectrogram):
         for y in range(img_size):
             row.append([0, 0, 0])
         image_data.append(row)
-    # draw grid lines
-    ticks = []
-    # beats
-    ticks.append((1/6*np.pi, (1/6+1/100)*np.pi, 0))
-    ticks.append((7/12*np.pi, (7/12+1/100)*np.pi, 0))
-    ticks.append((1*np.pi, (1+1/100)*np.pi, 0))
-    ticks.append((17/12*np.pi, (17/12+1/100)*np.pi, 0))
-    # # eights
-    ticks.append((2/12*np.pi, (3.25/12-1/100)*np.pi, floor(24/50*img_size)))
-    ticks.append((3.25/12*np.pi, (4.5/12-1/100)*np.pi, floor(24/50*img_size)))
-    ticks.append((4.5/12*np.pi, (5.75/12-1/100)*np.pi, floor(24/50*img_size)))
-    ticks.append((5.75/12*np.pi, (7/12-1/100)*np.pi, floor(24/50*img_size)))
-    ticks.append((7/12*np.pi, (8.25/12-1/100)*np.pi, floor(24/50*img_size)))
-    ticks.append((8.25/12*np.pi, (9.5/12-1/100)*np.pi, floor(24/50*img_size)))
-    ticks.append((9.5/12*np.pi, (10.75/12-1/100)*np.pi, floor(24/50*img_size)))
-    ticks.append((10.75/12*np.pi, (12/12-1/100)*np.pi, floor(24/50*img_size)))
-    ticks.append((12/12*np.pi, (13.25/12-1/100)*np.pi, floor(24/50*img_size)))
-    ticks.append((13.25/12*np.pi, (14.5/12-1/100)
-                  * np.pi, floor(24/50*img_size)))
-    ticks.append((14.5/12*np.pi, (15.75/12-1/100)
-                  * np.pi, floor(24/50*img_size)))
-    ticks.append((15.75/12*np.pi, (17/12-1/100)*np.pi, floor(24/50*img_size)))
-    ticks.append((17/12*np.pi, (18.25/12-1/100)*np.pi, floor(24/50*img_size)))
-    ticks.append((18.25/12*np.pi, (19.5/12-1/100)
-                  * np.pi, floor(24/50*img_size)))
-    ticks.append((19.5/12*np.pi, (20.75/12-1/100)
-                  * np.pi, floor(24/50*img_size)))
-    ticks.append((20.75/12*np.pi, (22/12-1/100)*np.pi, floor(24/50*img_size)))
+    # # draw grid lines
+    # ticks = []
+    # # beats
+    # ticks.append((1/6*np.pi, (1/6+1/100)*np.pi, 0))
+    # ticks.append((7/12*np.pi, (7/12+1/100)*np.pi, 0))
+    # ticks.append((1*np.pi, (1+1/100)*np.pi, 0))
+    # ticks.append((17/12*np.pi, (17/12+1/100)*np.pi, 0))
+    # # # eights
+    # ticks.append((2/12*np.pi, (3.25/12-1/100)*np.pi, floor(24/50*img_size)))
+    # ticks.append((3.25/12*np.pi, (4.5/12-1/100)*np.pi, floor(24/50*img_size)))
+    # ticks.append((4.5/12*np.pi, (5.75/12-1/100)*np.pi, floor(24/50*img_size)))
+    # ticks.append((5.75/12*np.pi, (7/12-1/100)*np.pi, floor(24/50*img_size)))
+    # ticks.append((7/12*np.pi, (8.25/12-1/100)*np.pi, floor(24/50*img_size)))
+    # ticks.append((8.25/12*np.pi, (9.5/12-1/100)*np.pi, floor(24/50*img_size)))
+    # ticks.append((9.5/12*np.pi, (10.75/12-1/100)*np.pi, floor(24/50*img_size)))
+    # ticks.append((10.75/12*np.pi, (12/12-1/100)*np.pi, floor(24/50*img_size)))
+    # ticks.append((12/12*np.pi, (13.25/12-1/100)*np.pi, floor(24/50*img_size)))
+    # ticks.append((13.25/12*np.pi, (14.5/12-1/100)
+    #               * np.pi, floor(24/50*img_size)))
+    # ticks.append((14.5/12*np.pi, (15.75/12-1/100)
+    #               * np.pi, floor(24/50*img_size)))
+    # ticks.append((15.75/12*np.pi, (17/12-1/100)*np.pi, floor(24/50*img_size)))
+    # ticks.append((17/12*np.pi, (18.25/12-1/100)*np.pi, floor(24/50*img_size)))
+    # ticks.append((18.25/12*np.pi, (19.5/12-1/100)
+    #               * np.pi, floor(24/50*img_size)))
+    # ticks.append((19.5/12*np.pi, (20.75/12-1/100)
+    #               * np.pi, floor(24/50*img_size)))
+    # ticks.append((20.75/12*np.pi, (22/12-1/100)*np.pi, floor(24/50*img_size)))
 
-    for t in ticks:
-        theta_start, theta_stop, r_start = t
-        theta_length = theta_stop-theta_start
-        for theta in np.arange(theta_start, theta_stop, np.pi/3000):
-            r_stop = floor(img_size/2)
-            for r in range(r_start, r_stop, 1):
-                x = floor(img_size/2+math.cos(theta)*r)
-                y = floor(img_size/2-math.sin(theta)*r)
-                image_data[x][y] = [255, 255, 255]
+    # for t in ticks:
+    #     theta_start, theta_stop, r_start = t
+    #     theta_length = theta_stop-theta_start
+    #     for theta in np.arange(theta_start, theta_stop, np.pi/3000):
+    #         r_stop = floor(img_size/2)
+    #         for r in range(r_start, r_stop, 1):
+    #             x = floor(img_size/2+math.cos(theta)*r)
+    #             y = floor(img_size/2-math.sin(theta)*r)
+    #             image_data[x][y] = [255, 255, 255]
 
     # polar plot FFT
     theta_start = np.pi/6
