@@ -93,35 +93,37 @@ AFRAME.registerComponent("go", {
         const scene = document.querySelector('a-scene');
         cy0(scene);
         const assets = document.querySelector('a-assets');
+        const htmlImage2 = document.createElement('img');
+        htmlImage2.setAttribute('src', `img/output.png`);
+        htmlImage2.id = `sample`;
+        assets.appendChild(htmlImage2);
         {
-            const htmlImage = document.createElement('img');
-            htmlImage.setAttribute('src', `img/output.png`);
-            htmlImage.id = `sample`;
-            assets.appendChild(htmlImage);
+            let idNumber = 0;
+            for (const i of [1, 2, 3, 4]) {
+                for (const j of [1, 2, 3, 4]) {
+                    const htmlImage = document.createElement('img');
+                    htmlImage.setAttribute('src', `img/dial/dial_${i}_${j}.png`);
+                    htmlImage.id = `dial${idNumber++}`;
+                    assets.appendChild(htmlImage);
+                }
+            }
             imageEntity = document.createElement('a-image');
-            imageEntity.setAttribute('src', '#sample');
+            imageEntity.setAttribute('src', '#dial0');
             imageEntity.setAttribute('width', '0.2');
             imageEntity.setAttribute('height', '0.2');
             imageEntity.setAttribute('position', '0, 1.5, -1.02');
-            imageEntity.setAttribute('rotation', '0 0 90');
+            imageEntity.setAttribute('rotation', '0 0 0');
             scene.appendChild(imageEntity);
         }
-        let idNumber = 0;
-        for (const i of [1, 2, 3, 4]) {
-            for (const j of [1, 2, 3, 4]) {
-                const htmlImage = document.createElement('img');
-                htmlImage.setAttribute('src', `img/dial/dial_${i}_${j}.png`);
-                htmlImage.id = `dial${idNumber++}`;
-                assets.appendChild(htmlImage);
-            }
+        {
+            const imageEntity2 = document.createElement('a-image');
+            imageEntity2.setAttribute('src', '#sample');
+            imageEntity2.setAttribute('width', '0.2');
+            imageEntity2.setAttribute('height', '0.2');
+            imageEntity2.setAttribute('position', '0, 1.5, -1');
+            imageEntity2.setAttribute('rotation', '0 0 0');
+            scene.appendChild(imageEntity2);
         }
-        imageEntity = document.createElement('a-image');
-        imageEntity.setAttribute('src', '#dial0');
-        imageEntity.setAttribute('width', '0.2');
-        imageEntity.setAttribute('height', '0.2');
-        imageEntity.setAttribute('position', '0, 1.5, -1');
-        imageEntity.setAttribute('rotation', '0 0 90');
-        scene.appendChild(imageEntity);
     },
     tick: function (timeMs, timeDeltaMs) {
         const beat = Math.trunc(timeMs / 500) % 16;
@@ -133,7 +135,7 @@ AFRAME.registerComponent("go", {
 });
 const body = document.getElementsByTagName('body')[0];
 body.innerHTML = `
-<a-scene go="1" background="black" cursor="rayOrigin: mouse">
+<a-scene go="1" background="black" transparent="false" cursor="rayOrigin: mouse">
 <a-assets>
   <a-asset-item id="octohedron-obj" src="obj/octohedron.obj"></a-asset-item>
   <a-asset-item id="octohedron-mtl" src="obj/octohedron.mtl"></a-asset-item>
