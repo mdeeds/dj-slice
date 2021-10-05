@@ -127,6 +127,7 @@ body.innerHTML = `
   <a-asset-item id="octohedron-mtl" src="obj/octohedron.mtl"></a-asset-item>
 </a-assets>
 
+<a-sky src = "https://cdn.eso.org/images/screen/eso0932a.jpg"></a-sky>
 <a-entity light="type: ambient; color: #777"></a-entity>
 <a-entity light="type:directional; color: #777" position="-3 4 5"></a-entity>
 <a-camera position="0 1.6 0"></a-camera>
