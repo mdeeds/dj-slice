@@ -6,15 +6,21 @@
 
 <body>
     <a-scene>
-        <a-entity obj-model="obj: url(obj/circle_triggers.obj);" position="0 1.5 -1" rotation="0 0 0"
+        <a-entity obj-model="obj: url(obj/4x4-neon.obj)" position="-0.3 1.5 -1" rotation="0 90 0"
+            material="shader: flat">
+        </a-entity>
+        <a-entity obj-model="obj: url(obj/4x4-neon-green.obj)" position="-0.3 1.5 -1" rotation="0 90 0"
+            material="shader: flat" color="00FF00">
+        </a-entity>
+        <a-entity obj-model="obj: url(obj/4x4-glass-green.obj)" position="-0.3 1.5 -1" rotation="0 90 0" color="00FF00"
+            material="transparent: true; opacity: 0.5">
+        </a-entity>
+        <a-entity obj-model="obj: url(obj/circle_triggers.obj);" position="0.3 1.5 -1" rotation="0 0 0"
             scale="0.5 0.5 0.5" color="#0000FF" material="shader: flat"></a-entity>
-        <a-image height="0.2" width="0.2" src="img/dial/dial_3_2.png" color="#ffffff" position="0 1.5 -1.02"
-            rotation="0 0 0" material="transparent: true; opacity: 0.5">
-        </a-image>
-        <a-image height="0.2" width="0.2" src="img/output.png" color="#ffffff" position="0 1.5 -1" rotation="0 0 0"
+        <a-image height="0.2" width="0.2" src="img/output.png" color="#ffffff" position="0.3 1.5 -1" rotation="0 0 0"
             material="transparent: true; opacity: 0.5">
         </a-image>
-        <a-image height="0.2" width="0.2" src="img/dial/dial_3_2.png" color="#ffffff" position="0 1.5 -1"
+        <a-image height="0.2" width="0.2" src="img/dial/dial_3_2.png" color="#ffffff" position="0.3 1.5 -1"
             rotation="0 0 0" material="transparent: true; opacity: 0.5">
         </a-image>
         <a-sky color="#550088"></a-sky>
