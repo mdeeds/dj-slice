@@ -5,6 +5,7 @@ module.exports = {
     index: "./src/index.js",
     open: "./src/open.js",
     loops: "./src/loops.js",
+    baloon: "./src/baloon.js",
   },
   output: {
     path: __dirname + "/dist",
@@ -51,6 +52,12 @@ module.exports = {
       filename: 'loops.html',
       template: 'src/loops.html',
       chunks: ['loops']
+    }),
+    new HtmlWebPackPlugin({
+      name: "baloon",
+      filename: 'baloon.html',
+      template: 'src/baloon.html',
+      chunks: ['baloon']
     }),
   ],
   module: {  // If I remove this, webpack fails. \(~n~)/
