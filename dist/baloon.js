@@ -47,7 +47,7 @@ AFRAME.registerComponent("go", {
         baloon.setAttribute('position', '0 8 0');
         player.appendChild(baloon);
         const basket = document.createElement('a-cylinder');
-        basket.setAttribute('material', 'color', 'brown');
+        basket.setAttribute('color', 'burlywood');
         basket.setAttribute('radius', '0.75');
         basket.setAttribute('height', '1.0');
         basket.setAttribute('position', '0 0.5 0');
@@ -55,10 +55,10 @@ AFRAME.registerComponent("go", {
         basket.setAttribute('open-ended', 'true');
         player.appendChild(basket);
         const floor = document.createElement('a-cylinder');
-        basket.setAttribute('material', 'color', 'brown');
-        basket.setAttribute('radius', '0.75');
-        basket.setAttribute('height', '0.02');
-        basket.setAttribute('position', '0 -0.01 0');
+        floor.setAttribute('color', 'burlywood');
+        floor.setAttribute('radius', '0.75');
+        floor.setAttribute('height', '0.02');
+        floor.setAttribute('position', '0 -0.01 0');
         player.appendChild(floor);
         for (let i = -40; i <= 40; ++i) {
             for (let j = -100; j <= 0; ++j) {
@@ -72,7 +72,7 @@ AFRAME.registerComponent("go", {
     tick: function (timeMs, timeDeltaMs) {
         const p = (timeMs / 1000 / 60 / 3) % 1; // percentage of three minutes
         const h = Math.sin(Math.PI * p) * 100; // 100m maximum height
-        const r = (1 - Math.cos(Math.PI * p)) * 1000; // glide 1km
+        const r = 0.5 * (1 - Math.cos(Math.PI * p)) * 2000; // glide 2km
         player.setAttribute('position', `0, ${h}, ${-r}`);
     }
 });
@@ -82,7 +82,7 @@ body.innerHTML = `
 <a-assets>
 </a-assets>
 
-<a-sky color="#adf" radius=2000></a-sky>
+<a-sky color="#adf" radius=3000></a-sky>
 <a-entity light="type: ambient; color: #777"></a-entity>
 <a-entity id='player'>
 <a-entity light="type:directional; color: #777" position="100 300 400"></a-entity>
