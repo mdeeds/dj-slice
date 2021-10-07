@@ -121,6 +121,7 @@ AFRAME.registerComponent("go", {
       clap.setAttribute('position', '-0.5 1.5 -1');
       clap.setAttribute('theta-start', '300');
       clap.setAttribute('theta-length', '120');
+      clap.classList.add('clickable');
       const spacing = gameTime.getDurationForBeats(1);
       clap.addEventListener("mouseenter", () => {
         const nowTime = gameTime.getAudioTimeNow();
