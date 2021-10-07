@@ -1,106 +1,7 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 690:
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const AFRAME = __importStar(__webpack_require__(449));
-var player = null;
-function addBuilding(x, z, scene) {
-    const box = document.createElement('a-box');
-    box.setAttribute('width', 15);
-    box.setAttribute('depth', 15);
-    const h = Math.random() * 50 + 20;
-    box.setAttribute('height', h);
-    box.setAttribute('position', `${x} ${h / 2} ${z}`);
-    scene.appendChild(box);
-}
-AFRAME.registerComponent("go", {
-    init: function () {
-        const scene = document.querySelector('a-scene');
-        player = document.querySelector('#player');
-        const baloon = document.createElement('a-sphere');
-        baloon.setAttribute('color', 'purple');
-        baloon.setAttribute('radius', '5');
-        baloon.setAttribute('position', '0 8 0');
-        player.appendChild(baloon);
-        const basket = document.createElement('a-cylinder');
-        basket.setAttribute('color', 'burlywood');
-        basket.setAttribute('radius', '0.75');
-        basket.setAttribute('height', '1.0');
-        basket.setAttribute('position', '0 0.5 0');
-        basket.setAttribute('material', 'side', 'double');
-        basket.setAttribute('open-ended', 'true');
-        player.appendChild(basket);
-        const floor = document.createElement('a-cylinder');
-        floor.setAttribute('color', 'burlywood');
-        floor.setAttribute('radius', '0.75');
-        floor.setAttribute('height', '0.02');
-        floor.setAttribute('position', '0 -0.01 0');
-        player.appendChild(floor);
-        for (let i = -40; i <= 40; ++i) {
-            for (let j = -100; j <= 0; ++j) {
-                if (i % 3 == 0 || j % 6 == 0) {
-                    continue;
-                }
-                addBuilding(i * 17, j * 17, scene);
-            }
-        }
-    },
-    tick: function (timeMs, timeDeltaMs) {
-        const p = (timeMs / 1000 / 60 / 3) % 1; // percentage of three minutes
-        const h = Math.sin(Math.PI * p) * 100; // 100m maximum height
-        const r = 0.5 * (1 - Math.cos(Math.PI * p)) * 2000; // glide 2km
-        player.setAttribute('position', `0, ${h}, ${-r}`);
-    }
-});
-const body = document.getElementsByTagName('body')[0];
-body.innerHTML = `
-<a-scene go="1" background="black" transparent="false" cursor="rayOrigin: mouse">
-<a-assets>
-</a-assets>
-
-<a-sky color="#adf" radius=3000></a-sky>
-<a-entity light="type: ambient; color: #777"></a-entity>
-<a-entity id='player'>
-<a-entity light="type:directional; color: #777" position="100 300 400"></a-entity>
-<a-entity light="type:directional; color: #777" position="100 -200 500"></a-entity>
-<a-camera position="0 1.6 0"></a-camera>
-  <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 5;" line="color: #44d"
-    pointer></a-entity>
-  <a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 5;" line="color: #d44"
-    pointer></a-entity>
-</a-entity>
-
-</a-scene>
-`;
-//# sourceMappingURL=baloon.js.map
-
-/***/ }),
-
-/***/ 449:
+/***/ 569:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 (function(f){if(true){module.exports=f()}else { var g; }})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c=undefined;if(!f&&c)return require(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u=undefined,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(_dereq_,module,exports){
@@ -76252,6 +76153,106 @@ module.exports = getWakeLock();
 });
 //# sourceMappingURL=aframe-master.js.map
 
+
+/***/ }),
+
+/***/ 690:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const AFRAME = __importStar(__webpack_require__(569));
+var player = null;
+function addBuilding(x, z, scene) {
+    const box = document.createElement('a-box');
+    box.setAttribute('width', 15);
+    box.setAttribute('depth', 15);
+    const h = Math.random() * 50 + 20;
+    box.setAttribute('height', h);
+    box.setAttribute('position', `${x} ${h / 2} ${z}`);
+    scene.appendChild(box);
+}
+AFRAME.registerComponent("go", {
+    init: function () {
+        const scene = document.querySelector('a-scene');
+        player = document.querySelector('#player');
+        const baloon = document.createElement('a-sphere');
+        baloon.setAttribute('color', 'purple');
+        baloon.setAttribute('radius', '5');
+        baloon.setAttribute('position', '0 8 0');
+        player.appendChild(baloon);
+        const basket = document.createElement('a-cylinder');
+        basket.setAttribute('color', 'burlywood');
+        basket.setAttribute('radius', '0.75');
+        basket.setAttribute('height', '1.0');
+        basket.setAttribute('position', '0 0.5 0');
+        basket.setAttribute('material', 'side', 'double');
+        basket.setAttribute('open-ended', 'true');
+        player.appendChild(basket);
+        const floor = document.createElement('a-cylinder');
+        floor.setAttribute('color', 'burlywood');
+        floor.setAttribute('radius', '0.75');
+        floor.setAttribute('height', '0.02');
+        floor.setAttribute('position', '0 -0.01 0');
+        player.appendChild(floor);
+        // for (let i = -40; i <= 40; ++i) {
+        //   for (let j = -100; j <= 0; ++j) {
+        //     if (i % 3 == 0 || j % 6 == 0) {
+        //       continue;
+        //     }
+        //     addBuilding(i * 17, j * 17, scene);
+        //   }
+        // }
+    },
+    tick: function (timeMs, timeDeltaMs) {
+        const p = (timeMs / 1000 / 60 / 3) % 1; // percentage of three minutes
+        const h = Math.sin(Math.PI * p) * 100; // 100m maximum height
+        const r = 0.5 * (1 - Math.cos(Math.PI * p)) * 2000; // glide 2km
+        player.setAttribute('position', `0, ${h}, ${-r}`);
+    }
+});
+const body = document.getElementsByTagName('body')[0];
+body.innerHTML = `
+<a-scene go="1" background="black" transparent="false" cursor="rayOrigin: mouse" stats>
+<!--- ---><a-entity obj-model="obj: url(obj/city.obj); mtl: url(obj/city.mtl)" rotation="0 180 0"></a-entity>
+<a-assets>
+</a-assets>
+
+<a-sky color="#adf" radius=3000></a-sky>
+<a-entity light="type: ambient; color: #777"></a-entity>
+<a-entity id='player'>
+<a-entity light="type:directional; color: #777" position="100 300 400"></a-entity>
+<a-entity light="type:directional; color: #777" position="100 -200 500"></a-entity>
+<a-camera position="0 1.6 0"></a-camera>
+  <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 5;" line="color: #44d"
+    pointer></a-entity>
+  <a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 5;" line="color: #d44"
+    pointer></a-entity>
+</a-entity>
+
+</a-scene>
+`;
+//# sourceMappingURL=baloon.js.map
 
 /***/ })
 

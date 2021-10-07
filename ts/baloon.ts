@@ -42,14 +42,14 @@ AFRAME.registerComponent("go", {
     floor.setAttribute('position', '0 -0.01 0');
     player.appendChild(floor);
 
-    for (let i = -40; i <= 40; ++i) {
-      for (let j = -100; j <= 0; ++j) {
-        if (i % 3 == 0 || j % 6 == 0) {
-          continue;
-        }
-        addBuilding(i * 17, j * 17, scene);
-      }
-    }
+    // for (let i = -40; i <= 40; ++i) {
+    //   for (let j = -100; j <= 0; ++j) {
+    //     if (i % 3 == 0 || j % 6 == 0) {
+    //       continue;
+    //     }
+    //     addBuilding(i * 17, j * 17, scene);
+    //   }
+    // }
 
   },
   tick: function (timeMs, timeDeltaMs) {
@@ -64,7 +64,8 @@ AFRAME.registerComponent("go", {
 
 const body = document.getElementsByTagName('body')[0];
 body.innerHTML = `
-<a-scene go="1" background="black" transparent="false" cursor="rayOrigin: mouse">
+<a-scene go="1" background="black" transparent="false" cursor="rayOrigin: mouse" stats>
+<!--- ---><a-entity obj-model="obj: url(obj/city.obj); mtl: url(obj/city.mtl)" rotation="0 180 0"></a-entity>
 <a-assets>
 </a-assets>
 
