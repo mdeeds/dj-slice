@@ -53,6 +53,10 @@ export class GameTime {
     return this.roundQuantizeAudioTime(this.getAudioTimeNow());
   }
 
+  getDurationForBeats(beatCount: number): number {
+    return 60 / this.bpm * beatCount;
+  }
+
   tick(timeMs: number, timeDeltaMs: number) {
     if (this.running) {
       this.elapsedMs += timeDeltaMs;

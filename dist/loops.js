@@ -104,6 +104,9 @@ class GameTime {
     getRoundQuantizedAudioTimeNow() {
         return this.roundQuantizeAudioTime(this.getAudioTimeNow());
     }
+    getDurationForBeats(beatCount) {
+        return 60 / this.bpm * beatCount;
+    }
     tick(timeMs, timeDeltaMs) {
         if (this.running) {
             this.elapsedMs += timeDeltaMs;
@@ -290,6 +293,24 @@ AFRAME.registerComponent("go", {
             dialEntity.appendChild(topBar);
         }
         scene.appendChild(dialEntity);
+        {
+            const clapSample = new sample_1.Sample('samples/handclap.mp3', gameTime);
+            const clap = document.createElement('a-ring');
+            clap.setAttribute('color', 'teal');
+            clap.setAttribute('radius-inner', '0.05');
+            clap.setAttribute('radius-outer', '0.15');
+            clap.setAttribute('position', '-0.5 1.5 -1');
+            clap.setAttribute('theta-start', '300');
+            clap.setAttribute('theta-length', '120');
+            clap.addEventListener("mouseenter", () => {
+                console.log('CLAP!');
+                const spacing = gameTime.getDurationForBeats(1);
+                for (let i = 0; i < 4; ++i) {
+                    clapSample.playAt(gameTime.getAudioTimeNow() + i * spacing);
+                }
+            });
+            scene.appendChild(clap);
+        }
     },
     tick: function (timeMs, timeDeltaMs) {
         track.tick(timeMs, timeDeltaMs);
