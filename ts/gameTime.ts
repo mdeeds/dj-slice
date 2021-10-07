@@ -21,8 +21,8 @@ export class GameTime {
   }
 
   start() {
+    this.running = true;
     if (this.audioCtx) {
-      this.running = true;
       this.audioCtxZero = this.audioCtx.currentTime - this.elapsedMs * 1000;
     }
   }

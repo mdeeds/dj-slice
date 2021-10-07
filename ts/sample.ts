@@ -2,14 +2,10 @@ import { Common } from "./common";
 import { GameTime } from "./gameTime";
 
 export class Sample {
-  private url: string;
-  private gameTime: GameTime;
   private audioCtx: AudioContext;
   private buffer: AudioBuffer;
 
-  constructor(url, gameTime) {
-    this.url = url;
-    this.gameTime = gameTime;
+  constructor(private url: string, private gameTime: GameTime) {
     this.audioCtx = null;
     this.buffer = null;
     this.init();
@@ -36,16 +32,27 @@ export class Sample {
     });
   }
 
-  _play(audioTimeS: number) {
+  private previousNode: AudioBufferSourceNode = null;
+
+  stop() {
+    if (this.previousNode) {
+      this.previousNode.stop();
+      this.previousNode = null;
+    }
+  }
+
+  playAt(audioTimeS: number) {
     if (!this.audioCtx || !this.buffer) {
       console.error('Sample is not loaded!');
       return;
     }
     const audioNode = this.audioCtx.createBufferSource();
+    this.previousNode = audioNode;
     audioNode.buffer = this.buffer;
     audioNode.connect(this.audioCtx.destination);
     const nowAudioTime = this.audioCtx.currentTime;
     const timeInFuture = audioTimeS - nowAudioTime;
+    console.log(`play in ${timeInFuture.toFixed(2)} seconds.`);
     audioNode.start(nowAudioTime + Math.max(timeInFuture, 0),
       Math.max(0, -timeInFuture));
   }
@@ -53,6 +60,10 @@ export class Sample {
   playQuantized(gameTimeMs) {
     const audioTimeS = this.gameTime.getAudioTimeForGameTime(gameTimeMs);
     const quantizedAudioTimeS = this.gameTime.roundQuantizeAudioTime(audioTimeS);
-    this._play(quantizedAudioTimeS);
+    this.playAt(quantizedAudioTimeS);
+  }
+
+  durationS(): number {
+    return this.buffer.duration;
   }
 }

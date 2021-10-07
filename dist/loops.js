@@ -1,6 +1,170 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 648:
+/***/ (function(__unused_webpack_module, exports) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Common = void 0;
+class Common {
+    static getContext() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (Common.audioCtx) {
+                return Common.audioCtx;
+            }
+            return new Promise((resolve) => {
+                const context = new window.AudioContext();
+                if (context.state === 'running') {
+                    resolve(context);
+                }
+                else {
+                    setTimeout(() => __awaiter(this, void 0, void 0, function* () {
+                        resolve(yield Common.getContext());
+                    }), 500);
+                }
+            });
+        });
+    }
+    static indexToTheta(index) {
+        return (index * 2 * Math.PI) / 16 - Math.PI;
+    }
+}
+exports.Common = Common;
+Common.audioCtx = null;
+//# sourceMappingURL=common.js.map
+
+/***/ }),
+
+/***/ 669:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GameTime = void 0;
+const common_1 = __webpack_require__(648);
+class GameTime {
+    constructor(bpm) {
+        console.assert(bpm);
+        this.bpm = bpm;
+        this.elapsedMs = 0;
+        this.running = false;
+        this.audioCtx = null;
+        this.audioCtxZero = 0;
+        this.init();
+    }
+    init() {
+        return __awaiter(this, void 0, void 0, function* () {
+            this.audioCtx = yield common_1.Common.getContext();
+        });
+    }
+    start() {
+        this.running = true;
+        if (this.audioCtx) {
+            this.audioCtxZero = this.audioCtx.currentTime - this.elapsedMs * 1000;
+        }
+    }
+    getBpm() {
+        return this.bpm;
+    }
+    getElapsedMs() {
+        return this.elapsedMs;
+    }
+    getAudioTimeForGameTime(gameMs) {
+        return this.audioCtxZero + gameMs / 1000;
+    }
+    getAudioTimeNow() {
+        return this.audioCtxZero + this.elapsedMs / 1000;
+    }
+    roundQuantizeAudioTime(audioTimeS) {
+        const secondsPerBeat = 60 / this.bpm / 4;
+        const beat = Math.round(audioTimeS / secondsPerBeat);
+        return beat * secondsPerBeat;
+    }
+    getRoundQuantizedAudioTimeNow() {
+        return this.roundQuantizeAudioTime(this.getAudioTimeNow());
+    }
+    tick(timeMs, timeDeltaMs) {
+        if (this.running) {
+            this.elapsedMs += timeDeltaMs;
+        }
+    }
+}
+exports.GameTime = GameTime;
+//# sourceMappingURL=gameTime.js.map
+
+/***/ }),
+
+/***/ 620:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LooperTrack = void 0;
+class LooperTrack {
+    constructor(gameTime) {
+        this.gameTime = gameTime;
+        this.samples = [];
+        this.currentIndex = 0;
+    }
+    addSample(sample) {
+        this.samples.push(sample);
+    }
+    enqueue() {
+        const sample = this.samples[this.currentIndex];
+        sample.playAt(this.nextLoopAudioTimeS);
+        this.nextLoopAudioTimeS += sample.durationS();
+    }
+    startLooping() {
+        if (this.samples.length == 0) {
+            return;
+        }
+        this.samples[this.currentIndex].stop();
+        this.nextLoopAudioTimeS = this.gameTime.getAudioTimeNow();
+        this.enqueue();
+    }
+    stopLooping() {
+        this.nextLoopAudioTimeS = null;
+    }
+    isLooping() {
+        return !!this.nextLoopAudioTimeS;
+    }
+    next() {
+        this.currentIndex = (this.currentIndex + 1) % this.samples.length;
+    }
+    tick(elapsedMs, deltaMs) {
+        if (this.nextLoopAudioTimeS != null &&
+            this.nextLoopAudioTimeS - this.gameTime.getAudioTimeNow() < 0.5) {
+            this.enqueue();
+        }
+    }
+}
+exports.LooperTrack = LooperTrack;
+//# sourceMappingURL=looperTrack.js.map
+
+/***/ }),
+
 /***/ 244:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -27,24 +191,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const AFRAME = __importStar(__webpack_require__(449));
-function renderToCanvas(i, canvas) {
-    canvas.width = 512;
-    canvas.height = 512;
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (i % 2 == 1) {
-        ctx.fillStyle = 'red';
-    }
-    else {
-        ctx.fillStyle = 'orange';
-    }
-    ctx.fillRect(64, 64, 256, 256);
-}
-function renderToUrl(i) {
-    const canvas = document.createElement('canvas');
-    renderToCanvas(i, canvas);
-    return canvas.toDataURL();
-}
+const gameTime_1 = __webpack_require__(669);
+const looperTrack_1 = __webpack_require__(620);
+const sample_1 = __webpack_require__(263);
 function cy0(scene) {
     const c = document.createElement('a-cylinder');
     c.setAttribute('height', '0.1');
@@ -53,40 +202,22 @@ function cy0(scene) {
     c.setAttribute('material', `color: crimson`);
     scene.appendChild(c);
 }
-function cy1(scene) {
-    const c = document.createElement('a-cylinder');
-    c.setAttribute('height', '0.1');
-    c.setAttribute('radius', '1.5');
-    c.setAttribute('position', "-2, 1, -3");
-    c.setAttribute('material', `shader: flat; src: url(${renderToUrl(0)})`);
-    function g(i) {
-        c.setAttribute('material', `shader: flat; src: url(${renderToUrl(i)})`);
-        setTimeout(() => { g(i + 1); }, 500);
+var track = null;
+var gameTime = null;
+function buildTracks() {
+    gameTime = new gameTime_1.GameTime(115);
+    track = new looperTrack_1.LooperTrack(gameTime);
+    for (const i of [1, 2, 3, 4]) {
+        track.addSample(new sample_1.Sample(`samples/funk/bass-${i}.m4a`, gameTime));
     }
-    g(0);
-    scene.appendChild(c);
-}
-function cy2(scene) {
-    const canvas = document.createElement('canvas');
-    scene.appendChild(canvas);
-    canvas.id = 'tex';
-    renderToCanvas(3, canvas);
-    const c = document.createElement('a-cylinder');
-    c.setAttribute('height', '0.1');
-    c.setAttribute('radius', '1.5');
-    c.setAttribute('position', "-2, 1, -3");
-    c.setAttribute('material', `shader: flat; src: #tex`);
-    scene.appendChild(c);
-    function g(i) {
-        renderToCanvas(i, canvas);
-        setTimeout(() => { g(i + 1); }, 500);
-    }
-    g(0);
+    console.log('start');
+    gameTime.start();
 }
 var imageEntity = null;
 var lastBeat = -1;
 AFRAME.registerComponent("go", {
     init: function () {
+        buildTracks();
         const o = document.getElementById('octohedron');
         const obj = o.object3D;
         obj.position.set(0, 1, -2);
@@ -97,6 +228,9 @@ AFRAME.registerComponent("go", {
         htmlImage2.setAttribute('src', `img/output.png`);
         htmlImage2.id = `sample`;
         assets.appendChild(htmlImage2);
+        const dialEntity = document.createElement('a-entity');
+        dialEntity.setAttribute('position', '0, 1.5, -1');
+        dialEntity.setAttribute('rotation', '0 0 0');
         {
             let idNumber = 0;
             for (const i of [1, 2, 3, 4]) {
@@ -111,21 +245,55 @@ AFRAME.registerComponent("go", {
             imageEntity.setAttribute('src', '#dial0');
             imageEntity.setAttribute('width', '0.2');
             imageEntity.setAttribute('height', '0.2');
-            imageEntity.setAttribute('position', '0, 1.5, -1.02');
-            imageEntity.setAttribute('rotation', '0 0 0');
-            scene.appendChild(imageEntity);
+            imageEntity.setAttribute('position', '0, 0, -0.02');
+            dialEntity.appendChild(imageEntity);
         }
         {
             const imageEntity2 = document.createElement('a-image');
             imageEntity2.setAttribute('src', '#sample');
             imageEntity2.setAttribute('width', '0.2');
             imageEntity2.setAttribute('height', '0.2');
-            imageEntity2.setAttribute('position', '0, 1.5, -1');
-            imageEntity2.setAttribute('rotation', '0 0 0');
-            scene.appendChild(imageEntity2);
+            dialEntity.appendChild(imageEntity2);
         }
+        {
+            const topBar = document.createElement('a-torus');
+            topBar.setAttribute('arc', '90');
+            topBar.setAttribute('radius', '0.15');
+            topBar.setAttribute('radius-tubular', '0.01');
+            topBar.setAttribute('segments-radial', '8');
+            topBar.setAttribute('segments-tubular', '4');
+            topBar.setAttribute('rotation', '0 0 45');
+            topBar.classList.add('clickable');
+            topBar.addEventListener("mouseenter", () => {
+                console.log('start');
+                track.startLooping();
+            });
+            dialEntity.appendChild(topBar);
+        }
+        {
+            const topBar = document.createElement('a-torus');
+            topBar.setAttribute('arc', '90');
+            topBar.setAttribute('radius', '0.15');
+            topBar.setAttribute('radius-tubular', '0.01');
+            topBar.setAttribute('segments-radial', '8');
+            topBar.setAttribute('segments-tubular', '4');
+            topBar.setAttribute('rotation', '0 0 225');
+            topBar.classList.add('clickable');
+            topBar.addEventListener("mouseenter", () => {
+                if (track.isLooping()) {
+                    track.stopLooping();
+                }
+                else {
+                    track.next();
+                }
+            });
+            dialEntity.appendChild(topBar);
+        }
+        scene.appendChild(dialEntity);
     },
     tick: function (timeMs, timeDeltaMs) {
+        track.tick(timeMs, timeDeltaMs);
+        gameTime.tick(timeMs, timeDeltaMs);
         const beat = Math.trunc(timeMs / 500) % 16;
         if (lastBeat != beat) {
             imageEntity.setAttribute('src', `#dial${beat}`);
@@ -141,6 +309,7 @@ body.innerHTML = `
   <a-asset-item id="octohedron-mtl" src="obj/octohedron.mtl"></a-asset-item>
 </a-assets>
 
+<a-sky src = "https://cdn.eso.org/images/screen/eso0932a.jpg"></a-sky>
 <a-entity light="type: ambient; color: #777"></a-entity>
 <a-entity light="type:directional; color: #777" position="-3 4 5"></a-entity>
 <a-camera position="0 1.6 0"></a-camera>
@@ -154,6 +323,88 @@ body.innerHTML = `
 </a-scene>
 `;
 //# sourceMappingURL=loops.js.map
+
+/***/ }),
+
+/***/ 263:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Sample = void 0;
+const common_1 = __webpack_require__(648);
+class Sample {
+    constructor(url, gameTime) {
+        this.url = url;
+        this.gameTime = gameTime;
+        this.previousNode = null;
+        this.audioCtx = null;
+        this.buffer = null;
+        this.init();
+    }
+    init() {
+        return __awaiter(this, void 0, void 0, function* () {
+            this.buffer = yield this.getData();
+        });
+    }
+    getData() {
+        return __awaiter(this, void 0, void 0, function* () {
+            this.audioCtx = yield common_1.Common.getContext();
+            const request = new XMLHttpRequest();
+            request.open('GET', this.url, true);
+            request.responseType = 'arraybuffer';
+            return new Promise((resolve, reject) => {
+                request.onload = () => {
+                    const audioData = request.response;
+                    this.audioCtx.decodeAudioData(audioData, function (buffer) {
+                        resolve(buffer);
+                    }, reject);
+                };
+                request.send();
+            });
+        });
+    }
+    stop() {
+        if (this.previousNode) {
+            this.previousNode.stop();
+            this.previousNode = null;
+        }
+    }
+    playAt(audioTimeS) {
+        if (!this.audioCtx || !this.buffer) {
+            console.error('Sample is not loaded!');
+            return;
+        }
+        const audioNode = this.audioCtx.createBufferSource();
+        this.previousNode = audioNode;
+        audioNode.buffer = this.buffer;
+        audioNode.connect(this.audioCtx.destination);
+        const nowAudioTime = this.audioCtx.currentTime;
+        const timeInFuture = audioTimeS - nowAudioTime;
+        console.log(`play in ${timeInFuture.toFixed(2)} seconds.`);
+        audioNode.start(nowAudioTime + Math.max(timeInFuture, 0), Math.max(0, -timeInFuture));
+    }
+    playQuantized(gameTimeMs) {
+        const audioTimeS = this.gameTime.getAudioTimeForGameTime(gameTimeMs);
+        const quantizedAudioTimeS = this.gameTime.roundQuantizeAudioTime(audioTimeS);
+        this.playAt(quantizedAudioTimeS);
+    }
+    durationS() {
+        return this.buffer.duration;
+    }
+}
+exports.Sample = Sample;
+//# sourceMappingURL=sample.js.map
 
 /***/ }),
 
@@ -54537,7 +54788,7 @@ var NoSleep = function () {
 }();
 module.exports = NoSleep;
       }),
-      (function(module, exports, __nested_webpack_require_1744804__) {
+      (function(module, exports, __webpack_require__) {
 module.exports = 'data:video/mp4;base64,AAAAIGZ0eXBtcDQyAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAACKBtZGF0AAAC8wYF///v3EXpvebZSLeWLNgg2SPu73gyNjQgLSBjb3JlIDE0MiByMjQ3OSBkZDc5YTYxIC0gSC4yNjQvTVBFRy00IEFWQyBjb2RlYyAtIENvcHlsZWZ0IDIwMDMtMjAxNCAtIGh0dHA6Ly93d3cudmlkZW9sYW4ub3JnL3gyNjQuaHRtbCAtIG9wdGlvbnM6IGNhYmFjPTEgcmVmPTEgZGVibG9jaz0xOjA6MCBhbmFseXNlPTB4MToweDExMSBtZT1oZXggc3VibWU9MiBwc3k9MSBwc3lfcmQ9MS4wMDowLjAwIG1peGVkX3JlZj0wIG1lX3JhbmdlPTE2IGNocm9tYV9tZT0xIHRyZWxsaXM9MCA4eDhkY3Q9MCBjcW09MCBkZWFkem9uZT0yMSwxMSBmYXN0X3Bza2lwPTEgY2hyb21hX3FwX29mZnNldD0wIHRocmVhZHM9NiBsb29rYWhlYWRfdGhyZWFkcz0xIHNsaWNlZF90aHJlYWRzPTAgbnI9MCBkZWNpbWF0ZT0xIGludGVybGFjZWQ9MCBibHVyYXlfY29tcGF0PTAgY29uc3RyYWluZWRfaW50cmE9MCBiZnJhbWVzPTMgYl9weXJhbWlkPTIgYl9hZGFwdD0xIGJfYmlhcz0wIGRpcmVjdD0xIHdlaWdodGI9MSBvcGVuX2dvcD0wIHdlaWdodHA9MSBrZXlpbnQ9MzAwIGtleWludF9taW49MzAgc2NlbmVjdXQ9NDAgaW50cmFfcmVmcmVzaD0wIHJjX2xvb2thaGVhZD0xMCByYz1jcmYgbWJ0cmVlPTEgY3JmPTIwLjAgcWNvbXA9MC42MCBxcG1pbj0wIHFwbWF4PTY5IHFwc3RlcD00IHZidl9tYXhyYXRlPTIwMDAwIHZidl9idWZzaXplPTI1MDAwIGNyZl9tYXg9MC4wIG5hbF9ocmQ9bm9uZSBmaWxsZXI9MCBpcF9yYXRpbz0xLjQwIGFxPTE6MS4wMACAAAAAOWWIhAA3//p+C7v8tDDSTjf97w55i3SbRPO4ZY+hkjD5hbkAkL3zpJ6h/LR1CAABzgB1kqqzUorlhQAAAAxBmiQYhn/+qZYADLgAAAAJQZ5CQhX/AAj5IQAD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';
       })
          ]);
@@ -76320,8 +76571,9 @@ module.exports = getWakeLock();
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
 /******/ 		// Check if module is in cache
-/******/ 		if(__webpack_module_cache__[moduleId]) {
-/******/ 			return __webpack_module_cache__[moduleId].exports;
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
@@ -76351,10 +76603,12 @@ module.exports = getWakeLock();
 /******/ 	})();
 /******/ 	
 /************************************************************************/
+/******/ 	
 /******/ 	// startup
-/******/ 	// Load entry module
+/******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	__webpack_require__(244);
+/******/ 	var __webpack_exports__ = __webpack_require__(244);
+/******/ 	
 /******/ })()
 ;
 //# sourceMappingURL=loops.js.map
