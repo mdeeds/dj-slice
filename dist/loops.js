@@ -1,6 +1,67 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 461:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+// OVERKILL!!!!
+//
+// class CircularBuffer {
+//   private size = 0;
+//   private index = 0;
+//   private buffer: Float64Array;
+//   constructor(private n: number) {
+//     this.buffer = new Float64Array(n);
+//   }
+//   length() {
+//     return this.size;
+//   }
+//   push(x: number) {
+//     this.buffer[this.index] = x;
+//   }
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BeatScore = void 0;
+// }
+class BeatScore {
+    constructor(bpm) {
+        this.bpm = bpm;
+        this.previousEventTimeS = [];
+        this.cumulativeError = 0.5;
+        this.secondsPerBeat = 60 / bpm;
+    }
+    strike(eventTimeS) {
+        if (this.previousEventTimeS.length === 0) {
+            this.previousEventTimeS.push(eventTimeS);
+            return 0;
+        }
+        let totalError = 0;
+        for (const prevS of this.previousEventTimeS) {
+            const deltaS = eventTimeS - prevS;
+            const beatNumber = Math.round(deltaS / this.secondsPerBeat);
+            // 0.0 is exactly on beat, 1.0 is exactly off beat.
+            const errorS = 2 * (deltaS - beatNumber * this.secondsPerBeat) /
+                this.secondsPerBeat;
+            totalError += Math.abs(errorS);
+        }
+        this.previousEventTimeS.push(eventTimeS);
+        if (this.previousEventTimeS.length > 4) {
+            this.previousEventTimeS.splice(0, 1);
+        }
+        const meanError = totalError / this.previousEventTimeS.length;
+        this.cumulativeError = (0.5 * this.cumulativeError) + (0.5 * meanError);
+        return meanError;
+    }
+    getCumulativeError() {
+        return this.cumulativeError;
+    }
+}
+exports.BeatScore = BeatScore;
+//# sourceMappingURL=beatScore.js.map
+
+/***/ }),
+
 /***/ 648:
 /***/ (function(__unused_webpack_module, exports) {
 
@@ -194,6 +255,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const AFRAME = __importStar(__webpack_require__(449));
+const beatScore_1 = __webpack_require__(461);
 const gameTime_1 = __webpack_require__(669);
 const looperTrack_1 = __webpack_require__(620);
 const sample_1 = __webpack_require__(263);
@@ -207,8 +269,13 @@ function cy0(scene) {
 }
 var track = null;
 var gameTime = null;
+var imageEntity = null;
+var lastBeat = -1;
+var beatScore = null;
+var octohedron = null;
 function buildTracks() {
     gameTime = new gameTime_1.GameTime(115);
+    beatScore = new beatScore_1.BeatScore(gameTime.getBpm());
     track = new looperTrack_1.LooperTrack(gameTime);
     for (const i of [1, 2, 3, 4]) {
         track.addSample(new sample_1.Sample(`samples/funk/bass-${i}.m4a`, gameTime));
@@ -216,8 +283,6 @@ function buildTracks() {
     console.log('start');
     gameTime.start();
 }
-var imageEntity = null;
-var lastBeat = -1;
 AFRAME.registerComponent("go", {
     init: function () {
         buildTracks();
@@ -293,6 +358,7 @@ AFRAME.registerComponent("go", {
             dialEntity.appendChild(topBar);
         }
         scene.appendChild(dialEntity);
+        octohedron = document.querySelector('#octohedron');
         {
             const clapSample = new sample_1.Sample('samples/handclap.mp3', gameTime);
             const clap = document.createElement('a-ring');
@@ -304,15 +370,20 @@ AFRAME.registerComponent("go", {
             clap.setAttribute('theta-length', '120');
             const spacing = gameTime.getDurationForBeats(1);
             clap.addEventListener("mouseenter", () => {
+                const nowTime = gameTime.getAudioTimeNow();
+                beatScore.strike(nowTime);
                 for (let i = 0; i < 4; ++i) {
-                    clapSample.playAt(gameTime.getAudioTimeNow() + i * spacing);
+                    clapSample.playAt(nowTime + i * spacing);
                 }
             });
             body.addEventListener('keydown', (ev) => {
                 if (ev.code === 'Space') {
+                    const nowTime = gameTime.getAudioTimeNow();
+                    beatScore.strike(nowTime);
                     for (let i = 0; i < 4; ++i) {
-                        clapSample.playAt(gameTime.getAudioTimeNow() + i * spacing);
+                        clapSample.playAt(nowTime + i * spacing);
                     }
+                    console.log(`Beat score: ${beatScore.getCumulativeError()}`);
                 }
             });
             scene.appendChild(clap);
@@ -326,6 +397,9 @@ AFRAME.registerComponent("go", {
             imageEntity.setAttribute('src', `#dial${beat}`);
             lastBeat = beat;
         }
+        let y = octohedron.object3D.position.y;
+        let yv = (0.4 - beatScore.getCumulativeError()) * timeDeltaMs / 1000;
+        octohedron.object3D.position.y = Math.max(0, y + yv);
     }
 });
 const body = document.getElementsByTagName('body')[0];
@@ -418,7 +492,7 @@ class Sample {
         audioNode.connect(this.audioCtx.destination);
         const nowAudioTime = this.audioCtx.currentTime;
         const timeInFuture = audioTimeS - nowAudioTime;
-        console.log(`play in ${timeInFuture.toFixed(2)} seconds.`);
+        // console.log(`play in ${timeInFuture.toFixed(2)} seconds.`);
         audioNode.start(nowAudioTime + Math.max(timeInFuture, 0), Math.max(0, -timeInFuture));
     }
     playQuantized(gameTimeMs) {

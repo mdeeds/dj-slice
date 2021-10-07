@@ -52,7 +52,7 @@ export class Sample {
     audioNode.connect(this.audioCtx.destination);
     const nowAudioTime = this.audioCtx.currentTime;
     const timeInFuture = audioTimeS - nowAudioTime;
-    console.log(`play in ${timeInFuture.toFixed(2)} seconds.`);
+    // console.log(`play in ${timeInFuture.toFixed(2)} seconds.`);
     audioNode.start(nowAudioTime + Math.max(timeInFuture, 0),
       Math.max(0, -timeInFuture));
   }

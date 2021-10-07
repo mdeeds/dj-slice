@@ -1,5 +1,6 @@
 import * as AFRAME from "aframe";
 import * as THREE from "three";
+import { BeatScore } from "./beatScore";
 import { GameTime } from "./gameTime";
 import { LooperTrack } from "./looperTrack";
 import { Sample } from "./sample";
@@ -15,9 +16,14 @@ function cy0(scene: AFRAME.Entity) {
 
 var track: LooperTrack = null;
 var gameTime: GameTime = null;
+var imageEntity = null;
+var lastBeat = -1;
+var beatScore: BeatScore = null;
+var octohedron: AFRAME.Entity = null;
 
 function buildTracks() {
   gameTime = new GameTime(115);
+  beatScore = new BeatScore(gameTime.getBpm());
   track = new LooperTrack(gameTime);
   for (const i of [1, 2, 3, 4]) {
     track.addSample(new Sample(`samples/funk/bass-${i}.m4a`, gameTime));
@@ -25,9 +31,6 @@ function buildTracks() {
   console.log('start');
   gameTime.start();
 }
-
-var imageEntity = null;
-var lastBeat = -1;
 
 AFRAME.registerComponent("go", {
   init: function () {
@@ -108,6 +111,7 @@ AFRAME.registerComponent("go", {
     }
     scene.appendChild(dialEntity);
 
+    octohedron = document.querySelector('#octohedron');
     {
       const clapSample = new Sample('samples/handclap.mp3', gameTime);
       const clap = document.createElement('a-ring');
@@ -119,15 +123,20 @@ AFRAME.registerComponent("go", {
       clap.setAttribute('theta-length', '120');
       const spacing = gameTime.getDurationForBeats(1);
       clap.addEventListener("mouseenter", () => {
+        const nowTime = gameTime.getAudioTimeNow();
+        beatScore.strike(nowTime);
         for (let i = 0; i < 4; ++i) {
-          clapSample.playAt(gameTime.getAudioTimeNow() + i * spacing);
+          clapSample.playAt(nowTime + i * spacing);
         }
       });
       body.addEventListener('keydown', (ev: KeyboardEvent) => {
         if (ev.code === 'Space') {
+          const nowTime = gameTime.getAudioTimeNow();
+          beatScore.strike(nowTime);
           for (let i = 0; i < 4; ++i) {
-            clapSample.playAt(gameTime.getAudioTimeNow() + i * spacing);
+            clapSample.playAt(nowTime + i * spacing);
           }
+          console.log(`Beat score: ${beatScore.getCumulativeError()}`);
         }
       });
       scene.appendChild(clap);
@@ -141,6 +150,9 @@ AFRAME.registerComponent("go", {
       imageEntity.setAttribute('src', `#dial${beat}`);
       lastBeat = beat;
     }
+    let y = octohedron.object3D.position.y;
+    let yv = (0.4 - beatScore.getCumulativeError()) * timeDeltaMs / 1000;
+    octohedron.object3D.position.y = Math.max(0, y + yv);
   }
 });
 
