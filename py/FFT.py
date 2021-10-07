@@ -27,7 +27,8 @@ def save_spectrogram(fname, spectrogram):
             r = int(r/color_max * 255)
             g = int(g/color_max * 255)
             b = int(b/color_max * 255)
-        colors.append([b, g, r])
+            a = 255
+        colors.append([b, g, r, a])
         mag.append(color_max)
     mag = mag / np.max(mag) * img_size/2
     # black out image
@@ -35,7 +36,7 @@ def save_spectrogram(fname, spectrogram):
     for x in range(img_size):
         row = []
         for y in range(img_size):
-            row.append([0, 0, 0])
+            row.append([0, 0, 0, 0])
         image_data.append(row)
     # # draw grid lines
     # ticks = []
@@ -107,4 +108,4 @@ for filename in files:
         if end_sample < len(data):
             slice = abs(np.fft.fft(data[start_sample:end_sample]*window))
             spectrogram.append(slice)
-    save_spectrogram(filename+".png", spectrogram)
+    save_spectrogram(filename.split('.')[0]+".png", spectrogram)
