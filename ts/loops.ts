@@ -117,11 +117,17 @@ AFRAME.registerComponent("go", {
       clap.setAttribute('position', '-0.5 1.5 -1');
       clap.setAttribute('theta-start', '300');
       clap.setAttribute('theta-length', '120');
+      const spacing = gameTime.getDurationForBeats(1);
       clap.addEventListener("mouseenter", () => {
-        console.log('CLAP!');
-        const spacing = gameTime.getDurationForBeats(1);
         for (let i = 0; i < 4; ++i) {
           clapSample.playAt(gameTime.getAudioTimeNow() + i * spacing);
+        }
+      });
+      body.addEventListener('keydown', (ev: KeyboardEvent) => {
+        if (ev.code === 'Space') {
+          for (let i = 0; i < 4; ++i) {
+            clapSample.playAt(gameTime.getAudioTimeNow() + i * spacing);
+          }
         }
       });
       scene.appendChild(clap);
