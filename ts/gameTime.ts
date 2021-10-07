@@ -21,8 +21,8 @@ export class GameTime {
   }
 
   start() {
+    this.running = true;
     if (this.audioCtx) {
-      this.running = true;
       this.audioCtxZero = this.audioCtx.currentTime - this.elapsedMs * 1000;
     }
   }
@@ -51,6 +51,10 @@ export class GameTime {
 
   getRoundQuantizedAudioTimeNow() {
     return this.roundQuantizeAudioTime(this.getAudioTimeNow());
+  }
+
+  getDurationForBeats(beatCount: number): number {
+    return 60 / this.bpm * beatCount;
   }
 
   tick(timeMs: number, timeDeltaMs: number) {

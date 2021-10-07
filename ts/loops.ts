@@ -1,25 +1,8 @@
 import * as AFRAME from "aframe";
 import * as THREE from "three";
-
-
-function renderToCanvas(i: number, canvas: HTMLCanvasElement) {
-  canvas.width = 512;
-  canvas.height = 512;
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (i % 2 == 1) {
-    ctx.fillStyle = 'red';
-  } else {
-    ctx.fillStyle = 'orange';
-  }
-  ctx.fillRect(64, 64, 256, 256);
-}
-
-function renderToUrl(i: number) {
-  const canvas = document.createElement('canvas') as any as HTMLCanvasElement;
-  renderToCanvas(i, canvas);
-  return canvas.toDataURL();
-}
+import { GameTime } from "./gameTime";
+import { LooperTrack } from "./looperTrack";
+import { Sample } from "./sample";
 
 function cy0(scene: AFRAME.Entity) {
   const c = document.createElement('a-cylinder') as AFRAME.Entity;
@@ -30,38 +13,17 @@ function cy0(scene: AFRAME.Entity) {
   scene.appendChild(c);
 }
 
-function cy1(scene: AFRAME.Entity) {
-  const c = document.createElement('a-cylinder') as AFRAME.Entity;
-  c.setAttribute('height', '0.1');
-  c.setAttribute('radius', '1.5');
-  c.setAttribute('position', "-2, 1, -3");
-  c.setAttribute('material', `shader: flat; src: url(${renderToUrl(0)})`);
+var track: LooperTrack = null;
+var gameTime: GameTime = null;
 
-  function g(i: number) {
-    c.setAttribute('material', `shader: flat; src: url(${renderToUrl(i)})`);
-    setTimeout(() => { g(i + 1) }, 500);
+function buildTracks() {
+  gameTime = new GameTime(115);
+  track = new LooperTrack(gameTime);
+  for (const i of [1, 2, 3, 4]) {
+    track.addSample(new Sample(`samples/funk/bass-${i}.m4a`, gameTime));
   }
-  g(0);
-
-  scene.appendChild(c);
-}
-
-function cy2(scene: AFRAME.Entity) {
-  const canvas = document.createElement('canvas') as any as HTMLCanvasElement;
-  scene.appendChild(canvas);
-  canvas.id = 'tex'
-  renderToCanvas(3, canvas);
-  const c = document.createElement('a-cylinder') as AFRAME.Entity;
-  c.setAttribute('height', '0.1');
-  c.setAttribute('radius', '1.5');
-  c.setAttribute('position', "-2, 1, -3");
-  c.setAttribute('material', `shader: flat; src: #tex`);
-  scene.appendChild(c);
-  function g(i: number) {
-    renderToCanvas(i, canvas);
-    setTimeout(() => { g(i + 1) }, 500);
-  }
-  g(0);
+  console.log('start');
+  gameTime.start();
 }
 
 var imageEntity = null;
@@ -69,6 +31,7 @@ var lastBeat = -1;
 
 AFRAME.registerComponent("go", {
   init: function () {
+    buildTracks();
     const o = document.getElementById('octohedron') as AFRAME.Entity;
     const obj = o.object3D;
     (obj.position as THREE.Vector3).set(0, 1, -2);
@@ -82,6 +45,10 @@ AFRAME.registerComponent("go", {
     htmlImage2.setAttribute('src', `img/output.png`);
     htmlImage2.id = `sample`;
     assets.appendChild(htmlImage2);
+
+    const dialEntity = document.createElement('a-entity');
+    dialEntity.setAttribute('position', '0, 1.5, -1');
+    dialEntity.setAttribute('rotation', '0 0 0');
     {
       let idNumber = 0;
       for (const i of [1, 2, 3, 4]) {
@@ -96,21 +63,79 @@ AFRAME.registerComponent("go", {
       imageEntity.setAttribute('src', '#dial0');
       imageEntity.setAttribute('width', '0.2');
       imageEntity.setAttribute('height', '0.2');
-      imageEntity.setAttribute('position', '0, 1.5, -1.02');
-      imageEntity.setAttribute('rotation', '0 0 0');
-      scene.appendChild(imageEntity);
+      imageEntity.setAttribute('position', '0, 0, -0.02');
+      dialEntity.appendChild(imageEntity);
     }
     {
       const imageEntity2 = document.createElement('a-image') as AFRAME.Entity;
       imageEntity2.setAttribute('src', '#sample');
       imageEntity2.setAttribute('width', '0.2');
       imageEntity2.setAttribute('height', '0.2');
-      imageEntity2.setAttribute('position', '0, 1.5, -1');
-      imageEntity2.setAttribute('rotation', '0 0 0');
-      scene.appendChild(imageEntity2);
+      dialEntity.appendChild(imageEntity2);
+    }
+    {
+      const topBar = document.createElement('a-torus') as AFRAME.Entity;
+      topBar.setAttribute('arc', '90');
+      topBar.setAttribute('radius', '0.15');
+      topBar.setAttribute('radius-tubular', '0.01');
+      topBar.setAttribute('segments-radial', '8');
+      topBar.setAttribute('segments-tubular', '4');
+      topBar.setAttribute('rotation', '0 0 45');
+      topBar.classList.add('clickable');
+      topBar.addEventListener("mouseenter", () => {
+        console.log('start');
+        track.startLooping();
+      });
+      dialEntity.appendChild(topBar);
+    }
+    {
+      const topBar = document.createElement('a-torus') as AFRAME.Entity;
+      topBar.setAttribute('arc', '90');
+      topBar.setAttribute('radius', '0.15');
+      topBar.setAttribute('radius-tubular', '0.01');
+      topBar.setAttribute('segments-radial', '8');
+      topBar.setAttribute('segments-tubular', '4');
+      topBar.setAttribute('rotation', '0 0 225');
+      topBar.classList.add('clickable');
+      topBar.addEventListener("mouseenter", () => {
+        if (track.isLooping()) {
+          track.stopLooping();
+        } else {
+          track.next();
+        }
+      });
+      dialEntity.appendChild(topBar);
+    }
+    scene.appendChild(dialEntity);
+
+    {
+      const clapSample = new Sample('samples/handclap.mp3', gameTime);
+      const clap = document.createElement('a-ring');
+      clap.setAttribute('color', 'teal');
+      clap.setAttribute('radius-inner', '0.05');
+      clap.setAttribute('radius-outer', '0.15');
+      clap.setAttribute('position', '-0.5 1.5 -1');
+      clap.setAttribute('theta-start', '300');
+      clap.setAttribute('theta-length', '120');
+      const spacing = gameTime.getDurationForBeats(1);
+      clap.addEventListener("mouseenter", () => {
+        for (let i = 0; i < 4; ++i) {
+          clapSample.playAt(gameTime.getAudioTimeNow() + i * spacing);
+        }
+      });
+      body.addEventListener('keydown', (ev: KeyboardEvent) => {
+        if (ev.code === 'Space') {
+          for (let i = 0; i < 4; ++i) {
+            clapSample.playAt(gameTime.getAudioTimeNow() + i * spacing);
+          }
+        }
+      });
+      scene.appendChild(clap);
     }
   },
   tick: function (timeMs, timeDeltaMs) {
+    track.tick(timeMs, timeDeltaMs);
+    gameTime.tick(timeMs, timeDeltaMs);
     const beat = Math.trunc(timeMs / 500) % 16;
     if (lastBeat != beat) {
       imageEntity.setAttribute('src', `#dial${beat}`);
