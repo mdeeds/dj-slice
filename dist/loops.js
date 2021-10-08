@@ -1,6 +1,33 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 637:
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BeatOrb = void 0;
+const beatScore_1 = __webpack_require__(461);
+class BeatOrb {
+    constructor(entity, bpm) {
+        this.entity = entity;
+        this.beatScore = new beatScore_1.BeatScore(bpm);
+    }
+    strike(eventTimeS) {
+        this.beatScore.strike(eventTimeS);
+    }
+    tick(timeMs, timeDeltaMs) {
+        let y = this.entity.object3D.position.y;
+        let yv = (0.4 - this.beatScore.getCumulativeError()) * timeDeltaMs / 1000;
+        this.entity.object3D.position.y = Math.max(0.9, y + yv);
+    }
+}
+exports.BeatOrb = BeatOrb;
+//# sourceMappingURL=beatOrb.js.map
+
+/***/ }),
+
 /***/ 461:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -347,13 +374,11 @@ exports.Sample = Sample;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WellScene = void 0;
-const beatScore_1 = __webpack_require__(461);
+const beatOrb_1 = __webpack_require__(637);
 const sample_1 = __webpack_require__(263);
 class WellScene {
     constructor() {
-        this.beatScore = null;
-        this.octohedron = null;
-        this.beatScore = new beatScore_1.BeatScore(115);
+        this.beatOrbs = [];
     }
     addBasket(player) {
         {
@@ -382,37 +407,53 @@ class WellScene {
             ring.setAttribute('rotation', '90 0 0');
             ring.setAttribute('material', `color: lightblue`);
             ring.setAttribute('side', 'double');
+            ring.classList.add('clickable');
             player.appendChild(ring);
         }
         return ring;
     }
-    init(scene, player, gameTime) {
-        this.octohedron = document.createElement('a-entity');
+    makeOctohedron(theta, scene) {
+        const octohedron = document.createElement('a-entity');
         //<a-entity id='octohedron' obj-model="obj: #octohedron-obj; mtl: #octohedron-mtl"></a-entity>
-        this.octohedron.setAttribute('obj-model', 'obj: #octohedron-obj; mtl: #octohedron-mtl');
-        scene.appendChild(this.octohedron);
-        this.octohedron.object3D.position.set(0, 1, -2);
+        octohedron.setAttribute('obj-model', 'obj: #octohedron-obj; mtl: #octohedron-mtl');
+        scene.appendChild(octohedron);
+        octohedron.object3D.position.
+            set(2 * Math.sin(theta), 1, 2 * Math.cos(theta));
+        return octohedron;
+    }
+    init(scene, player, gameTime) {
+        let theta = 0;
+        const bpms = [];
+        bpms.push(90, 100, 115, 120, 145);
+        for (const bpm in bpms) {
+            this.beatOrbs.push(new beatOrb_1.BeatOrb(this.makeOctohedron(theta, scene), bpm));
+            theta += 2 * Math.PI / 5;
+        }
         const clapSample = new sample_1.Sample('samples/handclap.mp3', gameTime);
         const clap = this.addBasket(player);
         clap.classList.add('clickable');
         clap.addEventListener("mouseenter", () => {
             const nowTime = gameTime.getAudioTimeNow();
-            this.beatScore.strike(nowTime);
+            for (const o of this.beatOrbs) {
+                o.strike(nowTime);
+            }
             clapSample.playAt(nowTime);
         });
         const body = document.getElementsByTagName('body')[0];
         body.addEventListener('keydown', (ev) => {
             if (ev.code === 'Space') {
                 const nowTime = gameTime.getAudioTimeNow();
-                this.beatScore.strike(nowTime);
+                for (const o of this.beatOrbs) {
+                    o.strike(nowTime);
+                }
                 clapSample.playAt(nowTime);
             }
         });
     }
     tick(timeMs, timeDeltaMs) {
-        let y = this.octohedron.object3D.position.y;
-        let yv = (0.4 - this.beatScore.getCumulativeError()) * timeDeltaMs / 1000;
-        this.octohedron.object3D.position.y = Math.max(0.9, y + yv);
+        for (const o of this.beatOrbs) {
+            o.tick(timeMs, timeDeltaMs);
+        }
     }
 }
 exports.WellScene = WellScene;

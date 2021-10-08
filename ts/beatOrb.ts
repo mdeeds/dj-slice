@@ -12,7 +12,8 @@ export class BeatOrb {
   }
 
   tick(timeMs: number, timeDeltaMs: number) {
-
+    let y = this.entity.object3D.position.y;
+    let yv = (0.4 - this.beatScore.getCumulativeError()) * timeDeltaMs / 1000;
+    this.entity.object3D.position.y = Math.max(0.9, y + yv);
   }
-
 }
