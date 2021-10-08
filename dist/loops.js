@@ -268,7 +268,7 @@ body.innerHTML = `
   <a-asset-item id="octohedron-mtl" src="obj/octohedron.mtl"></a-asset-item>
 </a-assets>
 
-<a-sky src = "https://cdn.eso.org/images/screen/eso0932a.jpg"></a-sky>
+<a-sky color="black"></a-sky>
 <a-entity light="type: ambient; color: #017; intensity: 0.2"></a-entity>
 
 <a-entity id='player'>
@@ -406,6 +406,7 @@ class WellScene {
             ring.setAttribute('position', "0, 1, 0");
             ring.setAttribute('rotation', '90 0 0');
             ring.setAttribute('material', `color: lightblue`);
+            ring.setAttribute('shader', 'flat');
             ring.setAttribute('side', 'double');
             ring.classList.add('clickable');
             player.appendChild(ring);
@@ -424,7 +425,7 @@ class WellScene {
     init(scene, player, gameTime) {
         let theta = 0;
         const bpms = [];
-        bpms.push(90, 100, 115, 120, 145);
+        bpms.push(85, 90, 100, 115, 120, 145, 168);
         for (const bpm in bpms) {
             this.beatOrbs.push(new beatOrb_1.BeatOrb(this.makeOctohedron(theta, scene), bpm));
             theta += 2 * Math.PI / 5;

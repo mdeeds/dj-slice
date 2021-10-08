@@ -36,6 +36,7 @@ export class WellScene {
       ring.setAttribute('position', "0, 1, 0");
       ring.setAttribute('rotation', '90 0 0');
       ring.setAttribute('material', `color: lightblue`);
+      ring.setAttribute('shader', 'flat');
       ring.setAttribute('side', 'double');
       ring.classList.add('clickable');
       player.appendChild(ring);
@@ -58,7 +59,7 @@ export class WellScene {
   init(scene: AFRAME.Entity, player: AFRAME.Entity, gameTime: GameTime) {
     let theta: number = 0;
     const bpms: number[] = [];
-    bpms.push(90, 100, 115, 120, 145);
+    bpms.push(85, 90, 100, 115, 120, 145, 168);
     for (const bpm in bpms) {
       this.beatOrbs.push(new BeatOrb(this.makeOctohedron(theta, scene), bpm as unknown as number));
       theta += 2 * Math.PI / 5;

@@ -26,7 +26,7 @@ body.innerHTML = `
   <a-asset-item id="octohedron-mtl" src="obj/octohedron.mtl"></a-asset-item>
 </a-assets>
 
-<a-sky src = "https://cdn.eso.org/images/screen/eso0932a.jpg"></a-sky>
+<a-sky color="black"></a-sky>
 <a-entity light="type: ambient; color: #017; intensity: 0.2"></a-entity>
 
 <a-entity id='player'>
