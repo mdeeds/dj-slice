@@ -181,56 +181,6 @@ exports.GameTime = GameTime;
 
 /***/ }),
 
-/***/ 620:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.LooperTrack = void 0;
-class LooperTrack {
-    constructor(gameTime) {
-        this.gameTime = gameTime;
-        this.samples = [];
-        this.currentIndex = 0;
-    }
-    addSample(sample) {
-        this.samples.push(sample);
-    }
-    enqueue() {
-        const sample = this.samples[this.currentIndex];
-        sample.playAt(this.nextLoopAudioTimeS);
-        this.nextLoopAudioTimeS += sample.durationS();
-    }
-    startLooping() {
-        if (this.samples.length == 0) {
-            return;
-        }
-        this.samples[this.currentIndex].stop();
-        this.nextLoopAudioTimeS = this.gameTime.getAudioTimeNow();
-        this.enqueue();
-    }
-    stopLooping() {
-        this.nextLoopAudioTimeS = null;
-    }
-    isLooping() {
-        return !!this.nextLoopAudioTimeS;
-    }
-    next() {
-        this.currentIndex = (this.currentIndex + 1) % this.samples.length;
-    }
-    tick(elapsedMs, deltaMs) {
-        if (this.nextLoopAudioTimeS != null &&
-            this.nextLoopAudioTimeS - this.gameTime.getAudioTimeNow() < 0.5) {
-            this.enqueue();
-        }
-    }
-}
-exports.LooperTrack = LooperTrack;
-//# sourceMappingURL=looperTrack.js.map
-
-/***/ }),
-
 /***/ 244:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -266,156 +216,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const AFRAME = __importStar(__webpack_require__(449));
-const beatScore_1 = __webpack_require__(461);
 const gameTime_1 = __webpack_require__(669);
-const looperTrack_1 = __webpack_require__(620);
-const sample_1 = __webpack_require__(263);
-function cy0(scene) {
-    const c = document.createElement('a-cylinder');
-    c.setAttribute('height', '0.1');
-    c.setAttribute('radius', '1.5');
-    c.setAttribute('position', "0, -0.1, 0");
-    c.setAttribute('material', `color: crimson`);
-    scene.appendChild(c);
-}
-var track = null;
+const wellScene_1 = __webpack_require__(305);
 var gameTime = null;
-var imageEntity = null;
-var lastBeat = -1;
-var beatScore = null;
-var octohedron = null;
-function buildTracks() {
-    return __awaiter(this, void 0, void 0, function* () {
-        gameTime = yield gameTime_1.GameTime.make(115);
-        beatScore = new beatScore_1.BeatScore(gameTime.getBpm());
-        track = new looperTrack_1.LooperTrack(gameTime);
-        for (const i of [1, 2, 3, 4]) {
-            track.addSample(new sample_1.Sample(`samples/funk/bass-${i}.m4a`, gameTime));
-        }
-        console.log('start');
-        gameTime.start();
-    });
-}
+var wellScene = null;
 AFRAME.registerComponent("go", {
     init: function () {
         return __awaiter(this, void 0, void 0, function* () {
-            yield buildTracks();
-            const o = document.getElementById('octohedron');
-            const obj = o.object3D;
-            obj.position.set(0, 1, -2);
-            const scene = document.querySelector('a-scene');
-            cy0(scene);
-            const assets = document.querySelector('a-assets');
-            const htmlImage2 = document.createElement('img');
-            htmlImage2.setAttribute('src', `img/output.png`);
-            htmlImage2.id = `sample`;
-            assets.appendChild(htmlImage2);
-            const dialEntity = document.createElement('a-entity');
-            dialEntity.setAttribute('position', '0, 1.5, -1');
-            dialEntity.setAttribute('rotation', '0 0 0');
-            {
-                let idNumber = 0;
-                for (const i of [1, 2, 3, 4]) {
-                    for (const j of [1, 2, 3, 4]) {
-                        const htmlImage = document.createElement('img');
-                        htmlImage.setAttribute('src', `img/dial/dial_${i}_${j}.png`);
-                        htmlImage.id = `dial${idNumber++}`;
-                        assets.appendChild(htmlImage);
-                    }
-                }
-                imageEntity = document.createElement('a-image');
-                imageEntity.setAttribute('src', '#dial0');
-                imageEntity.setAttribute('width', '0.2');
-                imageEntity.setAttribute('height', '0.2');
-                imageEntity.setAttribute('position', '0, 0, -0.02');
-                dialEntity.appendChild(imageEntity);
-            }
-            {
-                const imageEntity2 = document.createElement('a-image');
-                imageEntity2.setAttribute('src', '#sample');
-                imageEntity2.setAttribute('width', '0.2');
-                imageEntity2.setAttribute('height', '0.2');
-                dialEntity.appendChild(imageEntity2);
-            }
-            {
-                const topBar = document.createElement('a-torus');
-                topBar.setAttribute('arc', '90');
-                topBar.setAttribute('radius', '0.15');
-                topBar.setAttribute('radius-tubular', '0.01');
-                topBar.setAttribute('segments-radial', '8');
-                topBar.setAttribute('segments-tubular', '4');
-                topBar.setAttribute('rotation', '0 0 45');
-                topBar.classList.add('clickable');
-                topBar.addEventListener("mouseenter", () => {
-                    console.log('start');
-                    track.startLooping();
-                });
-                dialEntity.appendChild(topBar);
-            }
-            {
-                const topBar = document.createElement('a-torus');
-                topBar.setAttribute('arc', '90');
-                topBar.setAttribute('radius', '0.15');
-                topBar.setAttribute('radius-tubular', '0.01');
-                topBar.setAttribute('segments-radial', '8');
-                topBar.setAttribute('segments-tubular', '4');
-                topBar.setAttribute('rotation', '0 0 225');
-                topBar.classList.add('clickable');
-                topBar.addEventListener("mouseenter", () => {
-                    if (track.isLooping()) {
-                        track.stopLooping();
-                    }
-                    else {
-                        track.next();
-                    }
-                });
-                dialEntity.appendChild(topBar);
-            }
-            scene.appendChild(dialEntity);
-            octohedron = document.querySelector('#octohedron');
-            {
-                const clapSample = new sample_1.Sample('samples/handclap.mp3', gameTime);
-                const clap = document.createElement('a-ring');
-                clap.setAttribute('color', 'teal');
-                clap.setAttribute('radius-inner', '0.05');
-                clap.setAttribute('radius-outer', '0.15');
-                clap.setAttribute('position', '-0.5 1.5 -1');
-                clap.setAttribute('theta-start', '300');
-                clap.setAttribute('theta-length', '120');
-                clap.classList.add('clickable');
-                const spacing = gameTime.getDurationForBeats(1);
-                clap.addEventListener("mouseenter", () => {
-                    const nowTime = gameTime.getAudioTimeNow();
-                    beatScore.strike(nowTime);
-                    for (let i = 0; i < 4; ++i) {
-                        clapSample.playAt(nowTime + i * spacing);
-                    }
-                });
-                body.addEventListener('keydown', (ev) => {
-                    if (ev.code === 'Space') {
-                        const nowTime = gameTime.getAudioTimeNow();
-                        beatScore.strike(nowTime);
-                        for (let i = 0; i < 4; ++i) {
-                            clapSample.playAt(nowTime + i * spacing);
-                        }
-                        console.log(`Beat score: ${beatScore.getCumulativeError()}`);
-                    }
-                });
-                scene.appendChild(clap);
-            }
+            gameTime = yield gameTime_1.GameTime.make(115);
+            wellScene = new wellScene_1.WellScene();
+            wellScene.init(document.querySelector('a-scene'), document.querySelector('#player'), gameTime);
         });
     },
     tick: function (timeMs, timeDeltaMs) {
-        track.tick(timeMs, timeDeltaMs);
         gameTime.tick(timeMs, timeDeltaMs);
-        const beat = Math.trunc(timeMs / 500) % 16;
-        if (lastBeat != beat) {
-            imageEntity.setAttribute('src', `#dial${beat}`);
-            lastBeat = beat;
-        }
-        let y = octohedron.object3D.position.y;
-        let yv = (0.4 - beatScore.getCumulativeError()) * timeDeltaMs / 1000;
-        octohedron.object3D.position.y = Math.max(0, y + yv);
+        wellScene.tick(timeMs, timeDeltaMs);
     }
 });
 const body = document.getElementsByTagName('body')[0];
@@ -427,17 +242,17 @@ body.innerHTML = `
 </a-assets>
 
 <a-sky src = "https://cdn.eso.org/images/screen/eso0932a.jpg"></a-sky>
-<a-entity light="type: ambient; color: #777"></a-entity>
-<a-entity light="type:directional; color: #777" position="-3 4 5"></a-entity>
-<a-camera position="0 1.6 0"></a-camera>
-<a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 5;" line="color: #44d"
-  pointer></a-entity>
-<a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 5;" line="color: #d44"
-  pointer></a-entity>
+<a-entity light="type: ambient; color: #017; intensity: 0.2"></a-entity>
 
-<a-entity id='octohedron' obj-model="obj: #octohedron-obj; mtl: #octohedron-mtl"></a-entity>
-
-</a-scene>
+<a-entity id='player'>
+  <a-camera position="0 1.6 0"></a-camera>
+  <a-entity light="type: point; color: #fe9; intensity: 1" position="0 1.7 -0.1"></a-entity>
+  <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 5;" line="color: #44d"
+    pointer></a-entity>
+  <a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 5;" line="color: #d44"
+    pointer></a-entity>
+</a-entity>
+  </a-scene>
 `;
 //# sourceMappingURL=loops.js.map
 
@@ -522,6 +337,86 @@ class Sample {
 }
 exports.Sample = Sample;
 //# sourceMappingURL=sample.js.map
+
+/***/ }),
+
+/***/ 305:
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.WellScene = void 0;
+const beatScore_1 = __webpack_require__(461);
+const sample_1 = __webpack_require__(263);
+class WellScene {
+    constructor() {
+        this.beatScore = null;
+        this.octohedron = null;
+        this.beatScore = new beatScore_1.BeatScore(115);
+    }
+    addBasket(player) {
+        {
+            const c = document.createElement('a-cylinder');
+            c.setAttribute('height', '0.1');
+            c.setAttribute('radius', '1.5');
+            c.setAttribute('position', "0, 0, 0");
+            c.setAttribute('material', `color: crimson`);
+            player.appendChild(c);
+        }
+        {
+            const c = document.createElement('a-cylinder');
+            c.setAttribute('height', '1.0');
+            c.setAttribute('radius', '1.5');
+            c.setAttribute('position', "0, 0.5, 0");
+            c.setAttribute('material', `color: crimson`);
+            c.setAttribute('open-ended', 'true');
+            c.setAttribute('side', 'double');
+            player.appendChild(c);
+        }
+        const ring = document.createElement('a-ring');
+        {
+            ring.setAttribute('radius-inner', '1.49');
+            ring.setAttribute('radius-outer', '1.6');
+            ring.setAttribute('position', "0, 1, 0");
+            ring.setAttribute('rotation', '90 0 0');
+            ring.setAttribute('material', `color: lightblue`);
+            ring.setAttribute('side', 'double');
+            player.appendChild(ring);
+        }
+        return ring;
+    }
+    init(scene, player, gameTime) {
+        this.octohedron = document.createElement('a-entity');
+        //<a-entity id='octohedron' obj-model="obj: #octohedron-obj; mtl: #octohedron-mtl"></a-entity>
+        this.octohedron.setAttribute('obj-model', 'obj: #octohedron-obj; mtl: #octohedron-mtl');
+        scene.appendChild(this.octohedron);
+        this.octohedron.object3D.position.set(0, 1, -2);
+        const clapSample = new sample_1.Sample('samples/handclap.mp3', gameTime);
+        const clap = this.addBasket(player);
+        clap.classList.add('clickable');
+        clap.addEventListener("mouseenter", () => {
+            const nowTime = gameTime.getAudioTimeNow();
+            this.beatScore.strike(nowTime);
+            clapSample.playAt(nowTime);
+        });
+        const body = document.getElementsByTagName('body')[0];
+        body.addEventListener('keydown', (ev) => {
+            if (ev.code === 'Space') {
+                const nowTime = gameTime.getAudioTimeNow();
+                this.beatScore.strike(nowTime);
+                clapSample.playAt(nowTime);
+            }
+        });
+    }
+    tick(timeMs, timeDeltaMs) {
+        let y = this.octohedron.object3D.position.y;
+        let yv = (0.4 - this.beatScore.getCumulativeError()) * timeDeltaMs / 1000;
+        this.octohedron.object3D.position.y = Math.max(0.9, y + yv);
+    }
+}
+exports.WellScene = WellScene;
+//# sourceMappingURL=wellScene.js.map
 
 /***/ }),
 
