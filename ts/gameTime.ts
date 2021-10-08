@@ -6,18 +6,19 @@ export class GameTime {
   private running: boolean;
   private audioCtx: AudioContext;
   private audioCtxZero: number;
-  constructor(bpm) {
+  private constructor(bpm: number) {
     console.assert(bpm);
     this.bpm = bpm;
     this.elapsedMs = 0;
     this.running = false;
     this.audioCtx = null;
     this.audioCtxZero = 0;
-    this.init();
   }
 
-  async init() {
-    this.audioCtx = await Common.getContext();
+  static async make(bpm: number): Promise<GameTime> {
+    const result = new GameTime(bpm);
+    result.audioCtx = await Common.getContext();
+    return result;
   }
 
   start() {

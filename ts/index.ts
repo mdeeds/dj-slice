@@ -17,9 +17,9 @@ var renderCollection: RenderCollection = null;
 console.log("AAAAA: 1");
 
 AFRAME.registerComponent("go", {
-  init: function () {
+  init: async function () {
     renderCollection = new RenderCollection();
-    gameTime = new GameTime(/*bpm=*/110);
+    gameTime = await GameTime.make(/*bpm=*/110);
     fbs = new FlyingBlocks(gameTime, renderCollection);
     seq = new Sequence(fbs.getFactory(), gameTime);
     keyboardState = new KeyboardState(seq.getScene());

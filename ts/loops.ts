@@ -21,8 +21,8 @@ var lastBeat = -1;
 var beatScore: BeatScore = null;
 var octohedron: AFRAME.Entity = null;
 
-function buildTracks() {
-  gameTime = new GameTime(115);
+async function buildTracks() {
+  gameTime = await GameTime.make(115);
   beatScore = new BeatScore(gameTime.getBpm());
   track = new LooperTrack(gameTime);
   for (const i of [1, 2, 3, 4]) {
@@ -33,8 +33,8 @@ function buildTracks() {
 }
 
 AFRAME.registerComponent("go", {
-  init: function () {
-    buildTracks();
+  init: async function () {
+    await buildTracks();
     const o = document.getElementById('octohedron') as AFRAME.Entity;
     const obj = o.object3D;
     (obj.position as THREE.Vector3).set(0, 1, -2);

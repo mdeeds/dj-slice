@@ -132,11 +132,12 @@ class GameTime {
         this.running = false;
         this.audioCtx = null;
         this.audioCtxZero = 0;
-        this.init();
     }
-    init() {
+    static make(bpm) {
         return __awaiter(this, void 0, void 0, function* () {
-            this.audioCtx = yield common_1.Common.getContext();
+            const result = new GameTime(bpm);
+            result.audioCtx = yield common_1.Common.getContext();
+            return result;
         });
     }
     start() {
@@ -253,6 +254,15 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const AFRAME = __importStar(__webpack_require__(449));
 const beatScore_1 = __webpack_require__(461);
@@ -274,121 +284,125 @@ var lastBeat = -1;
 var beatScore = null;
 var octohedron = null;
 function buildTracks() {
-    gameTime = new gameTime_1.GameTime(115);
-    beatScore = new beatScore_1.BeatScore(gameTime.getBpm());
-    track = new looperTrack_1.LooperTrack(gameTime);
-    for (const i of [1, 2, 3, 4]) {
-        track.addSample(new sample_1.Sample(`samples/funk/bass-${i}.m4a`, gameTime));
-    }
-    console.log('start');
-    gameTime.start();
+    return __awaiter(this, void 0, void 0, function* () {
+        gameTime = yield gameTime_1.GameTime.make(115);
+        beatScore = new beatScore_1.BeatScore(gameTime.getBpm());
+        track = new looperTrack_1.LooperTrack(gameTime);
+        for (const i of [1, 2, 3, 4]) {
+            track.addSample(new sample_1.Sample(`samples/funk/bass-${i}.m4a`, gameTime));
+        }
+        console.log('start');
+        gameTime.start();
+    });
 }
 AFRAME.registerComponent("go", {
     init: function () {
-        buildTracks();
-        const o = document.getElementById('octohedron');
-        const obj = o.object3D;
-        obj.position.set(0, 1, -2);
-        const scene = document.querySelector('a-scene');
-        cy0(scene);
-        const assets = document.querySelector('a-assets');
-        const htmlImage2 = document.createElement('img');
-        htmlImage2.setAttribute('src', `img/output.png`);
-        htmlImage2.id = `sample`;
-        assets.appendChild(htmlImage2);
-        const dialEntity = document.createElement('a-entity');
-        dialEntity.setAttribute('position', '0, 1.5, -1');
-        dialEntity.setAttribute('rotation', '0 0 0');
-        {
-            let idNumber = 0;
-            for (const i of [1, 2, 3, 4]) {
-                for (const j of [1, 2, 3, 4]) {
-                    const htmlImage = document.createElement('img');
-                    htmlImage.setAttribute('src', `img/dial/dial_${i}_${j}.png`);
-                    htmlImage.id = `dial${idNumber++}`;
-                    assets.appendChild(htmlImage);
+        return __awaiter(this, void 0, void 0, function* () {
+            yield buildTracks();
+            const o = document.getElementById('octohedron');
+            const obj = o.object3D;
+            obj.position.set(0, 1, -2);
+            const scene = document.querySelector('a-scene');
+            cy0(scene);
+            const assets = document.querySelector('a-assets');
+            const htmlImage2 = document.createElement('img');
+            htmlImage2.setAttribute('src', `img/output.png`);
+            htmlImage2.id = `sample`;
+            assets.appendChild(htmlImage2);
+            const dialEntity = document.createElement('a-entity');
+            dialEntity.setAttribute('position', '0, 1.5, -1');
+            dialEntity.setAttribute('rotation', '0 0 0');
+            {
+                let idNumber = 0;
+                for (const i of [1, 2, 3, 4]) {
+                    for (const j of [1, 2, 3, 4]) {
+                        const htmlImage = document.createElement('img');
+                        htmlImage.setAttribute('src', `img/dial/dial_${i}_${j}.png`);
+                        htmlImage.id = `dial${idNumber++}`;
+                        assets.appendChild(htmlImage);
+                    }
                 }
+                imageEntity = document.createElement('a-image');
+                imageEntity.setAttribute('src', '#dial0');
+                imageEntity.setAttribute('width', '0.2');
+                imageEntity.setAttribute('height', '0.2');
+                imageEntity.setAttribute('position', '0, 0, -0.02');
+                dialEntity.appendChild(imageEntity);
             }
-            imageEntity = document.createElement('a-image');
-            imageEntity.setAttribute('src', '#dial0');
-            imageEntity.setAttribute('width', '0.2');
-            imageEntity.setAttribute('height', '0.2');
-            imageEntity.setAttribute('position', '0, 0, -0.02');
-            dialEntity.appendChild(imageEntity);
-        }
-        {
-            const imageEntity2 = document.createElement('a-image');
-            imageEntity2.setAttribute('src', '#sample');
-            imageEntity2.setAttribute('width', '0.2');
-            imageEntity2.setAttribute('height', '0.2');
-            dialEntity.appendChild(imageEntity2);
-        }
-        {
-            const topBar = document.createElement('a-torus');
-            topBar.setAttribute('arc', '90');
-            topBar.setAttribute('radius', '0.15');
-            topBar.setAttribute('radius-tubular', '0.01');
-            topBar.setAttribute('segments-radial', '8');
-            topBar.setAttribute('segments-tubular', '4');
-            topBar.setAttribute('rotation', '0 0 45');
-            topBar.classList.add('clickable');
-            topBar.addEventListener("mouseenter", () => {
-                console.log('start');
-                track.startLooping();
-            });
-            dialEntity.appendChild(topBar);
-        }
-        {
-            const topBar = document.createElement('a-torus');
-            topBar.setAttribute('arc', '90');
-            topBar.setAttribute('radius', '0.15');
-            topBar.setAttribute('radius-tubular', '0.01');
-            topBar.setAttribute('segments-radial', '8');
-            topBar.setAttribute('segments-tubular', '4');
-            topBar.setAttribute('rotation', '0 0 225');
-            topBar.classList.add('clickable');
-            topBar.addEventListener("mouseenter", () => {
-                if (track.isLooping()) {
-                    track.stopLooping();
-                }
-                else {
-                    track.next();
-                }
-            });
-            dialEntity.appendChild(topBar);
-        }
-        scene.appendChild(dialEntity);
-        octohedron = document.querySelector('#octohedron');
-        {
-            const clapSample = new sample_1.Sample('samples/handclap.mp3', gameTime);
-            const clap = document.createElement('a-ring');
-            clap.setAttribute('color', 'teal');
-            clap.setAttribute('radius-inner', '0.05');
-            clap.setAttribute('radius-outer', '0.15');
-            clap.setAttribute('position', '-0.5 1.5 -1');
-            clap.setAttribute('theta-start', '300');
-            clap.setAttribute('theta-length', '120');
-            clap.classList.add('clickable');
-            const spacing = gameTime.getDurationForBeats(1);
-            clap.addEventListener("mouseenter", () => {
-                const nowTime = gameTime.getAudioTimeNow();
-                beatScore.strike(nowTime);
-                for (let i = 0; i < 4; ++i) {
-                    clapSample.playAt(nowTime + i * spacing);
-                }
-            });
-            body.addEventListener('keydown', (ev) => {
-                if (ev.code === 'Space') {
+            {
+                const imageEntity2 = document.createElement('a-image');
+                imageEntity2.setAttribute('src', '#sample');
+                imageEntity2.setAttribute('width', '0.2');
+                imageEntity2.setAttribute('height', '0.2');
+                dialEntity.appendChild(imageEntity2);
+            }
+            {
+                const topBar = document.createElement('a-torus');
+                topBar.setAttribute('arc', '90');
+                topBar.setAttribute('radius', '0.15');
+                topBar.setAttribute('radius-tubular', '0.01');
+                topBar.setAttribute('segments-radial', '8');
+                topBar.setAttribute('segments-tubular', '4');
+                topBar.setAttribute('rotation', '0 0 45');
+                topBar.classList.add('clickable');
+                topBar.addEventListener("mouseenter", () => {
+                    console.log('start');
+                    track.startLooping();
+                });
+                dialEntity.appendChild(topBar);
+            }
+            {
+                const topBar = document.createElement('a-torus');
+                topBar.setAttribute('arc', '90');
+                topBar.setAttribute('radius', '0.15');
+                topBar.setAttribute('radius-tubular', '0.01');
+                topBar.setAttribute('segments-radial', '8');
+                topBar.setAttribute('segments-tubular', '4');
+                topBar.setAttribute('rotation', '0 0 225');
+                topBar.classList.add('clickable');
+                topBar.addEventListener("mouseenter", () => {
+                    if (track.isLooping()) {
+                        track.stopLooping();
+                    }
+                    else {
+                        track.next();
+                    }
+                });
+                dialEntity.appendChild(topBar);
+            }
+            scene.appendChild(dialEntity);
+            octohedron = document.querySelector('#octohedron');
+            {
+                const clapSample = new sample_1.Sample('samples/handclap.mp3', gameTime);
+                const clap = document.createElement('a-ring');
+                clap.setAttribute('color', 'teal');
+                clap.setAttribute('radius-inner', '0.05');
+                clap.setAttribute('radius-outer', '0.15');
+                clap.setAttribute('position', '-0.5 1.5 -1');
+                clap.setAttribute('theta-start', '300');
+                clap.setAttribute('theta-length', '120');
+                clap.classList.add('clickable');
+                const spacing = gameTime.getDurationForBeats(1);
+                clap.addEventListener("mouseenter", () => {
                     const nowTime = gameTime.getAudioTimeNow();
                     beatScore.strike(nowTime);
                     for (let i = 0; i < 4; ++i) {
                         clapSample.playAt(nowTime + i * spacing);
                     }
-                    console.log(`Beat score: ${beatScore.getCumulativeError()}`);
-                }
-            });
-            scene.appendChild(clap);
-        }
+                });
+                body.addEventListener('keydown', (ev) => {
+                    if (ev.code === 'Space') {
+                        const nowTime = gameTime.getAudioTimeNow();
+                        beatScore.strike(nowTime);
+                        for (let i = 0; i < 4; ++i) {
+                            clapSample.playAt(nowTime + i * spacing);
+                        }
+                        console.log(`Beat score: ${beatScore.getCumulativeError()}`);
+                    }
+                });
+                scene.appendChild(clap);
+            }
+        });
     },
     tick: function (timeMs, timeDeltaMs) {
         track.tick(timeMs, timeDeltaMs);
