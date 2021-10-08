@@ -41,7 +41,8 @@ export class GameTime {
   }
 
   getAudioTimeNow() {
-    return this.audioCtxZero + this.elapsedMs / 1000;
+    return this.audioCtx.currentTime;
+    // return this.audioCtxZero + this.elapsedMs / 1000;
   }
 
   roundQuantizeAudioTime(audioTimeS) {

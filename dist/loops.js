@@ -156,7 +156,8 @@ class GameTime {
         return this.audioCtxZero + gameMs / 1000;
     }
     getAudioTimeNow() {
-        return this.audioCtxZero + this.elapsedMs / 1000;
+        return this.audioCtx.currentTime;
+        // return this.audioCtxZero + this.elapsedMs / 1000;
     }
     roundQuantizeAudioTime(audioTimeS) {
         const secondsPerBeat = 60 / this.bpm / 4;
