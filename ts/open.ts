@@ -273,7 +273,7 @@ function getBpmFromFrames(numFrames: number, audioCtx: AudioContext) {
 async function go() {
   const audioCtx = await Common.getContext();
   const sampleUri = url.searchParams.get('s');
-  const gameTime = new GameTime(120);
+  const gameTime = await GameTime.make(120);
   const sample = new Sample(sampleUri, gameTime);
   const buffer = await sample.getData();
   const body = document.getElementsByTagName('body')[0];
