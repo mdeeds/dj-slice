@@ -24,8 +24,12 @@ class BeatOrb {
     tick(timeMs, timeDeltaMs) {
         let yv = (0.4 - this.beatScore.getCumulativeError()) * timeDeltaMs / 1000;
         this.y = Math.max(0.9, this.y + yv);
-        const phase = Math.cos(Math.PI / 2 * timeMs / this.msPerBeat);
-        this.entity.object3D.position.y = this.y + 0.1 * Math.abs(Math.sin(phase));
+        const phase = (timeMs / this.msPerBeat) % 1;
+        let drop = 0;
+        if (phase < 0.25) {
+            drop = (0.25 - phase);
+        }
+        this.entity.object3D.position.y = this.y - drop * Math.abs(Math.sin(phase));
         // if (phase > 0) {
         //   this.entity.setAttribute('color', '#f00');
         // } else {
@@ -416,7 +420,7 @@ class WellScene {
             ring.setAttribute('radius-outer', '1.6');
             ring.setAttribute('position', "0, 1, 0");
             ring.setAttribute('rotation', '90 0 0');
-            ring.setAttribute('material', `color: lightblue`);
+            ring.setAttribute('material', `color: crimson`);
             ring.setAttribute('shader', 'flat');
             ring.setAttribute('side', 'double');
             ring.classList.add('clickable');
