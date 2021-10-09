@@ -20,7 +20,7 @@ AFRAME.registerComponent("go", {
 
 const body = document.getElementsByTagName('body')[0];
 body.innerHTML = `
-<a-scene go="1" background="black" transparent="false" cursor="rayOrigin: mouse">
+<a-scene stats go cursor="rayOrigin: mouse">
 <a-assets>
   <a-asset-item id="octohedron-obj" src="obj/octohedron.obj"></a-asset-item>
   <a-asset-item id="octohedron-mtl" src="obj/octohedron.mtl"></a-asset-item>

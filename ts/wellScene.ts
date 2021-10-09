@@ -46,11 +46,11 @@ export class WellScene {
   }
 
   private makeOctohedron(theta: number, scene: AFRAME.Entity): AFRAME.Entity {
-    // const octohedron = document.createElement('a-entity');
-    // //<a-entity id='octohedron' obj-model="obj: #octohedron-obj; mtl: #octohedron-mtl"></a-entity>
-    // octohedron.setAttribute('obj-model',
-    //   'obj: #octohedron-obj; mtl: #octohedron-mtl');
-    const octohedron = document.createElement('a-sphere');
+    const octohedron = document.createElement('a-entity');
+    //<a-entity id='octohedron' obj-model="obj: #octohedron-obj; mtl: #octohedron-mtl"></a-entity>
+    octohedron.setAttribute('obj-model',
+      'obj: #octohedron-obj; mtl: #octohedron-mtl');
+    // const octohedron = document.createElement('a-sphere');
     octohedron.setAttribute('radius', '0.2');
     scene.appendChild(octohedron);
     (octohedron.object3D.position as THREE.Vector3).

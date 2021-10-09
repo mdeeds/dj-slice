@@ -273,7 +273,7 @@ AFRAME.registerComponent("go", {
 });
 const body = document.getElementsByTagName('body')[0];
 body.innerHTML = `
-<a-scene go="1" background="black" transparent="false" cursor="rayOrigin: mouse">
+<a-scene stats go cursor="rayOrigin: mouse">
 <a-assets>
   <a-asset-item id="octohedron-obj" src="obj/octohedron.obj"></a-asset-item>
   <a-asset-item id="octohedron-mtl" src="obj/octohedron.mtl"></a-asset-item>
@@ -425,11 +425,10 @@ class WellScene {
         return ring;
     }
     makeOctohedron(theta, scene) {
-        // const octohedron = document.createElement('a-entity');
-        // //<a-entity id='octohedron' obj-model="obj: #octohedron-obj; mtl: #octohedron-mtl"></a-entity>
-        // octohedron.setAttribute('obj-model',
-        //   'obj: #octohedron-obj; mtl: #octohedron-mtl');
-        const octohedron = document.createElement('a-sphere');
+        const octohedron = document.createElement('a-entity');
+        //<a-entity id='octohedron' obj-model="obj: #octohedron-obj; mtl: #octohedron-mtl"></a-entity>
+        octohedron.setAttribute('obj-model', 'obj: #octohedron-obj; mtl: #octohedron-mtl');
+        // const octohedron = document.createElement('a-sphere');
         octohedron.setAttribute('radius', '0.2');
         scene.appendChild(octohedron);
         octohedron.object3D.position.
