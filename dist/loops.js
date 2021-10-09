@@ -12,15 +12,26 @@ const beatScore_1 = __webpack_require__(461);
 class BeatOrb {
     constructor(entity, bpm) {
         this.entity = entity;
+        this.y = 1.0;
         this.beatScore = new beatScore_1.BeatScore(bpm);
+        this.msPerBeat = 1000 * 60 / bpm;
+        console.log(`Seconds per beat: ${(this.msPerBeat / 1000).toFixed(2)}`);
+        this.entity.setAttribute('color', '#0f0');
     }
     strike(eventTimeS) {
         this.beatScore.strike(eventTimeS);
     }
     tick(timeMs, timeDeltaMs) {
-        let y = this.entity.object3D.position.y;
         let yv = (0.4 - this.beatScore.getCumulativeError()) * timeDeltaMs / 1000;
-        this.entity.object3D.position.y = Math.max(0.9, y + yv);
+        this.y = Math.max(0.9, this.y + yv);
+        const phase = Math.cos(Math.PI / 2 * timeMs / this.msPerBeat);
+        this.entity.object3D.position.y = this.y + 0.1 * Math.abs(Math.sin(phase));
+        // if (phase > 0) {
+        //   this.entity.setAttribute('color', '#f00');
+        // } else {
+        //   this.entity.setAttribute('color', '#00f');
+        // }
+        //this.entity.setAttribute('material', 'roughness', Math.abs(phase));
     }
 }
 exports.BeatOrb = BeatOrb;
@@ -414,9 +425,12 @@ class WellScene {
         return ring;
     }
     makeOctohedron(theta, scene) {
-        const octohedron = document.createElement('a-entity');
-        //<a-entity id='octohedron' obj-model="obj: #octohedron-obj; mtl: #octohedron-mtl"></a-entity>
-        octohedron.setAttribute('obj-model', 'obj: #octohedron-obj; mtl: #octohedron-mtl');
+        // const octohedron = document.createElement('a-entity');
+        // //<a-entity id='octohedron' obj-model="obj: #octohedron-obj; mtl: #octohedron-mtl"></a-entity>
+        // octohedron.setAttribute('obj-model',
+        //   'obj: #octohedron-obj; mtl: #octohedron-mtl');
+        const octohedron = document.createElement('a-sphere');
+        octohedron.setAttribute('radius', '0.2');
         scene.appendChild(octohedron);
         octohedron.object3D.position.
             set(2 * Math.sin(theta), 1, 2 * Math.cos(theta));
@@ -424,11 +438,10 @@ class WellScene {
     }
     init(scene, player, gameTime) {
         let theta = 0;
-        const bpms = [];
-        bpms.push(85, 90, 100, 115, 120, 145, 168);
-        for (const bpm in bpms) {
+        const bpms = [85, 90, 100, 115, 120, 145, 168];
+        for (const bpm of bpms) {
             this.beatOrbs.push(new beatOrb_1.BeatOrb(this.makeOctohedron(theta, scene), bpm));
-            theta += 2 * Math.PI / 5;
+            theta += 2 * Math.PI / bpms.length;
         }
         const clapSample = new sample_1.Sample('samples/handclap.mp3', gameTime);
         const clap = this.addBasket(player);
