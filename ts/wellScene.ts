@@ -1,11 +1,13 @@
 import * as AFRAME from "aframe";
 import * as THREE from "three";
 import { BeatOrb } from "./beatOrb";
+import { BurnerEntity } from "./burnerEntity";
 import { GameTime } from "./gameTime";
 import { Sample } from "./sample";
 
 export class WellScene {
   private beatOrbs: BeatOrb[] = [];
+  private burnerEntity: BurnerEntity = null;
 
   constructor() {
   }
@@ -45,6 +47,17 @@ export class WellScene {
     return ring;
   }
 
+  private addBurner(player: AFRAME.Entity) {
+    const c = document.createElement('a-cylinder');
+    c.setAttribute('height', '0.8');
+    c.setAttribute('radius', '1.0');
+    c.setAttribute('color', 'silver');
+    c.setAttribute('material', 'metalness: 1');
+    c.setAttribute('position', '0 3.5 0');
+    player.appendChild(c);
+    return c;
+  }
+
   private makeOctohedron(theta: number, scene: AFRAME.Entity): AFRAME.Entity {
     const octohedron = document.createElement('a-entity');
     //<a-entity id='octohedron' obj-model="obj: #octohedron-obj; mtl: #octohedron-mtl"></a-entity>
@@ -60,9 +73,12 @@ export class WellScene {
 
   init(scene: AFRAME.Entity, player: AFRAME.Entity, gameTime: GameTime) {
     let theta: number = 0;
+    this.burnerEntity = new BurnerEntity(this.addBurner(player), gameTime);
+
     const bpms = [85, 90, 100, 115, 120, 145, 168];
     for (const bpm of bpms) {
-      this.beatOrbs.push(new BeatOrb(this.makeOctohedron(theta, scene), bpm));
+      this.beatOrbs.push(new BeatOrb(this.makeOctohedron(theta, scene), bpm,
+        () => this.lightTheBurner(bpm)));
       theta += 2 * Math.PI / bpms.length;
     }
 
@@ -88,9 +104,18 @@ export class WellScene {
     });
   }
 
+  lightTheBurner(bpm: number) {
+    for (const o of this.beatOrbs) {
+      o.remove();
+    }
+    this.beatOrbs.splice(0);
+    this.burnerEntity.start(bpm);
+  }
+
   tick(timeMs: number, timeDeltaMs: number) {
     for (const o of this.beatOrbs) {
       o.tick(timeMs, timeDeltaMs);
     }
+    this.burnerEntity.tick(timeMs, timeDeltaMs);
   }
 }

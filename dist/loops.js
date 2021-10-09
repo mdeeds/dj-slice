@@ -10,8 +10,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BeatOrb = void 0;
 const beatScore_1 = __webpack_require__(461);
 class BeatOrb {
-    constructor(entity, bpm) {
+    constructor(entity, bpm, oncomplete) {
         this.entity = entity;
+        this.oncomplete = oncomplete;
         this.y = 1.0;
         this.beatScore = new beatScore_1.BeatScore(bpm);
         this.msPerBeat = 1000 * 60 / bpm;
@@ -30,12 +31,18 @@ class BeatOrb {
             drop = (0.25 - phase);
         }
         this.entity.object3D.position.y = this.y - drop * Math.abs(Math.sin(phase));
+        if (this.y > 2) {
+            this.oncomplete();
+        }
         // if (phase > 0) {
         //   this.entity.setAttribute('color', '#f00');
         // } else {
         //   this.entity.setAttribute('color', '#00f');
         // }
         //this.entity.setAttribute('material', 'roughness', Math.abs(phase));
+    }
+    remove() {
+        this.entity.remove();
     }
 }
 exports.BeatOrb = BeatOrb;
@@ -101,6 +108,47 @@ class BeatScore {
 }
 exports.BeatScore = BeatScore;
 //# sourceMappingURL=beatScore.js.map
+
+/***/ }),
+
+/***/ 858:
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BurnerEntity = void 0;
+const sample_1 = __webpack_require__(263);
+class BurnerEntity {
+    constructor(entity, gameTime) {
+        this.entity = entity;
+        this.gameTime = gameTime;
+        this.secondsPerBeat = null;
+        this.startTimeS = null;
+        this.lastBeat = -1;
+        this.sample = new sample_1.Sample('samples/shaker.mp3', gameTime);
+    }
+    start(bpm) {
+        this.secondsPerBeat = 60 / bpm;
+        this.startTimeS = this.gameTime.getAudioTimeNow();
+        this.gameTime.setBpm(bpm);
+    }
+    tick(timeMs, timeDeltaMs) {
+        if (this.startTimeS) {
+            const beatNumber = Math.trunc((this.gameTime.getAudioTimeNow() - this.startTimeS) /
+                this.secondsPerBeat);
+            if (this.lastBeat != beatNumber) {
+                this.lastBeat = beatNumber;
+                // TODO: Clean up the timing here.
+                if (beatNumber % 4 == 0) {
+                    this.sample.playAt(this.gameTime.getAudioTimeNow());
+                }
+            }
+        }
+    }
+}
+exports.BurnerEntity = BurnerEntity;
+//# sourceMappingURL=burnerEntity.js.map
 
 /***/ }),
 
@@ -190,6 +238,9 @@ class GameTime {
     }
     getBpm() {
         return this.bpm;
+    }
+    setBpm(bpm) {
+        this.bpm = bpm;
     }
     getElapsedMs() {
         return this.elapsedMs;
@@ -287,12 +338,14 @@ body.innerHTML = `
 <a-entity light="type: ambient; color: #017; intensity: 0.2"></a-entity>
 
 <a-entity id='player'>
-  <a-camera position="0 1.6 0"></a-camera>
-  <a-entity light="type: point; color: #fe9; intensity: 1" position="0 1.7 -0.1"></a-entity>
-  <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 5;" line="color: #44d"
-    pointer></a-entity>
-  <a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 5;" line="color: #d44"
-    pointer></a-entity>
+  <a-entity id='human' wasd-controls="acceleration:20" lookcontrols>
+    <a-camera position="0 1.6 0" wasd-controls="enabled:false" lookcontrols="enabled:false"></a-camera>
+    <a-entity light="type: point; color: #fe9; intensity: 1" position="0 1.7 -0.1"></a-entity>
+    <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 5;" line="color: #44d"
+      pointer></a-entity>
+    <a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 5;" line="color: #d44"
+      pointer></a-entity>
+  </a-entity>
 </a-entity>
   </a-scene>
 `;
@@ -390,10 +443,12 @@ exports.Sample = Sample;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WellScene = void 0;
 const beatOrb_1 = __webpack_require__(637);
+const burnerEntity_1 = __webpack_require__(858);
 const sample_1 = __webpack_require__(263);
 class WellScene {
     constructor() {
         this.beatOrbs = [];
+        this.burnerEntity = null;
     }
     addBasket(player) {
         {
@@ -428,6 +483,16 @@ class WellScene {
         }
         return ring;
     }
+    addBurner(player) {
+        const c = document.createElement('a-cylinder');
+        c.setAttribute('height', '0.8');
+        c.setAttribute('radius', '1.0');
+        c.setAttribute('color', 'silver');
+        c.setAttribute('material', 'metalness: 1');
+        c.setAttribute('position', '0 3.5 0');
+        player.appendChild(c);
+        return c;
+    }
     makeOctohedron(theta, scene) {
         const octohedron = document.createElement('a-entity');
         //<a-entity id='octohedron' obj-model="obj: #octohedron-obj; mtl: #octohedron-mtl"></a-entity>
@@ -441,9 +506,10 @@ class WellScene {
     }
     init(scene, player, gameTime) {
         let theta = 0;
+        this.burnerEntity = new burnerEntity_1.BurnerEntity(this.addBurner(player), gameTime);
         const bpms = [85, 90, 100, 115, 120, 145, 168];
         for (const bpm of bpms) {
-            this.beatOrbs.push(new beatOrb_1.BeatOrb(this.makeOctohedron(theta, scene), bpm));
+            this.beatOrbs.push(new beatOrb_1.BeatOrb(this.makeOctohedron(theta, scene), bpm, () => this.lightTheBurner(bpm)));
             theta += 2 * Math.PI / bpms.length;
         }
         const clapSample = new sample_1.Sample('samples/handclap.mp3', gameTime);
@@ -467,10 +533,18 @@ class WellScene {
             }
         });
     }
+    lightTheBurner(bpm) {
+        for (const o of this.beatOrbs) {
+            o.remove();
+        }
+        this.beatOrbs.splice(0);
+        this.burnerEntity.start(bpm);
+    }
     tick(timeMs, timeDeltaMs) {
         for (const o of this.beatOrbs) {
             o.tick(timeMs, timeDeltaMs);
         }
+        this.burnerEntity.tick(timeMs, timeDeltaMs);
     }
 }
 exports.WellScene = WellScene;

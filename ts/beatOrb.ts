@@ -1,11 +1,14 @@
 import * as AFRAME from "aframe";
 import { BeatScore } from "./beatScore";
 
+export type CompleteCallback = () => void;
+
 export class BeatOrb {
   private readonly beatScore: BeatScore;
   private msPerBeat: number;
   private y: number = 1.0;
-  constructor(private entity: AFRAME.Entity, bpm: number) {
+  constructor(private entity: AFRAME.Entity, bpm: number,
+    private oncomplete: CompleteCallback) {
     this.beatScore = new BeatScore(bpm);
     this.msPerBeat = 1000 * 60 / bpm;
     console.log(`Seconds per beat: ${(this.msPerBeat / 1000).toFixed(2)}`);
@@ -25,11 +28,18 @@ export class BeatOrb {
       drop = (0.25 - phase);
     }
     this.entity.object3D.position.y = this.y - drop * Math.abs(Math.sin(phase));
+    if (this.y > 2) {
+      this.oncomplete();
+    }
     // if (phase > 0) {
     //   this.entity.setAttribute('color', '#f00');
     // } else {
     //   this.entity.setAttribute('color', '#00f');
     // }
     //this.entity.setAttribute('material', 'roughness', Math.abs(phase));
+  }
+
+  remove() {
+    this.entity.remove();
   }
 }
