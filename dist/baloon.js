@@ -78,40 +78,45 @@ function makeBalloon(player) {
     c.setAttribute('position', '0 3.5 0');
     player.appendChild(c);
 }
-function addClip(player, track, gameTime) {
+function addClip(player, track, gameTime, theta, sampleIndex) {
     const container = document.createElement('a-entity');
-    container.setAttribute('position', '0 1.3 -0.7');
-    {
-        const o = document.createElement('a-box');
-        o.setAttribute('width', '0.2');
-        o.setAttribute('height', '0.15');
-        o.setAttribute('depth', '0.05');
-        o.setAttribute('position', '0 0.30, 0');
-        o.setAttribute('shader', 'flat');
-        o.classList.add('clickable');
-        container.appendChild(o);
-    }
-    {
-        const o = document.createElement('a-entity');
-        o.setAttribute('obj-model', 'obj: url(obj/trapezoid-full.obj); mtl: url(obj/trapezoid-full.mtl');
-        o.setAttribute('shader', 'flat');
-        o.setAttribute('rotation', '0 0 180');
-        o.classList.add('clickable');
-        container.appendChild(o);
-    }
-    {
-        const o = document.createElement('a-entity');
-        o.setAttribute('obj-model', 'obj: url(obj/trapezoid.obj); mtl: url(obj/trapezoid-full.mtl');
-        o.setAttribute('shader', 'flat');
-        o.setAttribute('rotation', '0 0 90');
-        o.classList.add('clickable');
-        container.appendChild(o);
-    }
+    const x = 0.7 * Math.sin(theta);
+    const z = -0.7 * Math.cos(theta);
+    container.setAttribute('position', `${x} 1.3 ${z}`);
+    container.setAttribute('rotation', `0 ${-180 / Math.PI * theta} 0`);
+    // {
+    //   const o = document.createElement('a-box');
+    //   o.setAttribute('width', '0.2');
+    //   o.setAttribute('height', '0.15');
+    //   o.setAttribute('depth', '0.05');
+    //   o.setAttribute('position', '0 0.30, 0');
+    //   o.setAttribute('shader', 'flat');
+    //   o.classList.add('clickable');
+    //   container.appendChild(o);
+    // }
+    // {
+    //   const o = document.createElement('a-entity');
+    //   o.setAttribute('obj-model',
+    //     'obj: url(obj/trapezoid-full.obj); mtl: url(obj/trapezoid-full.mtl');
+    //   o.setAttribute('shader', 'flat');
+    //   o.setAttribute('rotation', '0 0 180')
+    //   o.classList.add('clickable');
+    //   container.appendChild(o);
+    // }
+    // {
+    //   const o = document.createElement('a-entity');
+    //   o.setAttribute('obj-model',
+    //     'obj: url(obj/trapezoid.obj); mtl: url(obj/trapezoid-full.mtl');
+    //   o.setAttribute('shader', 'flat');
+    //   o.setAttribute('rotation', '0 0 90')
+    //   o.classList.add('clickable');
+    //   container.appendChild(o);
+    // }
     {
         const o = document.createElement('a-image');
         o.setAttribute('height', '0.2');
         o.setAttribute('width', '0.2');
-        o.setAttribute('src', track.getImage(0));
+        o.setAttribute('src', track.getImage(sampleIndex));
         o.setAttribute('transparent', 'true');
         o.setAttribute('opacity', '0.5');
         container.appendChild(o);
@@ -159,13 +164,19 @@ AFRAME.registerComponent("go", {
             collisionHandler = new collisionHandler_1.CollisionHandler();
             leftStick = addStick(document.querySelector('#leftHand'));
             rightStick = addStick(document.querySelector('#rightHand'));
-            const clip = addClip(player, samplePack.tracks[0], gameTime);
-            collisionHandler.addPair(clip, leftStick, 0.1, () => {
-                samplePack.tracks[0].getSample(0).playAt(gameTime.getAudioTimeNow());
-            });
-            collisionHandler.addPair(clip, rightStick, 0.1, () => {
-                samplePack.tracks[0].getSample(0).playAt(gameTime.getAudioTimeNow());
-            });
+            let theta = 0;
+            for (const track of samplePack.tracks) {
+                for (let i = 0; i < track.numSamples(); ++i) {
+                    const clip = addClip(player, track, gameTime, theta, i);
+                    collisionHandler.addPair(clip, leftStick, 0.1, () => {
+                        track.getSample(i).playAt(gameTime.getAudioTimeNow());
+                    });
+                    collisionHandler.addPair(clip, rightStick, 0.1, () => {
+                        track.getSample(i).playAt(gameTime.getAudioTimeNow());
+                    });
+                    theta += Math.PI * 2 / 16;
+                }
+            }
         });
     },
     tick: function (timeMs, timeDeltaMs) {
@@ -582,6 +593,9 @@ class Track {
     }
     getImage(i) {
         return this.images[i];
+    }
+    numSamples() {
+        return this.samples.length;
     }
 }
 exports.Track = Track;
