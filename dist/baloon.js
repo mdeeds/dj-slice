@@ -36,7 +36,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const AFRAME = __importStar(__webpack_require__(449));
-const THREE = __importStar(__webpack_require__(578));
 const collisionHandler_1 = __webpack_require__(44);
 const debug_1 = __webpack_require__(756);
 const gameTime_1 = __webpack_require__(669);
@@ -90,9 +89,6 @@ function addClip(player, track, gameTime) {
         o.setAttribute('position', '0 0.30, 0');
         o.setAttribute('shader', 'flat');
         o.classList.add('clickable');
-        o.addEventListener('mouseenter', (ev) => {
-            track.getSample(0).playAt(gameTime.getAudioTimeNow());
-        });
         container.appendChild(o);
     }
     {
@@ -101,9 +97,6 @@ function addClip(player, track, gameTime) {
         o.setAttribute('shader', 'flat');
         o.setAttribute('rotation', '0 0 180');
         o.classList.add('clickable');
-        o.addEventListener('mouseenter', (ev) => {
-            track.getSample(0).playAt(gameTime.getAudioTimeNow());
-        });
         container.appendChild(o);
     }
     {
@@ -112,9 +105,6 @@ function addClip(player, track, gameTime) {
         o.setAttribute('shader', 'flat');
         o.setAttribute('rotation', '0 0 90');
         o.classList.add('clickable');
-        o.addEventListener('mouseenter', (ev) => {
-            track.getSample(0).playAt(gameTime.getAudioTimeNow());
-        });
         container.appendChild(o);
     }
     {
@@ -154,6 +144,7 @@ function addStick(container) {
 }
 var leftStick = null;
 var rightStick = null;
+var collisionHandler = null;
 AFRAME.registerComponent("go", {
     init: function () {
         return __awaiter(this, void 0, void 0, function* () {
@@ -165,7 +156,7 @@ AFRAME.registerComponent("go", {
             const samplePack = yield samplePack_1.SamplePack.load('funk', gameTime, assets);
             gameTime.start();
             debug_1.Debug.init(document.querySelector('a-camera'));
-            const collisionHandler = new collisionHandler_1.CollisionHandler();
+            collisionHandler = new collisionHandler_1.CollisionHandler();
             leftStick = addStick(document.querySelector('#leftHand'));
             rightStick = addStick(document.querySelector('#rightHand'));
             const clip = addClip(player, samplePack.tracks[0], gameTime);
@@ -182,18 +173,8 @@ AFRAME.registerComponent("go", {
         const h = Math.sin(Math.PI * p) * 100; // 100m maximum height
         const r = 0.5 * (1 - Math.cos(Math.PI * p)) * 2000; // glide 2km
         player.setAttribute('position', `0, ${h}, ${-r}`);
-        if (leftStick) {
-            const playerPos = new THREE.Vector3();
-            player.object3D.getWorldPosition(playerPos);
-            const lPos = new THREE.Vector3();
-            leftStick.object3D.getWorldPosition(lPos);
-            const rPos = new THREE.Vector3();
-            rightStick.object3D.getWorldPosition(rPos);
-            lPos.sub(playerPos);
-            rPos.sub(playerPos);
-            const lDistance = lPos.length();
-            const rDistance = rPos.length();
-            debug_1.Debug.set(`Left: ${lDistance.toFixed(3)}\nRight: ${rDistance.toFixed(3)}`);
+        if (collisionHandler) {
+            collisionHandler.tick(timeMs, timeDeltaMs);
         }
     }
 });
@@ -257,13 +238,20 @@ class CollisionPair {
         this.f = f;
         this.aPos = new THREE.Vector3();
         this.bPos = new THREE.Vector3();
+        this.isColliding = false;
     }
     tick(timeMs, timeDeltaMs) {
         this.a.object3D.getWorldPosition(this.aPos);
         this.b.object3D.getWorldPosition(this.bPos);
         this.aPos.sub(this.bPos);
         if (this.aPos.length() <= this.r) {
-            this.f();
+            if (!this.isColliding) {
+                this.isColliding = true;
+                this.f();
+            }
+        }
+        else {
+            this.isColliding = false;
         }
     }
 }
