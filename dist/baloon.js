@@ -108,7 +108,10 @@ function addClip(player, track, gameTime, theta, sampleIndex) {
         o.setAttribute('obj-model', 'obj: url(obj/trapezoid.obj); mtl: url(obj/trapezoid-full.mtl');
         o.setAttribute('shader', 'flat');
         o.setAttribute('rotation', '0 0 180');
-        // o.classList.add('clickable');
+        o.classList.add('clickable');
+        o.addEventListener('mouseenter', () => {
+            debug_1.Debug.set(`Enter ${Math.random().toFixed(5)}`);
+        });
         container.appendChild(o);
     }
     {
@@ -118,6 +121,7 @@ function addClip(player, track, gameTime, theta, sampleIndex) {
         o.setAttribute('src', track.getImage(sampleIndex));
         o.setAttribute('transparent', 'true');
         o.setAttribute('opacity', '0.5');
+        o.setAttribute('shader', 'flat');
         container.appendChild(o);
     }
     player.appendChild(container);
@@ -476,7 +480,10 @@ class Sample {
                     const audioData = request.response;
                     this.audioCtx.decodeAudioData(audioData, function (buffer) {
                         resolve(buffer);
-                    }, reject);
+                    }, function (err) {
+                        debug_1.Debug.set(`Failed to decode ${this.url}`);
+                        reject(err);
+                    });
                 };
                 request.send();
             });
@@ -493,6 +500,9 @@ class Sample {
             console.error('Sample is not loaded!');
             debug_1.Debug.set(`Not loaded: ${this.url}`);
             return;
+        }
+        else {
+            debug_1.Debug.set(`Play @ ${audioTimeS.toFixed(3)}\n${this.url}`);
         }
         const audioNode = this.audioCtx.createBufferSource();
         this.previousNode = audioNode;
