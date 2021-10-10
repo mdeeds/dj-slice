@@ -127,13 +127,26 @@ function addClip(player, track, gameTime) {
     player.appendChild(container);
 }
 function addStick(container) {
-    const o = document.createElement('a-box');
-    o.setAttribute('height', '0.4');
-    o.setAttribute('width', '0.01');
-    o.setAttribute('depth', '0.01');
-    o.setAttribute('position', '0 0.2 0');
-    container.appendChild(o);
+    {
+        const o = document.createElement('a-box');
+        o.setAttribute('height', '0.4');
+        o.setAttribute('width', '0.01');
+        o.setAttribute('depth', '0.01');
+        o.setAttribute('position', '0 0.2 0');
+        container.appendChild(o);
+    }
+    {
+        const o = document.createElement('a-box');
+        o.setAttribute('height', '0.011');
+        o.setAttribute('width', '0.011');
+        o.setAttribute('depth', '0.011');
+        o.setAttribute('position', '0 0.4 0');
+        container.appendChild(o);
+        return o;
+    }
 }
+var leftStick = null;
+var rightStick = null;
 AFRAME.registerComponent("go", {
     init: function () {
         return __awaiter(this, void 0, void 0, function* () {
@@ -146,8 +159,8 @@ AFRAME.registerComponent("go", {
             gameTime.start();
             debug_1.Debug.init(document.querySelector('a-camera'));
             addClip(player, samplePack.tracks[0], gameTime);
-            addStick(document.querySelector('#leftHand'));
-            addStick(document.querySelector('#rightHand'));
+            leftStick = addStick(document.querySelector('#leftHand'));
+            rightStick = addStick(document.querySelector('#rightHand'));
         });
     },
     tick: function (timeMs, timeDeltaMs) {
@@ -155,10 +168,10 @@ AFRAME.registerComponent("go", {
         const h = Math.sin(Math.PI * p) * 100; // 100m maximum height
         const r = 0.5 * (1 - Math.cos(Math.PI * p)) * 2000; // glide 2km
         player.setAttribute('position', `0, ${h}, ${-r}`);
-        {
-            const left = document.querySelector('#leftHand');
-            const distance = left.object3D.position.length();
-            debug_1.Debug.set(`Distance: ${distance.toFixed(3)}`);
+        if (leftStick) {
+            const lDistance = leftStick.object3D.position.length();
+            const rDistance = rightStick.object3D.position.length();
+            debug_1.Debug.set(`Left: ${lDistance.toFixed(3)}\nRight: ${rDistance.toFixed(3)}`);
         }
     }
 });
