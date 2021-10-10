@@ -32,6 +32,10 @@ export class GameTime {
     return this.bpm;
   }
 
+  setBpm(bpm: number) {
+    this.bpm = bpm;
+  }
+
   getElapsedMs() {
     return this.elapsedMs;
   }

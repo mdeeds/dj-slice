@@ -20,7 +20,7 @@ AFRAME.registerComponent("go", {
 
 const body = document.getElementsByTagName('body')[0];
 body.innerHTML = `
-<a-scene go="1" background="black" transparent="false" cursor="rayOrigin: mouse">
+<a-scene stats go cursor="rayOrigin: mouse">
 <a-assets>
   <a-asset-item id="octohedron-obj" src="obj/octohedron.obj"></a-asset-item>
   <a-asset-item id="octohedron-mtl" src="obj/octohedron.mtl"></a-asset-item>
@@ -30,12 +30,14 @@ body.innerHTML = `
 <a-entity light="type: ambient; color: #017; intensity: 0.2"></a-entity>
 
 <a-entity id='player'>
-  <a-camera position="0 1.6 0"></a-camera>
-  <a-entity light="type: point; color: #fe9; intensity: 1" position="0 1.7 -0.1"></a-entity>
-  <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 5;" line="color: #44d"
-    pointer></a-entity>
-  <a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 5;" line="color: #d44"
-    pointer></a-entity>
+  <a-entity id='human' wasd-controls="acceleration:20" lookcontrols>
+    <a-camera position="0 1.6 0" wasd-controls="enabled:false" lookcontrols="enabled:false"></a-camera>
+    <a-entity light="type: point; color: #fe9; intensity: 1" position="0 1.7 -0.1"></a-entity>
+    <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 5;" line="color: #44d"
+      pointer></a-entity>
+    <a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 5;" line="color: #d44"
+      pointer></a-entity>
+  </a-entity>
 </a-entity>
   </a-scene>
 `;
