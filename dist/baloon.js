@@ -43,8 +43,8 @@ AFRAME.registerComponent("go", {
         player = document.querySelector('#player');
         const baloon = document.createElement('a-sphere');
         baloon.setAttribute('color', 'purple');
-        baloon.setAttribute('radius', '5');
-        baloon.setAttribute('position', '0 8 0');
+        baloon.setAttribute('radius', '7');
+        baloon.setAttribute('position', '0 11 0');
         player.appendChild(baloon);
         const basket = document.createElement('a-cylinder');
         basket.setAttribute('color', 'burlywood');
@@ -60,6 +60,13 @@ AFRAME.registerComponent("go", {
         floor.setAttribute('height', '0.02');
         floor.setAttribute('position', '0 -0.01 0');
         player.appendChild(floor);
+        const c = document.createElement('a-cylinder');
+        c.setAttribute('height', '0.8');
+        c.setAttribute('radius', '1.0');
+        c.setAttribute('color', 'silver');
+        c.setAttribute('material', 'metalness: 1');
+        c.setAttribute('position', '0 3.5 0');
+        player.appendChild(c);
         // for (let i = -40; i <= 40; ++i) {
         //   for (let j = -100; j <= 0; ++j) {
         //     if (i % 3 == 0 || j % 6 == 0) {
