@@ -126,6 +126,14 @@ function addClip(player, track, gameTime) {
     }
     player.appendChild(container);
 }
+function addStick(container) {
+    const o = document.createElement('a-box');
+    o.setAttribute('height', '0.4');
+    o.setAttribute('width', '0.01');
+    o.setAttribute('depth', '0.01');
+    o.setAttribute('position', '0 0.2 0');
+    container.appendChild(o);
+}
 AFRAME.registerComponent("go", {
     init: function () {
         return __awaiter(this, void 0, void 0, function* () {
@@ -138,6 +146,8 @@ AFRAME.registerComponent("go", {
             gameTime.start();
             debug_1.Debug.init(document.querySelector('a-camera'));
             addClip(player, samplePack.tracks[0], gameTime);
+            addStick(document.querySelector('#leftHand'));
+            addStick(document.querySelector('#rightHand'));
         });
     },
     tick: function (timeMs, timeDeltaMs) {
@@ -165,9 +175,9 @@ body.innerHTML = `
 <a-entity light="type:directional; color: #777" position="100 300 400"></a-entity>
 <a-entity light="type:directional; color: #777" position="100 -200 500"></a-entity>
 <a-camera position="0 1.6 0"></a-camera>
-  <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 0.8;" line="color: #44d"
+  <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 5;" line="color: #44d"
     pointer></a-entity>
-  <a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 0.8;" line="color: #d44"
+  <a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 5;" line="color: #d44"
     pointer></a-entity>
 </a-entity>
 
