@@ -103,15 +103,14 @@ function addClip(player, track, gameTime, theta, sampleIndex) {
     //   o.classList.add('clickable');
     //   container.appendChild(o);
     // }
-    // {
-    //   const o = document.createElement('a-entity');
-    //   o.setAttribute('obj-model',
-    //     'obj: url(obj/trapezoid.obj); mtl: url(obj/trapezoid-full.mtl');
-    //   o.setAttribute('shader', 'flat');
-    //   o.setAttribute('rotation', '0 0 90')
-    //   o.classList.add('clickable');
-    //   container.appendChild(o);
-    // }
+    {
+        const o = document.createElement('a-entity');
+        o.setAttribute('obj-model', 'obj: url(obj/trapezoid.obj); mtl: url(obj/trapezoid-full.mtl');
+        o.setAttribute('shader', 'flat');
+        o.setAttribute('rotation', '0 0 180');
+        // o.classList.add('clickable');
+        container.appendChild(o);
+    }
     {
         const o = document.createElement('a-image');
         o.setAttribute('height', '0.2');
@@ -169,9 +168,11 @@ AFRAME.registerComponent("go", {
                 for (let i = 0; i < track.numSamples(); ++i) {
                     const clip = addClip(player, track, gameTime, theta, i);
                     collisionHandler.addPair(clip, leftStick, 0.1, () => {
+                        track.getSample(i).stop();
                         track.getSample(i).playAt(gameTime.getAudioTimeNow());
                     });
                     collisionHandler.addPair(clip, rightStick, 0.1, () => {
+                        track.getSample(i).stop();
                         track.getSample(i).playAt(gameTime.getAudioTimeNow());
                     });
                     theta += Math.PI * 2 / 16;
@@ -449,6 +450,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Sample = void 0;
 const common_1 = __webpack_require__(648);
+const debug_1 = __webpack_require__(756);
 class Sample {
     constructor(url, gameTime) {
         this.url = url;
@@ -489,6 +491,7 @@ class Sample {
     playAt(audioTimeS) {
         if (!this.audioCtx || !this.buffer) {
             console.error('Sample is not loaded!');
+            debug_1.Debug.set(`Not loaded: ${this.url}`);
             return;
         }
         const audioNode = this.audioCtx.createBufferSource();
