@@ -5,7 +5,7 @@ export class Debug {
   static init(container: AFRAME.Entity) {
     Debug.text = document.createElement('a-entity');
     Debug.text.setAttribute('text', 'value: "Hello, World!";');
-    Debug.text.setAttribute('position', '0 2 -3');
+    Debug.text.setAttribute('position', '0 0.3 -1');
     container.appendChild(Debug.text);
   }
 
