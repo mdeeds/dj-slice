@@ -37,6 +37,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const AFRAME = __importStar(__webpack_require__(449));
 const THREE = __importStar(__webpack_require__(578));
+const collisionHandler_1 = __webpack_require__(44);
 const debug_1 = __webpack_require__(756);
 const gameTime_1 = __webpack_require__(669);
 const samplePack_1 = __webpack_require__(780);
@@ -126,6 +127,7 @@ function addClip(player, track, gameTime) {
         container.appendChild(o);
     }
     player.appendChild(container);
+    return container;
 }
 function addStick(container) {
     {
@@ -163,9 +165,16 @@ AFRAME.registerComponent("go", {
             const samplePack = yield samplePack_1.SamplePack.load('funk', gameTime, assets);
             gameTime.start();
             debug_1.Debug.init(document.querySelector('a-camera'));
-            addClip(player, samplePack.tracks[0], gameTime);
+            const collisionHandler = new collisionHandler_1.CollisionHandler();
             leftStick = addStick(document.querySelector('#leftHand'));
             rightStick = addStick(document.querySelector('#rightHand'));
+            const clip = addClip(player, samplePack.tracks[0], gameTime);
+            collisionHandler.addPair(clip, leftStick, 0.1, () => {
+                samplePack.tracks[0].getSample(0).playAt(gameTime.getAudioTimeNow());
+            });
+            collisionHandler.addPair(clip, rightStick, 0.1, () => {
+                samplePack.tracks[0].getSample(0).playAt(gameTime.getAudioTimeNow());
+            });
         });
     },
     tick: function (timeMs, timeDeltaMs) {
@@ -210,6 +219,69 @@ body.innerHTML = `
 </a-scene>
 `;
 //# sourceMappingURL=baloon.js.map
+
+/***/ }),
+
+/***/ 44:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CollisionHandler = void 0;
+const THREE = __importStar(__webpack_require__(578));
+class CollisionPair {
+    constructor(a, b, r, f) {
+        this.a = a;
+        this.b = b;
+        this.r = r;
+        this.f = f;
+        this.aPos = new THREE.Vector3();
+        this.bPos = new THREE.Vector3();
+    }
+    tick(timeMs, timeDeltaMs) {
+        this.a.object3D.getWorldPosition(this.aPos);
+        this.b.object3D.getWorldPosition(this.bPos);
+        this.aPos.sub(this.bPos);
+        if (this.aPos.length() <= this.r) {
+            this.f();
+        }
+    }
+}
+class CollisionHandler {
+    constructor() {
+        this.pairs = [];
+    }
+    addPair(a, b, r, f) {
+        this.pairs.push(new CollisionPair(a, b, r, f));
+    }
+    tick(timeMs, timeDeltaMs) {
+        for (const p of this.pairs) {
+            p.tick(timeMs, timeDeltaMs);
+        }
+    }
+}
+exports.CollisionHandler = CollisionHandler;
+//# sourceMappingURL=collisionHandler.js.map
 
 /***/ }),
 
