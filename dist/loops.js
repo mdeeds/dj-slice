@@ -322,8 +322,10 @@ AFRAME.registerComponent("go", {
         });
     },
     tick: function (timeMs, timeDeltaMs) {
-        gameTime.tick(timeMs, timeDeltaMs);
-        wellScene.tick(timeMs, timeDeltaMs);
+        if (gameTime) {
+            gameTime.tick(timeMs, timeDeltaMs);
+            wellScene.tick(timeMs, timeDeltaMs);
+        }
     }
 });
 const body = document.getElementsByTagName('body')[0];
@@ -454,7 +456,7 @@ class WellScene {
         {
             const c = document.createElement('a-cylinder');
             c.setAttribute('height', '0.1');
-            c.setAttribute('radius', '1.5');
+            c.setAttribute('radius', WellScene.kBasketRadius);
             c.setAttribute('position', "0, 0, 0");
             c.setAttribute('material', `color: crimson`);
             player.appendChild(c);
@@ -462,23 +464,42 @@ class WellScene {
         {
             const c = document.createElement('a-cylinder');
             c.setAttribute('height', '1.0');
-            c.setAttribute('radius', '1.5');
+            c.setAttribute('radius', WellScene.kBasketRadius);
             c.setAttribute('position', "0, 0.5, 0");
             c.setAttribute('material', `color: crimson`);
             c.setAttribute('open-ended', 'true');
             c.setAttribute('side', 'double');
             player.appendChild(c);
         }
-        const ring = document.createElement('a-ring');
+        const ring = document.createElement('a-entity');
         {
-            ring.setAttribute('radius-inner', '1.49');
-            ring.setAttribute('radius-outer', '1.6');
-            ring.setAttribute('position', "0, 1, 0");
-            ring.setAttribute('rotation', '90 0 0');
-            ring.setAttribute('material', `color: crimson`);
-            ring.setAttribute('shader', 'flat');
-            ring.setAttribute('side', 'double');
-            ring.classList.add('clickable');
+            for (let i = 0; i < 6; ++i) {
+                const theta = Math.PI * 2 / 6 * (i + 0.5);
+                let x = Math.sin(theta) * WellScene.kBasketRadius;
+                let z = Math.cos(theta) * WellScene.kBasketRadius;
+                {
+                    const bar = document.createElement('a-box');
+                    bar.setAttribute('height', '2');
+                    bar.setAttribute('depth', '0.05');
+                    bar.setAttribute('width', '0.05');
+                    bar.setAttribute('position', `${x} 2 ${z}`);
+                    bar.setAttribute('color', 'white');
+                    bar.setAttribute('rotation', `0 ${180 * theta / Math.PI} 0`);
+                    player.appendChild(bar);
+                }
+                {
+                    const bar = document.createElement('a-box');
+                    bar.setAttribute('height', '0.8');
+                    bar.setAttribute('depth', '0.08');
+                    bar.setAttribute('width', '0.08');
+                    bar.setAttribute('position', `${x} 2 ${z}`);
+                    bar.setAttribute('shader', 'flat');
+                    bar.classList.add('clickable');
+                    bar.setAttribute('color', 'white');
+                    bar.setAttribute('rotation', `0 ${180 * theta / Math.PI} 0`);
+                    ring.appendChild(bar);
+                }
+            }
             player.appendChild(ring);
         }
         return ring;
@@ -501,16 +522,16 @@ class WellScene {
         octohedron.setAttribute('radius', '0.2');
         scene.appendChild(octohedron);
         octohedron.object3D.position.
-            set(2 * Math.sin(theta), 1, 2 * Math.cos(theta));
+            set(2 * Math.sin(theta), 1, -2 * Math.cos(theta));
         return octohedron;
     }
     init(scene, player, gameTime) {
-        let theta = 0;
         this.burnerEntity = new burnerEntity_1.BurnerEntity(this.addBurner(player), gameTime);
-        const bpms = [85, 90, 100, 115, 120, 145, 168];
+        const bpms = [85, 115, 168];
+        let theta = -(Math.PI / 6);
         for (const bpm of bpms) {
             this.beatOrbs.push(new beatOrb_1.BeatOrb(this.makeOctohedron(theta, scene), bpm, () => this.lightTheBurner(bpm)));
-            theta += 2 * Math.PI / bpms.length;
+            theta += Math.PI / 3 / (bpms.length - 1);
         }
         const clapSample = new sample_1.Sample('samples/handclap.mp3', gameTime);
         const clap = this.addBasket(player);
@@ -548,6 +569,7 @@ class WellScene {
     }
 }
 exports.WellScene = WellScene;
+WellScene.kBasketRadius = 0.8;
 //# sourceMappingURL=wellScene.js.map
 
 /***/ }),

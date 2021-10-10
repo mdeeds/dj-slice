@@ -3,3 +3,4 @@ src/*.js.map
 dist/samples/*.wav
 node_modules
 *.wav
+dist/*.js.map
