@@ -1,5 +1,6 @@
 import * as AFRAME from "aframe";
 import * as THREE from "three";
+import { Debug } from "./debug";
 import { GameTime } from "./gameTime";
 import { SamplePack } from "./samplePack";
 import { Track } from "./track";
@@ -112,6 +113,7 @@ AFRAME.registerComponent("go", {
     const gameTime = await GameTime.make(115);
     const samplePack = await SamplePack.load('funk', gameTime, assets)
     gameTime.start();
+    Debug.init(document.querySelector('a-camera'));
 
     addClip(player, samplePack.tracks[0], gameTime);
   },
@@ -122,6 +124,11 @@ AFRAME.registerComponent("go", {
     const r = 0.5 * (1 - Math.cos(Math.PI * p)) * 2000;  // glide 2km
 
     player.setAttribute('position', `0, ${h}, ${-r}`);
+    {
+      const left = document.querySelector('#leftHand');
+      const distance = left.object3D.position.length();
+      Debug.set(`Distance: ${distance.toFixed(3)}`);
+    }
   }
 });
 
@@ -132,7 +139,7 @@ body.innerHTML = `
 <a-assets>
 </a-assets>
 
-<a-sky color="#adf" radius=3000></a-sky>
+<a-sky color="#112" radius=3000></a-sky>
 <a-entity light="type: ambient; color: #777"></a-entity>
 <a-entity id='player'>
 <a-entity light="type:directional; color: #777" position="100 300 400"></a-entity>

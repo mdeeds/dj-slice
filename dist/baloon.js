@@ -36,6 +36,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const AFRAME = __importStar(__webpack_require__(449));
+const debug_1 = __webpack_require__(756);
 const gameTime_1 = __webpack_require__(669);
 const samplePack_1 = __webpack_require__(780);
 var player = null;
@@ -135,6 +136,7 @@ AFRAME.registerComponent("go", {
             const gameTime = yield gameTime_1.GameTime.make(115);
             const samplePack = yield samplePack_1.SamplePack.load('funk', gameTime, assets);
             gameTime.start();
+            debug_1.Debug.init(document.querySelector('a-camera'));
             addClip(player, samplePack.tracks[0], gameTime);
         });
     },
@@ -143,6 +145,11 @@ AFRAME.registerComponent("go", {
         const h = Math.sin(Math.PI * p) * 100; // 100m maximum height
         const r = 0.5 * (1 - Math.cos(Math.PI * p)) * 2000; // glide 2km
         player.setAttribute('position', `0, ${h}, ${-r}`);
+        {
+            const left = document.querySelector('#leftHand');
+            const distance = left.object3D.position.length();
+            debug_1.Debug.set(`Distance: ${distance.toFixed(3)}`);
+        }
     }
 });
 const body = document.getElementsByTagName('body')[0];
@@ -152,7 +159,7 @@ body.innerHTML = `
 <a-assets>
 </a-assets>
 
-<a-sky color="#adf" radius=3000></a-sky>
+<a-sky color="#112" radius=3000></a-sky>
 <a-entity light="type: ambient; color: #777"></a-entity>
 <a-entity id='player'>
 <a-entity light="type:directional; color: #777" position="100 300 400"></a-entity>
@@ -212,6 +219,32 @@ class Common {
 exports.Common = Common;
 Common.audioCtx = null;
 //# sourceMappingURL=common.js.map
+
+/***/ }),
+
+/***/ 756:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Debug = void 0;
+class Debug {
+    static init(container) {
+        Debug.text = document.createElement('a-entity');
+        Debug.text.setAttribute('text', 'value: "Hello, World!";');
+        Debug.text.setAttribute('position', '0 2 -3');
+        container.appendChild(Debug.text);
+    }
+    static set(message) {
+        if (Debug.text) {
+            Debug.text.setAttribute('text', `value: "${message}";`);
+        }
+    }
+}
+exports.Debug = Debug;
+Debug.text = null;
+//# sourceMappingURL=debug.js.map
 
 /***/ }),
 
