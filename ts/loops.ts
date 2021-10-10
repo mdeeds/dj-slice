@@ -13,8 +13,10 @@ AFRAME.registerComponent("go", {
       document.querySelector('#player'), gameTime);
   },
   tick: function (timeMs: number, timeDeltaMs: number) {
-    gameTime.tick(timeMs, timeDeltaMs);
-    wellScene.tick(timeMs, timeDeltaMs);
+    if (gameTime) {
+      gameTime.tick(timeMs, timeDeltaMs);
+      wellScene.tick(timeMs, timeDeltaMs);
+    }
   }
 });
 

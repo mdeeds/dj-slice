@@ -12,11 +12,13 @@ export class WellScene {
   constructor() {
   }
 
+  private static kBasketRadius = 0.8;
+
   private addBasket(player: AFRAME.Entity) {
     {
       const c = document.createElement('a-cylinder') as AFRAME.Entity;
       c.setAttribute('height', '0.1');
-      c.setAttribute('radius', '1.5');
+      c.setAttribute('radius', WellScene.kBasketRadius);
       c.setAttribute('position', "0, 0, 0");
       c.setAttribute('material', `color: crimson`);
       player.appendChild(c);
@@ -24,7 +26,7 @@ export class WellScene {
     {
       const c = document.createElement('a-cylinder') as AFRAME.Entity;
       c.setAttribute('height', '1.0');
-      c.setAttribute('radius', '1.5');
+      c.setAttribute('radius', WellScene.kBasketRadius);
       c.setAttribute('position', "0, 0.5, 0");
       c.setAttribute('material', `color: crimson`);
       c.setAttribute('open-ended', 'true');
@@ -35,8 +37,8 @@ export class WellScene {
     {
       for (let i = 0; i < 6; ++i) {
         const theta = Math.PI * 2 / 6 * (i + 0.5);
-        let x = Math.sin(theta) * 1.5;
-        let z = Math.cos(theta) * 1.5;
+        let x = Math.sin(theta) * WellScene.kBasketRadius;
+        let z = Math.cos(theta) * WellScene.kBasketRadius;
         {
           const bar = document.createElement('a-box');
           bar.setAttribute('height', '2');
@@ -95,7 +97,7 @@ export class WellScene {
   init(scene: AFRAME.Entity, player: AFRAME.Entity, gameTime: GameTime) {
     this.burnerEntity = new BurnerEntity(this.addBurner(player), gameTime);
 
-    const bpms = [85, 90, 100, 115, 120, 145, 168];
+    const bpms = [85, 115, 168];
     let theta: number = -(Math.PI / 6);
     for (const bpm of bpms) {
       this.beatOrbs.push(new BeatOrb(this.makeOctohedron(theta, scene), bpm,

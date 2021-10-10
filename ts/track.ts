@@ -9,7 +9,6 @@ export class Track {
   constructor(obj: object, gameTime: GameTime, assets: AFRAME.Entity) {
     for (const sample of obj['samples']) {
       const audioUrl = sample['audio'];
-      console.log(`Loading: ${audioUrl}`);
       const s = new Sample(audioUrl, gameTime);
       this.samples.push(s);
       const i = document.createElement('img') as any as HTMLImageElement;
