@@ -8,6 +8,7 @@ export class SamplePack {
   readonly tracks: Track[] = [];
   private constructor(obj: object, gameTime: GameTime, assets: AFRAME.Entity) {
     this.bpm = obj['bpm'];
+    gameTime.setBpm(this.bpm);
     for (const track of obj['tracks']) {
       this.tracks.push(new Track(track, gameTime, assets));
     }

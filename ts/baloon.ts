@@ -1,5 +1,8 @@
 import * as AFRAME from "aframe";
 import * as THREE from "three";
+import { GameTime } from "./gameTime";
+import { SamplePack } from "./samplePack";
+import { Track } from "./track";
 
 
 
@@ -15,51 +18,102 @@ function addBuilding(x: number, z: number, scene: AFRAME.Entity) {
   scene.appendChild(box);
 }
 
+function makeBalloon(player: AFRAME.Entity) {
+  const baloon = document.createElement('a-sphere') as AFRAME.Entity;
+  baloon.setAttribute('color', 'purple');
+  baloon.setAttribute('radius', '7');
+  baloon.setAttribute('position', '0 11 0');
+  player.appendChild(baloon);
+
+  const basket = document.createElement('a-cylinder') as AFRAME.Entity;
+  basket.setAttribute('color', 'burlywood');
+  basket.setAttribute('radius', '0.75');
+  basket.setAttribute('height', '1.0');
+  basket.setAttribute('position', '0 0.5 0');
+  basket.setAttribute('material', 'side', 'double');
+  basket.setAttribute('open-ended', 'true');
+  player.appendChild(basket);
+
+  const floor = document.createElement('a-cylinder') as AFRAME.Entity;
+  floor.setAttribute('color', 'burlywood');
+  floor.setAttribute('radius', '0.75');
+  floor.setAttribute('height', '0.02');
+  floor.setAttribute('position', '0 -0.01 0');
+  player.appendChild(floor);
+
+  const c = document.createElement('a-cylinder');
+  c.setAttribute('height', '0.8');
+  c.setAttribute('radius', '1.0');
+  c.setAttribute('color', 'silver');
+  c.setAttribute('material', 'metalness: 1');
+  c.setAttribute('position', '0 3.5 0');
+  player.appendChild(c);
+}
+
+function addClip(player: AFRAME.Entity, track: Track, gameTime: GameTime) {
+  const container = document.createElement('a-entity');
+  container.setAttribute('position', '0 1.3 -0.7');
+  {
+    const o = document.createElement('a-box');
+    o.setAttribute('width', '0.2');
+    o.setAttribute('height', '0.15');
+    o.setAttribute('depth', '0.05');
+    o.setAttribute('position', '0 0.30, 0');
+    o.setAttribute('shader', 'flat');
+    o.classList.add('clickable');
+    o.addEventListener('mouseenter', (ev: MouseEvent) => {
+      track.getSample(0).playAt(gameTime.getAudioTimeNow());
+    });
+    container.appendChild(o);
+  }
+  {
+    const o = document.createElement('a-entity');
+    o.setAttribute('obj-model',
+      'obj: url(obj/trapezoid-full.obj); mtl: url(obj/trapezoid-full.mtl');
+    o.setAttribute('shader', 'flat');
+    o.setAttribute('rotation', '0 0 180')
+    o.classList.add('clickable');
+    o.addEventListener('mouseenter', (ev: MouseEvent) => {
+      track.getSample(0).playAt(gameTime.getAudioTimeNow());
+    });
+    container.appendChild(o);
+  }
+  {
+    const o = document.createElement('a-entity');
+    o.setAttribute('obj-model',
+      'obj: url(obj/trapezoid.obj); mtl: url(obj/trapezoid-full.mtl');
+    o.setAttribute('shader', 'flat');
+    o.setAttribute('rotation', '0 0 90')
+    o.classList.add('clickable');
+    o.addEventListener('mouseenter', (ev: MouseEvent) => {
+      track.getSample(0).playAt(gameTime.getAudioTimeNow());
+    });
+    container.appendChild(o);
+  }
+  {
+    const o = document.createElement('a-image');
+    o.setAttribute('height', '0.2');
+    o.setAttribute('width', '0.2');
+    o.setAttribute('src', track.getImage(0));
+    o.setAttribute('transparent', 'true');
+    o.setAttribute('opacity', '0.5');
+    container.appendChild(o);
+  }
+
+  player.appendChild(container);
+}
+
 AFRAME.registerComponent("go", {
-  init: function () {
+  init: async function () {
     const scene = document.querySelector('a-scene');
     player = document.querySelector('#player') as AFRAME.Entity;
+    makeBalloon(player);
+    const assets = document.querySelector('a-assets');
+    const gameTime = await GameTime.make(115);
+    const samplePack = await SamplePack.load('funk', gameTime, assets)
+    gameTime.start();
 
-    const baloon = document.createElement('a-sphere') as AFRAME.Entity;
-    baloon.setAttribute('color', 'purple');
-    baloon.setAttribute('radius', '7');
-    baloon.setAttribute('position', '0 11 0');
-    player.appendChild(baloon);
-
-    const basket = document.createElement('a-cylinder') as AFRAME.Entity;
-    basket.setAttribute('color', 'burlywood');
-    basket.setAttribute('radius', '0.75');
-    basket.setAttribute('height', '1.0');
-    basket.setAttribute('position', '0 0.5 0');
-    basket.setAttribute('material', 'side', 'double');
-    basket.setAttribute('open-ended', 'true');
-    player.appendChild(basket);
-
-    const floor = document.createElement('a-cylinder') as AFRAME.Entity;
-    floor.setAttribute('color', 'burlywood');
-    floor.setAttribute('radius', '0.75');
-    floor.setAttribute('height', '0.02');
-    floor.setAttribute('position', '0 -0.01 0');
-    player.appendChild(floor);
-
-    const c = document.createElement('a-cylinder');
-    c.setAttribute('height', '0.8');
-    c.setAttribute('radius', '1.0');
-    c.setAttribute('color', 'silver');
-    c.setAttribute('material', 'metalness: 1');
-    c.setAttribute('position', '0 3.5 0');
-    player.appendChild(c);
-
-
-    // for (let i = -40; i <= 40; ++i) {
-    //   for (let j = -100; j <= 0; ++j) {
-    //     if (i % 3 == 0 || j % 6 == 0) {
-    //       continue;
-    //     }
-    //     addBuilding(i * 17, j * 17, scene);
-    //   }
-    // }
-
+    addClip(player, samplePack.tracks[0], gameTime);
   },
   tick: function (timeMs, timeDeltaMs) {
     const p = (timeMs / 1000 / 60 / 3) % 1; // percentage of three minutes
@@ -74,7 +128,7 @@ AFRAME.registerComponent("go", {
 const body = document.getElementsByTagName('body')[0];
 body.innerHTML = `
 <a-scene go="1" background="black" transparent="false" cursor="rayOrigin: mouse" stats>
-<!--- ---><a-entity obj-model="obj: url(obj/city.obj); mtl: url(obj/city.mtl)" rotation="0 180 0"></a-entity>
+<a-entity obj-model="obj: url(obj/city.obj); mtl: url(obj/city.mtl)" rotation="0 180 0"></a-entity>
 <a-assets>
 </a-assets>
 
@@ -84,9 +138,9 @@ body.innerHTML = `
 <a-entity light="type:directional; color: #777" position="100 300 400"></a-entity>
 <a-entity light="type:directional; color: #777" position="100 -200 500"></a-entity>
 <a-camera position="0 1.6 0"></a-camera>
-  <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 5;" line="color: #44d"
+  <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 0.8;" line="color: #44d"
     pointer></a-entity>
-  <a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 5;" line="color: #d44"
+  <a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 0.8;" line="color: #d44"
     pointer></a-entity>
 </a-entity>
 

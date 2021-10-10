@@ -25,8 +25,19 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const AFRAME = __importStar(__webpack_require__(449));
+const gameTime_1 = __webpack_require__(669);
+const samplePack_1 = __webpack_require__(780);
 var player = null;
 function addBuilding(x, z, scene) {
     const box = document.createElement('a-box');
@@ -37,44 +48,95 @@ function addBuilding(x, z, scene) {
     box.setAttribute('position', `${x} ${h / 2} ${z}`);
     scene.appendChild(box);
 }
+function makeBalloon(player) {
+    const baloon = document.createElement('a-sphere');
+    baloon.setAttribute('color', 'purple');
+    baloon.setAttribute('radius', '7');
+    baloon.setAttribute('position', '0 11 0');
+    player.appendChild(baloon);
+    const basket = document.createElement('a-cylinder');
+    basket.setAttribute('color', 'burlywood');
+    basket.setAttribute('radius', '0.75');
+    basket.setAttribute('height', '1.0');
+    basket.setAttribute('position', '0 0.5 0');
+    basket.setAttribute('material', 'side', 'double');
+    basket.setAttribute('open-ended', 'true');
+    player.appendChild(basket);
+    const floor = document.createElement('a-cylinder');
+    floor.setAttribute('color', 'burlywood');
+    floor.setAttribute('radius', '0.75');
+    floor.setAttribute('height', '0.02');
+    floor.setAttribute('position', '0 -0.01 0');
+    player.appendChild(floor);
+    const c = document.createElement('a-cylinder');
+    c.setAttribute('height', '0.8');
+    c.setAttribute('radius', '1.0');
+    c.setAttribute('color', 'silver');
+    c.setAttribute('material', 'metalness: 1');
+    c.setAttribute('position', '0 3.5 0');
+    player.appendChild(c);
+}
+function addClip(player, track, gameTime) {
+    const container = document.createElement('a-entity');
+    container.setAttribute('position', '0 1.3 -0.7');
+    {
+        const o = document.createElement('a-box');
+        o.setAttribute('width', '0.2');
+        o.setAttribute('height', '0.15');
+        o.setAttribute('depth', '0.05');
+        o.setAttribute('position', '0 0.30, 0');
+        o.setAttribute('shader', 'flat');
+        o.classList.add('clickable');
+        o.addEventListener('mouseenter', (ev) => {
+            track.getSample(0).playAt(gameTime.getAudioTimeNow());
+        });
+        container.appendChild(o);
+    }
+    {
+        const o = document.createElement('a-entity');
+        o.setAttribute('obj-model', 'obj: url(obj/trapezoid-full.obj); mtl: url(obj/trapezoid-full.mtl');
+        o.setAttribute('shader', 'flat');
+        o.setAttribute('rotation', '0 0 180');
+        o.classList.add('clickable');
+        o.addEventListener('mouseenter', (ev) => {
+            track.getSample(0).playAt(gameTime.getAudioTimeNow());
+        });
+        container.appendChild(o);
+    }
+    {
+        const o = document.createElement('a-entity');
+        o.setAttribute('obj-model', 'obj: url(obj/trapezoid.obj); mtl: url(obj/trapezoid-full.mtl');
+        o.setAttribute('shader', 'flat');
+        o.setAttribute('rotation', '0 0 90');
+        o.classList.add('clickable');
+        o.addEventListener('mouseenter', (ev) => {
+            track.getSample(0).playAt(gameTime.getAudioTimeNow());
+        });
+        container.appendChild(o);
+    }
+    {
+        const o = document.createElement('a-image');
+        o.setAttribute('height', '0.2');
+        o.setAttribute('width', '0.2');
+        o.setAttribute('src', track.getImage(0));
+        o.setAttribute('transparent', 'true');
+        o.setAttribute('opacity', '0.5');
+        container.appendChild(o);
+    }
+    player.appendChild(container);
+}
 AFRAME.registerComponent("go", {
     init: function () {
-        const scene = document.querySelector('a-scene');
-        player = document.querySelector('#player');
-        const baloon = document.createElement('a-sphere');
-        baloon.setAttribute('color', 'purple');
-        baloon.setAttribute('radius', '7');
-        baloon.setAttribute('position', '0 11 0');
-        player.appendChild(baloon);
-        const basket = document.createElement('a-cylinder');
-        basket.setAttribute('color', 'burlywood');
-        basket.setAttribute('radius', '0.75');
-        basket.setAttribute('height', '1.0');
-        basket.setAttribute('position', '0 0.5 0');
-        basket.setAttribute('material', 'side', 'double');
-        basket.setAttribute('open-ended', 'true');
-        player.appendChild(basket);
-        const floor = document.createElement('a-cylinder');
-        floor.setAttribute('color', 'burlywood');
-        floor.setAttribute('radius', '0.75');
-        floor.setAttribute('height', '0.02');
-        floor.setAttribute('position', '0 -0.01 0');
-        player.appendChild(floor);
-        const c = document.createElement('a-cylinder');
-        c.setAttribute('height', '0.8');
-        c.setAttribute('radius', '1.0');
-        c.setAttribute('color', 'silver');
-        c.setAttribute('material', 'metalness: 1');
-        c.setAttribute('position', '0 3.5 0');
-        player.appendChild(c);
-        // for (let i = -40; i <= 40; ++i) {
-        //   for (let j = -100; j <= 0; ++j) {
-        //     if (i % 3 == 0 || j % 6 == 0) {
-        //       continue;
-        //     }
-        //     addBuilding(i * 17, j * 17, scene);
-        //   }
-        // }
+        return __awaiter(this, void 0, void 0, function* () {
+            const scene = document.querySelector('a-scene');
+            player = document.querySelector('#player');
+            makeBalloon(player);
+            const assets = document.querySelector('a-assets');
+            const gameTime = yield gameTime_1.GameTime.make(115);
+            const samplePack = yield samplePack_1.SamplePack.load('funk', gameTime, assets);
+            gameTime.start();
+            addClip(player, samplePack.tracks[0], gameTime);
+        });
     },
     tick: function (timeMs, timeDeltaMs) {
         const p = (timeMs / 1000 / 60 / 3) % 1; // percentage of three minutes
@@ -86,7 +148,7 @@ AFRAME.registerComponent("go", {
 const body = document.getElementsByTagName('body')[0];
 body.innerHTML = `
 <a-scene go="1" background="black" transparent="false" cursor="rayOrigin: mouse" stats>
-<!--- ---><a-entity obj-model="obj: url(obj/city.obj); mtl: url(obj/city.mtl)" rotation="0 180 0"></a-entity>
+<a-entity obj-model="obj: url(obj/city.obj); mtl: url(obj/city.mtl)" rotation="0 180 0"></a-entity>
 <a-assets>
 </a-assets>
 
@@ -96,15 +158,306 @@ body.innerHTML = `
 <a-entity light="type:directional; color: #777" position="100 300 400"></a-entity>
 <a-entity light="type:directional; color: #777" position="100 -200 500"></a-entity>
 <a-camera position="0 1.6 0"></a-camera>
-  <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 5;" line="color: #44d"
+  <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 0.8;" line="color: #44d"
     pointer></a-entity>
-  <a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 5;" line="color: #d44"
+  <a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 0.8;" line="color: #d44"
     pointer></a-entity>
 </a-entity>
 
 </a-scene>
 `;
 //# sourceMappingURL=baloon.js.map
+
+/***/ }),
+
+/***/ 648:
+/***/ (function(__unused_webpack_module, exports) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Common = void 0;
+class Common {
+    static getContext() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (Common.audioCtx) {
+                return Common.audioCtx;
+            }
+            return new Promise((resolve) => {
+                const context = new window.AudioContext();
+                if (context.state === 'running') {
+                    resolve(context);
+                }
+                else {
+                    setTimeout(() => __awaiter(this, void 0, void 0, function* () {
+                        resolve(yield Common.getContext());
+                    }), 500);
+                }
+            });
+        });
+    }
+    static indexToTheta(index) {
+        return (index * 2 * Math.PI) / 16 - Math.PI;
+    }
+}
+exports.Common = Common;
+Common.audioCtx = null;
+//# sourceMappingURL=common.js.map
+
+/***/ }),
+
+/***/ 669:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GameTime = void 0;
+const common_1 = __webpack_require__(648);
+class GameTime {
+    constructor(bpm) {
+        console.assert(bpm);
+        this.bpm = bpm;
+        this.elapsedMs = 0;
+        this.running = false;
+        this.audioCtx = null;
+        this.audioCtxZero = 0;
+    }
+    static make(bpm) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const result = new GameTime(bpm);
+            result.audioCtx = yield common_1.Common.getContext();
+            return result;
+        });
+    }
+    start() {
+        this.running = true;
+        if (this.audioCtx) {
+            this.audioCtxZero = this.audioCtx.currentTime - this.elapsedMs * 1000;
+        }
+    }
+    getBpm() {
+        return this.bpm;
+    }
+    setBpm(bpm) {
+        this.bpm = bpm;
+    }
+    getElapsedMs() {
+        return this.elapsedMs;
+    }
+    getAudioTimeForGameTime(gameMs) {
+        return this.audioCtxZero + gameMs / 1000;
+    }
+    getAudioTimeNow() {
+        return this.audioCtx.currentTime;
+        // return this.audioCtxZero + this.elapsedMs / 1000;
+    }
+    roundQuantizeAudioTime(audioTimeS) {
+        const secondsPerBeat = 60 / this.bpm / 4;
+        const beat = Math.round(audioTimeS / secondsPerBeat);
+        return beat * secondsPerBeat;
+    }
+    getRoundQuantizedAudioTimeNow() {
+        return this.roundQuantizeAudioTime(this.getAudioTimeNow());
+    }
+    getDurationForBeats(beatCount) {
+        return 60 / this.bpm * beatCount;
+    }
+    tick(timeMs, timeDeltaMs) {
+        if (this.running) {
+            this.elapsedMs += timeDeltaMs;
+        }
+    }
+}
+exports.GameTime = GameTime;
+//# sourceMappingURL=gameTime.js.map
+
+/***/ }),
+
+/***/ 263:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Sample = void 0;
+const common_1 = __webpack_require__(648);
+class Sample {
+    constructor(url, gameTime) {
+        this.url = url;
+        this.gameTime = gameTime;
+        this.previousNode = null;
+        this.audioCtx = null;
+        this.buffer = null;
+        this.init();
+    }
+    init() {
+        return __awaiter(this, void 0, void 0, function* () {
+            this.buffer = yield this.getData();
+        });
+    }
+    getData() {
+        return __awaiter(this, void 0, void 0, function* () {
+            this.audioCtx = yield common_1.Common.getContext();
+            const request = new XMLHttpRequest();
+            request.open('GET', this.url, true);
+            request.responseType = 'arraybuffer';
+            return new Promise((resolve, reject) => {
+                request.onload = () => {
+                    const audioData = request.response;
+                    this.audioCtx.decodeAudioData(audioData, function (buffer) {
+                        resolve(buffer);
+                    }, reject);
+                };
+                request.send();
+            });
+        });
+    }
+    stop() {
+        if (this.previousNode) {
+            this.previousNode.stop();
+            this.previousNode = null;
+        }
+    }
+    playAt(audioTimeS) {
+        if (!this.audioCtx || !this.buffer) {
+            console.error('Sample is not loaded!');
+            return;
+        }
+        const audioNode = this.audioCtx.createBufferSource();
+        this.previousNode = audioNode;
+        audioNode.buffer = this.buffer;
+        audioNode.connect(this.audioCtx.destination);
+        const nowAudioTime = this.audioCtx.currentTime;
+        const timeInFuture = audioTimeS - nowAudioTime;
+        // console.log(`play in ${timeInFuture.toFixed(2)} seconds.`);
+        audioNode.start(nowAudioTime + Math.max(timeInFuture, 0), Math.max(0, -timeInFuture));
+    }
+    playQuantized(gameTimeMs) {
+        const audioTimeS = this.gameTime.getAudioTimeForGameTime(gameTimeMs);
+        const quantizedAudioTimeS = this.gameTime.roundQuantizeAudioTime(audioTimeS);
+        this.playAt(quantizedAudioTimeS);
+    }
+    durationS() {
+        return this.buffer.duration;
+    }
+}
+exports.Sample = Sample;
+//# sourceMappingURL=sample.js.map
+
+/***/ }),
+
+/***/ 780:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SamplePack = void 0;
+const track_1 = __webpack_require__(201);
+class SamplePack {
+    constructor(obj, gameTime, assets) {
+        this.tracks = [];
+        this.bpm = obj['bpm'];
+        gameTime.setBpm(this.bpm);
+        for (const track of obj['tracks']) {
+            this.tracks.push(new track_1.Track(track, gameTime, assets));
+        }
+    }
+    static load(name, gameTime, assets) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var oReq = new XMLHttpRequest();
+            return new Promise((resolve, reject) => {
+                oReq.addEventListener("load", () => {
+                    const obj = JSON.parse(oReq.responseText);
+                    for (const song of obj) {
+                        if (song['name'] === name) {
+                            resolve(new SamplePack(song, gameTime, assets));
+                        }
+                    }
+                    reject(`Not found: ${name}`);
+                });
+                oReq.open("GET", "songs.json");
+                oReq.send();
+            });
+        });
+    }
+}
+exports.SamplePack = SamplePack;
+//# sourceMappingURL=samplePack.js.map
+
+/***/ }),
+
+/***/ 201:
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Track = void 0;
+const sample_1 = __webpack_require__(263);
+class Track {
+    constructor(obj, gameTime, assets) {
+        this.samples = [];
+        this.images = [];
+        for (const sample of obj['samples']) {
+            const audioUrl = sample['audio'];
+            const s = new sample_1.Sample(audioUrl, gameTime);
+            this.samples.push(s);
+            this.images.push(sample['image']);
+            // const i = document.createElement('img') as any as HTMLImageElement;
+            // i.setAttribute('src', sample['image']);
+            // i.id = `trackImage${Track.idNumber++}`
+            // this.images.push(i);
+            // assets.appendChild(i);
+        }
+    }
+    getSample(i) {
+        return this.samples[i];
+    }
+    getImage(i) {
+        return this.images[i];
+    }
+}
+exports.Track = Track;
+Track.idNumber = 0;
+//# sourceMappingURL=track.js.map
 
 /***/ }),
 
