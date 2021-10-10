@@ -104,6 +104,33 @@ function addClip(player: AFRAME.Entity, track: Track, gameTime: GameTime) {
   player.appendChild(container);
 }
 
+function addStick(container: AFRAME.Entity) {
+  {
+    const o = document.createElement('a-box');
+    o.setAttribute('height', '0.01');
+    o.setAttribute('width', '0.01');
+    o.setAttribute('depth', '0.4');
+    o.setAttribute('position', '0 0 -0.2');
+    o.setAttribute('color', '#422');
+    o.setAttribute('shader', 'flat');
+    container.appendChild(o);
+  }
+  {
+    const o = document.createElement('a-box');
+    o.setAttribute('height', '0.011');
+    o.setAttribute('width', '0.011');
+    o.setAttribute('depth', '0.011');
+    o.setAttribute('position', '0 0 -0.4');
+    o.setAttribute('color', '#f09');
+    o.setAttribute('shader', 'flat');
+    container.appendChild(o);
+    return o;
+  }
+}
+
+var leftStick: AFRAME.Entity = null;
+var rightStick: AFRAME.Entity = null;
+
 AFRAME.registerComponent("go", {
   init: async function () {
     const scene = document.querySelector('a-scene');
@@ -116,6 +143,8 @@ AFRAME.registerComponent("go", {
     Debug.init(document.querySelector('a-camera'));
 
     addClip(player, samplePack.tracks[0], gameTime);
+    leftStick = addStick(document.querySelector('#leftHand'));
+    rightStick = addStick(document.querySelector('#rightHand'));
   },
   tick: function (timeMs, timeDeltaMs) {
     const p = (timeMs / 1000 / 60 / 3) % 1; // percentage of three minutes
@@ -124,10 +153,21 @@ AFRAME.registerComponent("go", {
     const r = 0.5 * (1 - Math.cos(Math.PI * p)) * 2000;  // glide 2km
 
     player.setAttribute('position', `0, ${h}, ${-r}`);
-    {
-      const left = document.querySelector('#leftHand');
-      const distance = left.object3D.position.length();
-      Debug.set(`Distance: ${distance.toFixed(3)}`);
+
+    if (leftStick) {
+      const playerPos = new THREE.Vector3();
+      player.object3D.getWorldPosition(playerPos);
+      const lPos = new THREE.Vector3();
+      leftStick.object3D.getWorldPosition(lPos);
+      const rPos = new THREE.Vector3();
+      rightStick.object3D.getWorldPosition(rPos);
+
+      lPos.sub(playerPos);
+      rPos.sub(playerPos);
+      const lDistance = lPos.length();
+      const rDistance = rPos.length();
+      Debug.set(
+        `Left: ${lDistance.toFixed(3)}\nRight: ${rDistance.toFixed(3)}`);
     }
   }
 });
@@ -145,9 +185,9 @@ body.innerHTML = `
 <a-entity light="type:directional; color: #777" position="100 300 400"></a-entity>
 <a-entity light="type:directional; color: #777" position="100 -200 500"></a-entity>
 <a-camera position="0 1.6 0"></a-camera>
-  <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 0.8;" line="color: #44d"
+  <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 5;" line="color: #44d"
     pointer></a-entity>
-  <a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 0.8;" line="color: #d44"
+  <a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 5;" line="color: #d44"
     pointer></a-entity>
 </a-entity>
 

@@ -11,7 +11,7 @@ export class Debug {
 
   static set(message: string) {
     if (Debug.text) {
-      Debug.text.setAttribute('text', `value: "${message}";`);
+      Debug.text.setAttribute('text', `value: ${message};`);
     }
   }
 }
