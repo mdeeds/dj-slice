@@ -1,5 +1,6 @@
 import * as AFRAME from "aframe";
 import * as THREE from "three";
+import { CollisionHandler } from "./collisionHandler";
 import { Debug } from "./debug";
 import { GameTime } from "./gameTime";
 import { SamplePack } from "./samplePack";
@@ -62,9 +63,6 @@ function addClip(player: AFRAME.Entity, track: Track, gameTime: GameTime) {
     o.setAttribute('position', '0 0.30, 0');
     o.setAttribute('shader', 'flat');
     o.classList.add('clickable');
-    o.addEventListener('mouseenter', (ev: MouseEvent) => {
-      track.getSample(0).playAt(gameTime.getAudioTimeNow());
-    });
     container.appendChild(o);
   }
   {
@@ -74,9 +72,6 @@ function addClip(player: AFRAME.Entity, track: Track, gameTime: GameTime) {
     o.setAttribute('shader', 'flat');
     o.setAttribute('rotation', '0 0 180')
     o.classList.add('clickable');
-    o.addEventListener('mouseenter', (ev: MouseEvent) => {
-      track.getSample(0).playAt(gameTime.getAudioTimeNow());
-    });
     container.appendChild(o);
   }
   {
@@ -86,9 +81,6 @@ function addClip(player: AFRAME.Entity, track: Track, gameTime: GameTime) {
     o.setAttribute('shader', 'flat');
     o.setAttribute('rotation', '0 0 90')
     o.classList.add('clickable');
-    o.addEventListener('mouseenter', (ev: MouseEvent) => {
-      track.getSample(0).playAt(gameTime.getAudioTimeNow());
-    });
     container.appendChild(o);
   }
   {
@@ -102,6 +94,7 @@ function addClip(player: AFRAME.Entity, track: Track, gameTime: GameTime) {
   }
 
   player.appendChild(container);
+  return container;
 }
 
 function addStick(container: AFRAME.Entity) {
@@ -130,6 +123,7 @@ function addStick(container: AFRAME.Entity) {
 
 var leftStick: AFRAME.Entity = null;
 var rightStick: AFRAME.Entity = null;
+var collisionHandler: CollisionHandler = null;
 
 AFRAME.registerComponent("go", {
   init: async function () {
@@ -141,10 +135,17 @@ AFRAME.registerComponent("go", {
     const samplePack = await SamplePack.load('funk', gameTime, assets)
     gameTime.start();
     Debug.init(document.querySelector('a-camera'));
+    collisionHandler = new CollisionHandler();
 
-    addClip(player, samplePack.tracks[0], gameTime);
     leftStick = addStick(document.querySelector('#leftHand'));
     rightStick = addStick(document.querySelector('#rightHand'));
+    const clip = addClip(player, samplePack.tracks[0], gameTime);
+    collisionHandler.addPair(clip, leftStick, 0.1, () => {
+      samplePack.tracks[0].getSample(0).playAt(gameTime.getAudioTimeNow());
+    });
+    collisionHandler.addPair(clip, rightStick, 0.1, () => {
+      samplePack.tracks[0].getSample(0).playAt(gameTime.getAudioTimeNow());
+    });
   },
   tick: function (timeMs, timeDeltaMs) {
     const p = (timeMs / 1000 / 60 / 3) % 1; // percentage of three minutes
@@ -153,21 +154,8 @@ AFRAME.registerComponent("go", {
     const r = 0.5 * (1 - Math.cos(Math.PI * p)) * 2000;  // glide 2km
 
     player.setAttribute('position', `0, ${h}, ${-r}`);
-
-    if (leftStick) {
-      const playerPos = new THREE.Vector3();
-      player.object3D.getWorldPosition(playerPos);
-      const lPos = new THREE.Vector3();
-      leftStick.object3D.getWorldPosition(lPos);
-      const rPos = new THREE.Vector3();
-      rightStick.object3D.getWorldPosition(rPos);
-
-      lPos.sub(playerPos);
-      rPos.sub(playerPos);
-      const lDistance = lPos.length();
-      const rDistance = rPos.length();
-      Debug.set(
-        `Left: ${lDistance.toFixed(3)}\nRight: ${rDistance.toFixed(3)}`);
+    if (collisionHandler) {
+      collisionHandler.tick(timeMs, timeDeltaMs);
     }
   }
 });
