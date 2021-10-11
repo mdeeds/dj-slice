@@ -82,7 +82,7 @@ function addClip(player, track, gameTime, theta, sampleIndex) {
     const container = document.createElement('a-entity');
     const x = 0.7 * Math.sin(theta);
     const z = -0.7 * Math.cos(theta);
-    container.setAttribute('position', `${x} 1.3 ${z}`);
+    container.setAttribute('position', `${x} 1 ${z}`);
     container.setAttribute('rotation', `0 ${-180 / Math.PI * theta} 0`);
     // {
     //   const o = document.createElement('a-box');
@@ -100,9 +100,6 @@ function addClip(player, track, gameTime, theta, sampleIndex) {
         o.setAttribute('shader', 'flat');
         o.setAttribute('rotation', '0 0 0');
         o.classList.add('clickable');
-        o.addEventListener('mouseenter', () => {
-            debug_1.Debug.set(`Top ${Math.random().toFixed(5)}`);
-        });
         container.appendChild(o);
     }
     {
@@ -169,7 +166,12 @@ AFRAME.registerComponent("go", {
             collisionHandler = new collisionHandler_1.CollisionHandler();
             leftStick = addStick(document.querySelector('#leftHand'));
             rightStick = addStick(document.querySelector('#rightHand'));
+            const keyCodes = ['Digit1', 'Digit2', 'Digit3', 'Digit4',
+                'KeyQ', 'KeyW', 'KeyE', 'KeyR',
+                'KeyA', 'KeyS', 'KeyD', 'KeyF',
+                'KeyZ', 'KeyX', 'KeyC', 'KeyV'];
             let theta = 0;
+            let keyIndex = 0;
             for (const track of samplePack.tracks) {
                 for (let i = 0; i < track.numSamples(); ++i) {
                     const clip = addClip(player, track, gameTime, theta, i);
@@ -181,7 +183,16 @@ AFRAME.registerComponent("go", {
                         track.getSample(i).stop();
                         track.getSample(i).playAt(gameTime.getAudioTimeNow());
                     });
+                    body.addEventListener('keydown', ((ki, sample) => {
+                        return (ev) => {
+                            if (ev.code === ki) {
+                                sample.stop();
+                                sample.playAt(gameTime.getAudioTimeNow());
+                            }
+                        };
+                    })(keyCodes[keyIndex], track.getSample(i)));
                     theta += Math.PI * 2 / 16;
+                    ++keyIndex;
                 }
             }
         });
@@ -505,7 +516,8 @@ class Sample {
             return;
         }
         else {
-            debug_1.Debug.set(`Play @ ${audioTimeS.toFixed(3)}\n${this.url}`);
+            debug_1.Debug.set(`Play @ ${audioTimeS.toFixed(3)}\n${this.url}` +
+                `\nlength: ${this.buffer.length}`);
         }
         const audioNode = this.audioCtx.createBufferSource();
         this.previousNode = audioNode;
