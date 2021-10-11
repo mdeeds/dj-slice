@@ -1,5 +1,95 @@
 [
   {
+    "name": "doof",
+    "bpm": 120,
+    "tracks": [
+      {
+        "name": "guitar",
+        "samples": [
+          {
+            "audio": "samples/doof.mp3",
+            "image": "samples/funk/guitar-1.png"
+          },
+          {
+            "audio": "samples/doof.mp3",
+            "image": "samples/funk/guitar-2.png"
+          },
+          {
+            "audio": "samples/doof.mp3",
+            "image": "samples/funk/guitar-3.png"
+          },
+          {
+            "audio": "samples/doof.mp3",
+            "image": "samples/funk/guitar-4.png"
+          }
+        ]
+      },
+      {
+        "name": "synth",
+        "samples": [
+          {
+            "audio": "samples/doof.mp3",
+            "image": "samples/funk/synth-1.png"
+          },
+          {
+            "audio": "samples/doof.mp3",
+            "image": "samples/funk/synth-2.png"
+          },
+          {
+            "audio": "samples/doof.mp3",
+            "image": "samples/funk/synth-3.png"
+          },
+          {
+            "audio": "samples/doof.mp3",
+            "image": "samples/funk/synth-4.png"
+          }
+        ]
+      },
+      {
+        "name": "bass",
+        "samples": [
+          {
+            "audio": "samples/doof.mp3",
+            "image": "samples/funk/bass-1.png"
+          },
+          {
+            "audio": "samples/doof.mp3",
+            "image": "samples/funk/bass-2.png"
+          },
+          {
+            "audio": "samples/doof.mp3",
+            "image": "samples/funk/bass-3.png"
+          },
+          {
+            "audio": "samples/doof.mp3",
+            "image": "samples/funk/bass-4.png"
+          }
+        ]
+      },
+      {
+        "name": "drum",
+        "samples": [
+          {
+            "audio": "samples/doof.mp3",
+            "image": "samples/funk/drum-1.png"
+          },
+          {
+            "audio": "samples/doof.mp3",
+            "image": "samples/funk/drum-2.png"
+          },
+          {
+            "audio": "samples/doof.mp3",
+            "image": "samples/funk/drum-3.png"
+          },
+          {
+            "audio": "samples/doof.mp3",
+            "image": "samples/funk/drum-4.png"
+          }
+        ]
+      }
+    ]
+  },
+  {
     "name": "funk",
     "bpm": 115,
     "tracks": [

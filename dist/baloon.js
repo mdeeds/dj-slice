@@ -160,7 +160,7 @@ AFRAME.registerComponent("go", {
             makeBalloon(player);
             const assets = document.querySelector('a-assets');
             const gameTime = yield gameTime_1.GameTime.make(115);
-            const samplePack = yield samplePack_1.SamplePack.load('funk', gameTime, assets);
+            const samplePack = yield samplePack_1.SamplePack.load('doof', gameTime, assets);
             gameTime.start();
             debug_1.Debug.init(document.querySelector('a-camera'));
             collisionHandler = new collisionHandler_1.CollisionHandler();
