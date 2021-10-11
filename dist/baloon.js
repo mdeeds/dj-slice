@@ -160,8 +160,8 @@ AFRAME.registerComponent("go", {
             makeBalloon(player);
             const assets = document.querySelector('a-assets');
             const gameTime = yield gameTime_1.GameTime.make(115);
-            const samplePack = yield samplePack_1.SamplePack.load('doof', gameTime, assets);
-            gameTime.start();
+            yield gameTime.start();
+            const samplePack = yield samplePack_1.SamplePack.load('funk', gameTime, assets);
             debug_1.Debug.init(document.querySelector('a-camera'));
             collisionHandler = new collisionHandler_1.CollisionHandler();
             leftStick = addStick(document.querySelector('#leftHand'));
@@ -321,21 +321,31 @@ exports.Common = void 0;
 class Common {
     static getContext() {
         return __awaiter(this, void 0, void 0, function* () {
-            if (Common.audioCtx) {
-                return Common.audioCtx;
-            }
             return new Promise((resolve) => {
-                const context = new window.AudioContext();
-                if (context.state === 'running') {
-                    resolve(context);
+                if (Common.audioCtx) {
+                    console.log('Context established.');
+                    resolve(Common.audioCtx);
                 }
                 else {
-                    setTimeout(() => __awaiter(this, void 0, void 0, function* () {
-                        resolve(yield Common.getContext());
-                    }), 500);
+                    const context = new window.AudioContext();
+                    if (context.state === 'running') {
+                        Common.audioCtx = context;
+                        resolve(context);
+                    }
+                    else {
+                        setTimeout(() => __awaiter(this, void 0, void 0, function* () {
+                            resolve(yield Common.getContext());
+                        }), 500);
+                    }
                 }
             });
         });
+    }
+    static audioContext() {
+        if (!Common.audioCtx) {
+            throw new Error(`Context is not ready!`);
+        }
+        return Common.audioCtx;
     }
     static indexToTheta(index) {
         return (index * 2 * Math.PI) / 16 - Math.PI;
@@ -396,21 +406,24 @@ class GameTime {
         this.bpm = bpm;
         this.elapsedMs = 0;
         this.running = false;
-        this.audioCtx = null;
         this.audioCtxZero = 0;
     }
     static make(bpm) {
         return __awaiter(this, void 0, void 0, function* () {
             const result = new GameTime(bpm);
-            result.audioCtx = yield common_1.Common.getContext();
-            return result;
+            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                result.hiddenContext = yield common_1.Common.getContext();
+                console.log(result.hiddenContext.currentTime);
+                resolve(result);
+            }));
         });
     }
     start() {
-        this.running = true;
-        if (this.audioCtx) {
-            this.audioCtxZero = this.audioCtx.currentTime - this.elapsedMs * 1000;
-        }
+        return __awaiter(this, void 0, void 0, function* () {
+            this.running = true;
+            const audioCtx = yield common_1.Common.getContext();
+            this.audioCtxZero = audioCtx.currentTime - this.elapsedMs * 1000;
+        });
     }
     getBpm() {
         return this.bpm;
@@ -425,8 +438,8 @@ class GameTime {
         return this.audioCtxZero + gameMs / 1000;
     }
     getAudioTimeNow() {
-        return this.audioCtx.currentTime;
-        // return this.audioCtxZero + this.elapsedMs / 1000;
+        return common_1.Common.audioContext().currentTime;
+        // return Common.audioContext()Zero + this.elapsedMs / 1000;
     }
     roundQuantizeAudioTime(audioTimeS) {
         const secondsPerBeat = 60 / this.bpm / 4;
@@ -473,7 +486,6 @@ class Sample {
         this.url = url;
         this.gameTime = gameTime;
         this.previousNode = null;
-        this.audioCtx = null;
         this.buffer = null;
         this.init();
     }
@@ -484,14 +496,13 @@ class Sample {
     }
     getData() {
         return __awaiter(this, void 0, void 0, function* () {
-            this.audioCtx = yield common_1.Common.getContext();
             const request = new XMLHttpRequest();
             request.open('GET', this.url, true);
             request.responseType = 'arraybuffer';
             return new Promise((resolve, reject) => {
                 request.onload = () => {
                     const audioData = request.response;
-                    this.audioCtx.decodeAudioData(audioData, function (buffer) {
+                    common_1.Common.audioContext().decodeAudioData(audioData, function (buffer) {
                         debug_1.Debug.set(`Decoded ${++(Sample.numDecoded)}`);
                         resolve(buffer);
                     }, function (err) {
@@ -509,21 +520,31 @@ class Sample {
             this.previousNode = null;
         }
     }
+    range() {
+        let a = 0;
+        let b = 0;
+        for (const x of this.buffer.getChannelData(0)) {
+            a = Math.min(a, x);
+            b = Math.max(b, x);
+        }
+        return `${a.toFixed(4)} to ${b.toFixed(4)}`;
+    }
     playAt(audioTimeS) {
-        if (!this.audioCtx || !this.buffer) {
+        if (!this.buffer) {
             console.error('Sample is not loaded!');
             debug_1.Debug.set(`Not loaded: ${this.url}`);
             return;
         }
         else {
             debug_1.Debug.set(`Play @ ${audioTimeS.toFixed(3)}\n${this.url}` +
-                `\nlength: ${this.buffer.length}`);
+                `\nlength: ${this.buffer.length}` +
+                `\nrange: ${this.range()}`);
         }
-        const audioNode = this.audioCtx.createBufferSource();
+        const audioNode = common_1.Common.audioContext().createBufferSource();
         this.previousNode = audioNode;
         audioNode.buffer = this.buffer;
-        audioNode.connect(this.audioCtx.destination);
-        const nowAudioTime = this.audioCtx.currentTime;
+        audioNode.connect(common_1.Common.audioContext().destination);
+        const nowAudioTime = common_1.Common.audioContext().currentTime;
         const timeInFuture = audioTimeS - nowAudioTime;
         // console.log(`play in ${timeInFuture.toFixed(2)} seconds.`);
         audioNode.start(nowAudioTime + Math.max(timeInFuture, 0), Math.max(0, -timeInFuture));
