@@ -26,4 +26,7 @@ export class Track {
   public getImage(i: number) {
     return this.images[i];
   }
+  public numSamples(): number {
+    return this.samples.length;
+  }
 }

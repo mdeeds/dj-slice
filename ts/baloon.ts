@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { CollisionHandler } from "./collisionHandler";
 import { Debug } from "./debug";
 import { GameTime } from "./gameTime";
+import { Sample } from "./sample";
 import { SamplePack } from "./samplePack";
 import { Track } from "./track";
 
@@ -52,16 +53,29 @@ function makeBalloon(player: AFRAME.Entity) {
   player.appendChild(c);
 }
 
-function addClip(player: AFRAME.Entity, track: Track, gameTime: GameTime) {
+function addClip(player: AFRAME.Entity, track: Track, gameTime: GameTime,
+  theta: number, sampleIndex: number) {
   const container = document.createElement('a-entity');
-  container.setAttribute('position', '0 1.3 -0.7');
+  const x = 0.7 * Math.sin(theta);
+  const z = -0.7 * Math.cos(theta);
+  container.setAttribute('position', `${x} 1 ${z}`);
+  container.setAttribute('rotation', `0 ${-180 / Math.PI * theta} 0`)
+  // {
+  //   const o = document.createElement('a-box');
+  //   o.setAttribute('width', '0.2');
+  //   o.setAttribute('height', '0.15');
+  //   o.setAttribute('depth', '0.05');
+  //   o.setAttribute('position', '0 0.30, 0');
+  //   o.setAttribute('shader', 'flat');
+  //   o.classList.add('clickable');
+  //   container.appendChild(o);
+  // }
   {
-    const o = document.createElement('a-box');
-    o.setAttribute('width', '0.2');
-    o.setAttribute('height', '0.15');
-    o.setAttribute('depth', '0.05');
-    o.setAttribute('position', '0 0.30, 0');
+    const o = document.createElement('a-entity');
+    o.setAttribute('obj-model',
+      'obj: url(obj/trapezoid-full.obj); mtl: url(obj/trapezoid-full.mtl');
     o.setAttribute('shader', 'flat');
+    o.setAttribute('rotation', '0 0 0')
     o.classList.add('clickable');
     container.appendChild(o);
   }
@@ -72,24 +86,19 @@ function addClip(player: AFRAME.Entity, track: Track, gameTime: GameTime) {
     o.setAttribute('shader', 'flat');
     o.setAttribute('rotation', '0 0 180')
     o.classList.add('clickable');
-    container.appendChild(o);
-  }
-  {
-    const o = document.createElement('a-entity');
-    o.setAttribute('obj-model',
-      'obj: url(obj/trapezoid.obj); mtl: url(obj/trapezoid-full.mtl');
-    o.setAttribute('shader', 'flat');
-    o.setAttribute('rotation', '0 0 90')
-    o.classList.add('clickable');
+    o.addEventListener('mouseenter', () => {
+      Debug.set(`Enter ${Math.random().toFixed(5)}`);
+    });
     container.appendChild(o);
   }
   {
     const o = document.createElement('a-image');
     o.setAttribute('height', '0.2');
     o.setAttribute('width', '0.2');
-    o.setAttribute('src', track.getImage(0));
+    o.setAttribute('src', track.getImage(sampleIndex));
     o.setAttribute('transparent', 'true');
     o.setAttribute('opacity', '0.5');
+    o.setAttribute('shader', 'flat');
     container.appendChild(o);
   }
 
@@ -132,20 +141,44 @@ AFRAME.registerComponent("go", {
     makeBalloon(player);
     const assets = document.querySelector('a-assets');
     const gameTime = await GameTime.make(115);
+    await gameTime.start();
     const samplePack = await SamplePack.load('funk', gameTime, assets)
-    gameTime.start();
     Debug.init(document.querySelector('a-camera'));
     collisionHandler = new CollisionHandler();
 
     leftStick = addStick(document.querySelector('#leftHand'));
     rightStick = addStick(document.querySelector('#rightHand'));
-    const clip = addClip(player, samplePack.tracks[0], gameTime);
-    collisionHandler.addPair(clip, leftStick, 0.1, () => {
-      samplePack.tracks[0].getSample(0).playAt(gameTime.getAudioTimeNow());
-    });
-    collisionHandler.addPair(clip, rightStick, 0.1, () => {
-      samplePack.tracks[0].getSample(0).playAt(gameTime.getAudioTimeNow());
-    });
+
+    const keyCodes = ['Digit1', 'Digit2', 'Digit3', 'Digit4',
+      'KeyQ', 'KeyW', 'KeyE', 'KeyR',
+      'KeyA', 'KeyS', 'KeyD', 'KeyF',
+      'KeyZ', 'KeyX', 'KeyC', 'KeyV'];
+    let theta = 0;
+    let keyIndex = 0;
+    for (const track of samplePack.tracks) {
+      for (let i = 0; i < track.numSamples(); ++i) {
+        const clip = addClip(player, track, gameTime, theta, i);
+        collisionHandler.addPair(clip, leftStick, 0.1, () => {
+          track.getSample(i).stop();
+          track.getSample(i).playAt(gameTime.getAudioTimeNow());
+        });
+        collisionHandler.addPair(clip, rightStick, 0.1, () => {
+          track.getSample(i).stop();
+          track.getSample(i).playAt(gameTime.getAudioTimeNow());
+        });
+        body.addEventListener('keydown',
+          ((ki: string, sample: Sample) => {
+            return (ev: KeyboardEvent) => {
+              if (ev.code === ki) {
+                sample.stop();
+                sample.playAt(gameTime.getAudioTimeNow());
+              }
+            }
+          })(keyCodes[keyIndex], track.getSample(i)));
+        theta += Math.PI * 2 / 16;
+        ++keyIndex;
+      }
+    }
   },
   tick: function (timeMs, timeDeltaMs) {
     const p = (timeMs / 1000 / 60 / 3) % 1; // percentage of three minutes

@@ -1,12 +1,11 @@
 import { Common } from "./common";
+import { Debug } from "./debug";
 import { GameTime } from "./gameTime";
 
 export class Sample {
-  private audioCtx: AudioContext;
   private buffer: AudioBuffer;
 
   constructor(private url: string, private gameTime: GameTime) {
-    this.audioCtx = null;
     this.buffer = null;
     this.init();
   }
@@ -15,18 +14,22 @@ export class Sample {
     this.buffer = await this.getData();
   }
 
+  private static numDecoded = 0;
   async getData(): Promise<AudioBuffer> {
-    this.audioCtx = await Common.getContext();
     const request = new XMLHttpRequest();
     request.open('GET', this.url, true);
     request.responseType = 'arraybuffer';
     return new Promise((resolve, reject) => {
       request.onload = () => {
         const audioData = request.response;
-        this.audioCtx.decodeAudioData(audioData, function (buffer) {
+        Common.audioContext().decodeAudioData(audioData, function (buffer) {
+          Debug.set(`Decoded ${++(Sample.numDecoded)}`)
           resolve(buffer);
-        },
-          reject);
+        }, function (err) {
+          Debug.set(`Failed to decode ${this.url}`);
+          reject(err);
+
+        });
       }
       request.send();
     });
@@ -41,16 +44,31 @@ export class Sample {
     }
   }
 
-  playAt(audioTimeS: number) {
-    if (!this.audioCtx || !this.buffer) {
-      console.error('Sample is not loaded!');
-      return;
+  private range() {
+    let a = 0;
+    let b = 0;
+    for (const x of this.buffer.getChannelData(0)) {
+      a = Math.min(a, x);
+      b = Math.max(b, x);
     }
-    const audioNode = this.audioCtx.createBufferSource();
+    return `${a.toFixed(4)} to ${b.toFixed(4)}`;
+  }
+
+  playAt(audioTimeS: number) {
+    if (!this.buffer) {
+      console.error('Sample is not loaded!');
+      Debug.set(`Not loaded: ${this.url}`);
+      return;
+    } else {
+      Debug.set(`Play @ ${audioTimeS.toFixed(3)}\n${this.url}` +
+        `\nlength: ${this.buffer.length}` +
+        `\nrange: ${this.range()}`);
+    }
+    const audioNode = Common.audioContext().createBufferSource();
     this.previousNode = audioNode;
     audioNode.buffer = this.buffer;
-    audioNode.connect(this.audioCtx.destination);
-    const nowAudioTime = this.audioCtx.currentTime;
+    audioNode.connect(Common.audioContext().destination);
+    const nowAudioTime = Common.audioContext().currentTime;
     const timeInFuture = audioTimeS - nowAudioTime;
     // console.log(`play in ${timeInFuture.toFixed(2)} seconds.`);
     audioNode.start(nowAudioTime + Math.max(timeInFuture, 0),

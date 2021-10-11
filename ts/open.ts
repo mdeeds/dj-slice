@@ -168,25 +168,23 @@ class Granules {
   private controlPoints: number[];
   private playbackPoints: number[];
   private activePoint: number;
-  private audioCtx: AudioContext;
   private numSamples: number;
-  constructor(audioBuffer: AudioBuffer, audioCtx: AudioContext) {
+  constructor(audioBuffer: AudioBuffer) {
     this.audioBuffer = audioBuffer;
     this.numSamples = audioBuffer.getChannelData(0).length;
-    this.audioCtx = audioCtx;
-    this.controlPoints = [0, this.numSamples / audioCtx.sampleRate];
-    this.playbackPoints = [0, this.numSamples / audioCtx.sampleRate];
+    this.controlPoints = [0, this.numSamples / Common.audioContext().sampleRate];
+    this.playbackPoints = [0, this.numSamples / Common.audioContext().sampleRate];
     this.activePoint = 0;
   }
 
   private getXForPoint(index: number, canvas: HTMLCanvasElement) {
     const x = (canvas.width * this.controlPoints[index]) /
-      (this.numSamples / this.audioCtx.sampleRate);
+      (this.numSamples / Common.audioContext().sampleRate);
     return x;
   }
   private getXForPlayback(index: number, canvas: HTMLCanvasElement) {
     const x = (canvas.width * this.playbackPoints[index]) /
-      (this.numSamples / this.audioCtx.sampleRate);
+      (this.numSamples / Common.audioContext().sampleRate);
     return x;
   }
 
@@ -234,9 +232,9 @@ class Granules {
 
   play() {
     console.log('playing');
-    const audioNode = this.audioCtx.createBufferSource();
+    const audioNode = Common.audioContext().createBufferSource();
     audioNode.buffer = this.audioBuffer;
-    audioNode.connect(this.audioCtx.destination);
+    audioNode.connect(Common.audioContext().destination);
     const duration = this.controlPoints[this.activePoint + 1]
       - this.controlPoints[this.activePoint];
     audioNode.start(0, this.controlPoints[this.activePoint], duration);
@@ -284,7 +282,7 @@ async function go() {
 
   const frames = buffer.getChannelData(0);
   const bpm = getBpmFromFrames(frames.length, audioCtx);
-  const granules = new Granules(buffer, audioCtx);
+  const granules = new Granules(buffer);
 
   const waveCanvas = document.createElement('canvas') as
     any as HTMLCanvasElement;
