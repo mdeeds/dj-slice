@@ -94,18 +94,20 @@ function addClip(player, track, gameTime, theta, sampleIndex) {
     //   o.classList.add('clickable');
     //   container.appendChild(o);
     // }
-    // {
-    //   const o = document.createElement('a-entity');
-    //   o.setAttribute('obj-model',
-    //     'obj: url(obj/trapezoid-full.obj); mtl: url(obj/trapezoid-full.mtl');
-    //   o.setAttribute('shader', 'flat');
-    //   o.setAttribute('rotation', '0 0 180')
-    //   o.classList.add('clickable');
-    //   container.appendChild(o);
-    // }
     {
         const o = document.createElement('a-entity');
-        o.setAttribute('obj-model', 'obj: url(obj/trapezoid.obj); mtl: url(obj/trapezoid-full.mtl');
+        o.setAttribute('obj-model', 'obj: url(obj/trapezoid-full.obj); mtl: url(obj/trapezoid-full.mtl');
+        o.setAttribute('shader', 'flat');
+        o.setAttribute('rotation', '0 0 0');
+        o.classList.add('clickable');
+        o.addEventListener('mouseenter', () => {
+            debug_1.Debug.set(`Top ${Math.random().toFixed(5)}`);
+        });
+        container.appendChild(o);
+    }
+    {
+        const o = document.createElement('a-entity');
+        o.setAttribute('obj-model', 'obj: url(obj/trapezoid-full.obj); mtl: url(obj/trapezoid-full.mtl');
         o.setAttribute('shader', 'flat');
         o.setAttribute('rotation', '0 0 180');
         o.classList.add('clickable');
@@ -479,6 +481,7 @@ class Sample {
                 request.onload = () => {
                     const audioData = request.response;
                     this.audioCtx.decodeAudioData(audioData, function (buffer) {
+                        debug_1.Debug.set(`Decoded ${++(Sample.numDecoded)}`);
                         resolve(buffer);
                     }, function (err) {
                         debug_1.Debug.set(`Failed to decode ${this.url}`);
@@ -523,6 +526,7 @@ class Sample {
     }
 }
 exports.Sample = Sample;
+Sample.numDecoded = 0;
 //# sourceMappingURL=sample.js.map
 
 /***/ }),
