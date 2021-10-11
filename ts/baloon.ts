@@ -106,13 +106,14 @@ function addClip(player: AFRAME.Entity, track: Track, gameTime: GameTime,
   return container;
 }
 
+const kStickLength = 0.25;
 function addStick(container: AFRAME.Entity) {
   {
     const o = document.createElement('a-box');
     o.setAttribute('height', '0.01');
     o.setAttribute('width', '0.01');
-    o.setAttribute('depth', '0.4');
-    o.setAttribute('position', '0 0 -0.2');
+    o.setAttribute('depth', kStickLength);
+    o.setAttribute('position', `0 0 ${-kStickLength / 2}`);
     o.setAttribute('color', '#422');
     o.setAttribute('shader', 'flat');
     container.appendChild(o);
@@ -122,7 +123,7 @@ function addStick(container: AFRAME.Entity) {
     o.setAttribute('height', '0.011');
     o.setAttribute('width', '0.011');
     o.setAttribute('depth', '0.011');
-    o.setAttribute('position', '0 0 -0.4');
+    o.setAttribute('position', `0 0 ${-kStickLength}`);
     o.setAttribute('color', '#f09');
     o.setAttribute('shader', 'flat');
     container.appendChild(o);

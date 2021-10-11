@@ -126,13 +126,14 @@ function addClip(player, track, gameTime, theta, sampleIndex) {
     player.appendChild(container);
     return container;
 }
+const kStickLength = 0.25;
 function addStick(container) {
     {
         const o = document.createElement('a-box');
         o.setAttribute('height', '0.01');
         o.setAttribute('width', '0.01');
-        o.setAttribute('depth', '0.4');
-        o.setAttribute('position', '0 0 -0.2');
+        o.setAttribute('depth', kStickLength);
+        o.setAttribute('position', `0 0 ${-kStickLength / 2}`);
         o.setAttribute('color', '#422');
         o.setAttribute('shader', 'flat');
         container.appendChild(o);
@@ -142,7 +143,7 @@ function addStick(container) {
         o.setAttribute('height', '0.011');
         o.setAttribute('width', '0.011');
         o.setAttribute('depth', '0.011');
-        o.setAttribute('position', '0 0 -0.4');
+        o.setAttribute('position', `0 0 ${-kStickLength}`);
         o.setAttribute('color', '#f09');
         o.setAttribute('shader', 'flat');
         container.appendChild(o);
@@ -176,21 +177,21 @@ AFRAME.registerComponent("go", {
                 for (let i = 0; i < track.numSamples(); ++i) {
                     const clip = addClip(player, track, gameTime, theta, i);
                     collisionHandler.addPair(clip, leftStick, 0.1, () => {
-                        track.getSample(i).stop();
-                        track.getSample(i).playAt(gameTime.getAudioTimeNow());
+                        track.stop();
+                        track.getSample(i).playQuantized();
                     });
                     collisionHandler.addPair(clip, rightStick, 0.1, () => {
-                        track.getSample(i).stop();
-                        track.getSample(i).playAt(gameTime.getAudioTimeNow());
+                        track.stop();
+                        track.getSample(i).playQuantized();
                     });
-                    body.addEventListener('keydown', ((ki, sample) => {
+                    body.addEventListener('keydown', ((ki, track, sample) => {
                         return (ev) => {
                             if (ev.code === ki) {
-                                sample.stop();
-                                sample.playAt(gameTime.getAudioTimeNow());
+                                track.stop();
+                                sample.playQuantized();
                             }
                         };
-                    })(keyCodes[keyIndex], track.getSample(i)));
+                    })(keyCodes[keyIndex], track, track.getSample(i)));
                     theta += Math.PI * 2 / 16;
                     ++keyIndex;
                 }
@@ -209,17 +210,20 @@ AFRAME.registerComponent("go", {
 });
 const body = document.getElementsByTagName('body')[0];
 body.innerHTML = `
-<a-scene go="1" background="black" transparent="false" cursor="rayOrigin: mouse" stats>
+<a-scene go="1" 
+  fog="type: linear; color: #112; near: 2; far: 300"
+  background="black" transparent="false" cursor="rayOrigin: mouse" stats>
 <a-entity obj-model="obj: url(obj/city.obj); mtl: url(obj/city.mtl)" rotation="0 180 0"></a-entity>
 <a-assets>
 </a-assets>
 
 <a-sky color="#112" radius=3000></a-sky>
-<a-entity light="type: ambient; color: #777"></a-entity>
+<a-entity light="type: ambient; color: #222"></a-entity>
+<a-entity light="type:directional; color: #777" position="100 200 -500 rotation="270 0 0"></a-entity>
 <a-entity id='player'>
-<a-entity light="type:directional; color: #777" position="100 300 400"></a-entity>
-<a-entity light="type:directional; color: #777" position="100 -200 500"></a-entity>
-<a-camera position="0 1.6 0"></a-camera>
+  <a-camera position="0 1.6 0">
+    <a-entity light="type:point; intensity: 0.75; distance: 4; decay: 2" position="0 0.1 -0.1">
+  </a-camera>
   <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 5;" line="color: #44d"
     pointer></a-entity>
   <a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 5;" line="color: #d44"
@@ -442,7 +446,7 @@ class GameTime {
         // return Common.audioContext()Zero + this.elapsedMs / 1000;
     }
     roundQuantizeAudioTime(audioTimeS) {
-        const secondsPerBeat = 60 / this.bpm / 4;
+        const secondsPerBeat = 4 * 60 / this.bpm;
         const beat = Math.round(audioTimeS / secondsPerBeat);
         return beat * secondsPerBeat;
     }
@@ -516,7 +520,9 @@ class Sample {
     }
     stop() {
         if (this.previousNode) {
-            this.previousNode.stop();
+            const quantizedAudioTimeS = this.gameTime.
+                roundQuantizeAudioTime(common_1.Common.audioContext().currentTime);
+            this.previousNode.stop(quantizedAudioTimeS);
             this.previousNode = null;
         }
     }
@@ -549,9 +555,9 @@ class Sample {
         // console.log(`play in ${timeInFuture.toFixed(2)} seconds.`);
         audioNode.start(nowAudioTime + Math.max(timeInFuture, 0), Math.max(0, -timeInFuture));
     }
-    playQuantized(gameTimeMs) {
-        const audioTimeS = this.gameTime.getAudioTimeForGameTime(gameTimeMs);
-        const quantizedAudioTimeS = this.gameTime.roundQuantizeAudioTime(audioTimeS);
+    playQuantized() {
+        const quantizedAudioTimeS = this.gameTime.
+            roundQuantizeAudioTime(common_1.Common.audioContext().currentTime);
         this.playAt(quantizedAudioTimeS);
     }
     durationS() {
@@ -636,6 +642,11 @@ class Track {
             // i.id = `trackImage${Track.idNumber++}`
             // this.images.push(i);
             // assets.appendChild(i);
+        }
+    }
+    stop() {
+        for (const s of this.samples) {
+            s.stop();
         }
     }
     getSample(i) {
