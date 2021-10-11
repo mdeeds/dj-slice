@@ -159,22 +159,22 @@ AFRAME.registerComponent("go", {
       for (let i = 0; i < track.numSamples(); ++i) {
         const clip = addClip(player, track, gameTime, theta, i);
         collisionHandler.addPair(clip, leftStick, 0.1, () => {
-          track.getSample(i).stop();
-          track.getSample(i).playAt(gameTime.getAudioTimeNow());
+          track.stop();
+          track.getSample(i).playQuantized();
         });
         collisionHandler.addPair(clip, rightStick, 0.1, () => {
-          track.getSample(i).stop();
-          track.getSample(i).playAt(gameTime.getAudioTimeNow());
+          track.stop();
+          track.getSample(i).playQuantized();
         });
         body.addEventListener('keydown',
-          ((ki: string, sample: Sample) => {
+          ((ki: string, track: Track, sample: Sample) => {
             return (ev: KeyboardEvent) => {
               if (ev.code === ki) {
-                sample.stop();
-                sample.playAt(gameTime.getAudioTimeNow());
+                track.stop();
+                sample.playQuantized();
               }
             }
-          })(keyCodes[keyIndex], track.getSample(i)));
+          })(keyCodes[keyIndex], track, track.getSample(i)));
         theta += Math.PI * 2 / 16;
         ++keyIndex;
       }

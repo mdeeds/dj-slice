@@ -113,7 +113,8 @@ export class WellScene {
       for (const o of this.beatOrbs) {
         o.strike(nowTime);
       }
-      clapSample.playAt(nowTime);
+      // TODO: Not quantized!!!
+      clapSample.playQuantized();
     });
     const body = document.getElementsByTagName('body')[0];
     body.addEventListener('keydown', (ev: KeyboardEvent) => {
@@ -122,7 +123,8 @@ export class WellScene {
         for (const o of this.beatOrbs) {
           o.strike(nowTime);
         }
-        clapSample.playAt(nowTime);
+        // TODO: Not quantized!!!
+        clapSample.playQuantized();
       }
     });
   }

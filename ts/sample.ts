@@ -39,7 +39,9 @@ export class Sample {
 
   stop() {
     if (this.previousNode) {
-      this.previousNode.stop();
+      const quantizedAudioTimeS = this.gameTime.
+        roundQuantizeAudioTime(Common.audioContext().currentTime);
+      this.previousNode.stop(quantizedAudioTimeS);
       this.previousNode = null;
     }
   }
@@ -54,7 +56,7 @@ export class Sample {
     return `${a.toFixed(4)} to ${b.toFixed(4)}`;
   }
 
-  playAt(audioTimeS: number) {
+  private playAt(audioTimeS: number) {
     if (!this.buffer) {
       console.error('Sample is not loaded!');
       Debug.set(`Not loaded: ${this.url}`);
@@ -75,9 +77,9 @@ export class Sample {
       Math.max(0, -timeInFuture));
   }
 
-  playQuantized(gameTimeMs) {
-    const audioTimeS = this.gameTime.getAudioTimeForGameTime(gameTimeMs);
-    const quantizedAudioTimeS = this.gameTime.roundQuantizeAudioTime(audioTimeS);
+  playQuantized() {
+    const quantizedAudioTimeS = this.gameTime.
+      roundQuantizeAudioTime(Common.audioContext().currentTime);
     this.playAt(quantizedAudioTimeS);
   }
 

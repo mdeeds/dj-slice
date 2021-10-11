@@ -50,8 +50,8 @@ export class GameTime {
     // return Common.audioContext()Zero + this.elapsedMs / 1000;
   }
 
-  roundQuantizeAudioTime(audioTimeS) {
-    const secondsPerBeat = 60 / this.bpm / 4;
+  roundQuantizeAudioTime(audioTimeS: number) {
+    const secondsPerBeat = 4 * 60 / this.bpm;
     const beat = Math.round(audioTimeS / secondsPerBeat);
     return beat * secondsPerBeat;
   }

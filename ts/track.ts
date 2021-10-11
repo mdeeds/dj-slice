@@ -20,6 +20,12 @@ export class Track {
     }
   }
 
+  public stop() {
+    for (const s of this.samples) {
+      s.stop();
+    }
+  }
+
   public getSample(i: number) {
     return this.samples[i];
   }
