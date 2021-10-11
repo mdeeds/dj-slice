@@ -195,17 +195,20 @@ AFRAME.registerComponent("go", {
 
 const body = document.getElementsByTagName('body')[0];
 body.innerHTML = `
-<a-scene go="1" background="black" transparent="false" cursor="rayOrigin: mouse" stats>
+<a-scene go="1" 
+  fog="type: linear; color: #112; near: 2; far: 300"
+  background="black" transparent="false" cursor="rayOrigin: mouse" stats>
 <a-entity obj-model="obj: url(obj/city.obj); mtl: url(obj/city.mtl)" rotation="0 180 0"></a-entity>
 <a-assets>
 </a-assets>
 
 <a-sky color="#112" radius=3000></a-sky>
-<a-entity light="type: ambient; color: #777"></a-entity>
+<a-entity light="type: ambient; color: #222"></a-entity>
+<a-entity light="type:directional; color: #777" position="100 200 -500 rotation="270 0 0"></a-entity>
 <a-entity id='player'>
-<a-entity light="type:directional; color: #777" position="100 300 400"></a-entity>
-<a-entity light="type:directional; color: #777" position="100 -200 500"></a-entity>
-<a-camera position="0 1.6 0"></a-camera>
+  <a-camera position="0 1.6 0">
+    <a-entity light="type:point; intensity: 0.75; distance: 4; decay: 2" position="0 0.1 -0.1">
+  </a-camera>
   <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 5;" line="color: #44d"
     pointer></a-entity>
   <a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 5;" line="color: #d44"
