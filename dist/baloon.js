@@ -39,6 +39,7 @@ const AFRAME = __importStar(__webpack_require__(449));
 const collisionHandler_1 = __webpack_require__(44);
 const debug_1 = __webpack_require__(756);
 const gameTime_1 = __webpack_require__(669);
+const robot_1 = __webpack_require__(607);
 const samplePack_1 = __webpack_require__(780);
 var player = null;
 function addBuilding(x, z, scene) {
@@ -153,6 +154,7 @@ function addStick(container) {
 var leftStick = null;
 var rightStick = null;
 var collisionHandler = null;
+var robot = null;
 AFRAME.registerComponent("go", {
     init: function () {
         return __awaiter(this, void 0, void 0, function* () {
@@ -196,6 +198,7 @@ AFRAME.registerComponent("go", {
                     ++keyIndex;
                 }
             }
+            robot = new robot_1.Robot(document.querySelector('#camera'), document.querySelector('#leftHand'), document.querySelector('#rightHand'), document.querySelector('#robot'));
         });
     },
     tick: function (timeMs, timeDeltaMs) {
@@ -205,6 +208,9 @@ AFRAME.registerComponent("go", {
         player.setAttribute('position', `0, ${h}, ${-r}`);
         if (collisionHandler) {
             collisionHandler.tick(timeMs, timeDeltaMs);
+        }
+        if (robot) {
+            robot.tick(timeMs, timeDeltaMs);
         }
     }
 });
@@ -219,9 +225,13 @@ body.innerHTML = `
 
 <a-sky color="#112" radius=3000></a-sky>
 <a-entity light="type: ambient; color: #222"></a-entity>
-<a-entity light="type:directional; color: #777" position="100 200 -500 rotation="270 0 0"></a-entity>
+<a-entity light="type:directional; color: #777" position="1800 1000 1200"></a-entity>
+
 <a-entity id='player'>
-  <a-camera position="0 1.6 0">
+  <a-entity id='robot' position = "-2 0 -2" rotation = "0 180 0"></a-entity>
+  <a-sphere position="180 100 120" radius=20 color=#fff shader=flat></a-sphere>
+
+  <a-camera id="camera" position="0 1.6 0">
     <a-entity light="type:point; intensity: 0.75; distance: 4; decay: 2" position="0 0.1 -0.1">
   </a-camera>
   <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 5;" line="color: #44d"
@@ -464,6 +474,59 @@ class GameTime {
 }
 exports.GameTime = GameTime;
 //# sourceMappingURL=gameTime.js.map
+
+/***/ }),
+
+/***/ 607:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Robot = void 0;
+class Robot {
+    constructor(headRef, leftRef, rightRef, container) {
+        this.headRef = headRef;
+        this.leftRef = leftRef;
+        this.rightRef = rightRef;
+        this.container = container;
+        this.head = document.createElement('a-box');
+        this.head.setAttribute('color', '#fff');
+        this.head.setAttribute('width', '0.5');
+        this.head.setAttribute('height', '0.25');
+        this.head.setAttribute('depth', '0.25');
+        this.head.setAttribute('position', '0 0 0');
+        this.left = document.createElement('a-box');
+        this.left.setAttribute('color', '#fff');
+        this.left.setAttribute('width', '0.15');
+        this.left.setAttribute('height', '0.15');
+        this.left.setAttribute('depth', '0.15');
+        this.left.setAttribute('position', '0 0 0');
+        this.right = document.createElement('a-box');
+        this.right.setAttribute('color', '#fff');
+        this.right.setAttribute('width', '0.15');
+        this.right.setAttribute('height', '0.15');
+        this.right.setAttribute('depth', '0.15');
+        this.right.setAttribute('position', '0 0 0');
+        container.appendChild(this.head);
+        container.appendChild(this.left);
+        container.appendChild(this.right);
+        this.track();
+    }
+    track() {
+        this.head.object3D.position.copy(this.headRef.object3D.position);
+        this.left.object3D.position.copy(this.leftRef.object3D.position);
+        this.right.object3D.position.copy(this.rightRef.object3D.position);
+        this.head.object3D.rotation.copy(this.headRef.object3D.rotation);
+        this.left.object3D.rotation.copy(this.leftRef.object3D.rotation);
+        this.right.object3D.rotation.copy(this.rightRef.object3D.rotation);
+    }
+    tick(timeMs, timeDeltaMs) {
+        this.track();
+    }
+}
+exports.Robot = Robot;
+//# sourceMappingURL=robot.js.map
 
 /***/ }),
 
