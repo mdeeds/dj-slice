@@ -205,8 +205,9 @@ body.innerHTML = `
 
 <a-sky color="#112" radius=3000></a-sky>
 <a-entity light="type: ambient; color: #222"></a-entity>
-<a-entity light="type:directional; color: #777" position="100 200 -500 rotation="270 0 0"></a-entity>
+<a-entity light="type:directional; color: #777" position="1800 1000 1200"></a-entity>
 <a-entity id='player'>
+  <a-sphere position="180 100 120" radius=20 color=#fff shader=flat></a-sphere>
   <a-camera position="0 1.6 0">
     <a-entity light="type:point; intensity: 0.75; distance: 4; decay: 2" position="0 0.1 -0.1">
   </a-camera>
