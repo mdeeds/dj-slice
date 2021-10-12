@@ -20,10 +20,19 @@ export class Track {
     }
   }
 
+  public stop() {
+    for (const s of this.samples) {
+      s.stop();
+    }
+  }
+
   public getSample(i: number) {
     return this.samples[i];
   }
   public getImage(i: number) {
     return this.images[i];
+  }
+  public numSamples(): number {
+    return this.samples.length;
   }
 }

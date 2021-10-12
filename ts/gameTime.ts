@@ -4,28 +4,29 @@ export class GameTime {
   private bpm: number;
   private elapsedMs: number;
   private running: boolean;
-  private audioCtx: AudioContext;
   private audioCtxZero: number;
+  private hiddenContext: AudioContext;
   private constructor(bpm: number) {
     console.assert(bpm);
     this.bpm = bpm;
     this.elapsedMs = 0;
     this.running = false;
-    this.audioCtx = null;
     this.audioCtxZero = 0;
   }
 
   static async make(bpm: number): Promise<GameTime> {
     const result = new GameTime(bpm);
-    result.audioCtx = await Common.getContext();
-    return result;
+    return new Promise(async (resolve, reject) => {
+      result.hiddenContext = await Common.getContext();
+      console.log(result.hiddenContext.currentTime);
+      resolve(result);
+    });
   }
 
-  start() {
+  async start() {
     this.running = true;
-    if (this.audioCtx) {
-      this.audioCtxZero = this.audioCtx.currentTime - this.elapsedMs * 1000;
-    }
+    const audioCtx = await Common.getContext();
+    this.audioCtxZero = audioCtx.currentTime - this.elapsedMs * 1000;
   }
 
   getBpm() {
@@ -45,12 +46,12 @@ export class GameTime {
   }
 
   getAudioTimeNow() {
-    return this.audioCtx.currentTime;
-    // return this.audioCtxZero + this.elapsedMs / 1000;
+    return Common.audioContext().currentTime;
+    // return Common.audioContext()Zero + this.elapsedMs / 1000;
   }
 
-  roundQuantizeAudioTime(audioTimeS) {
-    const secondsPerBeat = 60 / this.bpm / 4;
+  roundQuantizeAudioTime(audioTimeS: number) {
+    const secondsPerBeat = 4 * 60 / this.bpm;
     const beat = Math.round(audioTimeS / secondsPerBeat);
     return beat * secondsPerBeat;
   }

@@ -13,7 +13,7 @@ export class LooperTrack {
 
   private enqueue() {
     const sample = this.samples[this.currentIndex];
-    sample.playAt(this.nextLoopAudioTimeS);
+    sample.playQuantized();
     this.nextLoopAudioTimeS += sample.durationS();
   }
 

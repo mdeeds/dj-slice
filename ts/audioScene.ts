@@ -44,7 +44,7 @@ export class AudioScene {
   triggerTrackAt(track: number, gameTimeMs: number) {
     const sample = this.samples[track];
     if (sample) {
-      sample.playQuantized(gameTimeMs);
+      sample.playQuantized();
     }
   }
 

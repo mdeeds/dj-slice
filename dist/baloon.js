@@ -39,6 +39,7 @@ const AFRAME = __importStar(__webpack_require__(449));
 const collisionHandler_1 = __webpack_require__(44);
 const debug_1 = __webpack_require__(756);
 const gameTime_1 = __webpack_require__(669);
+const robot_1 = __webpack_require__(607);
 const samplePack_1 = __webpack_require__(780);
 var player = null;
 function addBuilding(x, z, scene) {
@@ -82,7 +83,7 @@ function addClip(player, track, gameTime, theta, sampleIndex) {
     const container = document.createElement('a-entity');
     const x = 0.7 * Math.sin(theta);
     const z = -0.7 * Math.cos(theta);
-    container.setAttribute('position', `${x} 1.3 ${z}`);
+    container.setAttribute('position', `${x} 1 ${z}`);
     container.setAttribute('rotation', `0 ${-180 / Math.PI * theta} 0`);
     // {
     //   const o = document.createElement('a-box');
@@ -94,18 +95,17 @@ function addClip(player, track, gameTime, theta, sampleIndex) {
     //   o.classList.add('clickable');
     //   container.appendChild(o);
     // }
-    // {
-    //   const o = document.createElement('a-entity');
-    //   o.setAttribute('obj-model',
-    //     'obj: url(obj/trapezoid-full.obj); mtl: url(obj/trapezoid-full.mtl');
-    //   o.setAttribute('shader', 'flat');
-    //   o.setAttribute('rotation', '0 0 180')
-    //   o.classList.add('clickable');
-    //   container.appendChild(o);
-    // }
     {
         const o = document.createElement('a-entity');
-        o.setAttribute('obj-model', 'obj: url(obj/trapezoid.obj); mtl: url(obj/trapezoid-full.mtl');
+        o.setAttribute('obj-model', 'obj: url(obj/trapezoid-full.obj); mtl: url(obj/trapezoid-full.mtl');
+        o.setAttribute('shader', 'flat');
+        o.setAttribute('rotation', '0 0 0');
+        o.classList.add('clickable');
+        container.appendChild(o);
+    }
+    {
+        const o = document.createElement('a-entity');
+        o.setAttribute('obj-model', 'obj: url(obj/trapezoid-full.obj); mtl: url(obj/trapezoid-full.mtl');
         o.setAttribute('shader', 'flat');
         o.setAttribute('rotation', '0 0 180');
         o.classList.add('clickable');
@@ -127,13 +127,14 @@ function addClip(player, track, gameTime, theta, sampleIndex) {
     player.appendChild(container);
     return container;
 }
+const kStickLength = 0.25;
 function addStick(container) {
     {
         const o = document.createElement('a-box');
         o.setAttribute('height', '0.01');
         o.setAttribute('width', '0.01');
-        o.setAttribute('depth', '0.4');
-        o.setAttribute('position', '0 0 -0.2');
+        o.setAttribute('depth', kStickLength);
+        o.setAttribute('position', `0 0 ${-kStickLength / 2}`);
         o.setAttribute('color', '#422');
         o.setAttribute('shader', 'flat');
         container.appendChild(o);
@@ -143,7 +144,7 @@ function addStick(container) {
         o.setAttribute('height', '0.011');
         o.setAttribute('width', '0.011');
         o.setAttribute('depth', '0.011');
-        o.setAttribute('position', '0 0 -0.4');
+        o.setAttribute('position', `0 0 ${-kStickLength}`);
         o.setAttribute('color', '#f09');
         o.setAttribute('shader', 'flat');
         container.appendChild(o);
@@ -153,6 +154,7 @@ function addStick(container) {
 var leftStick = null;
 var rightStick = null;
 var collisionHandler = null;
+var robot = null;
 AFRAME.registerComponent("go", {
     init: function () {
         return __awaiter(this, void 0, void 0, function* () {
@@ -161,27 +163,42 @@ AFRAME.registerComponent("go", {
             makeBalloon(player);
             const assets = document.querySelector('a-assets');
             const gameTime = yield gameTime_1.GameTime.make(115);
+            yield gameTime.start();
             const samplePack = yield samplePack_1.SamplePack.load('funk', gameTime, assets);
-            gameTime.start();
             debug_1.Debug.init(document.querySelector('a-camera'));
             collisionHandler = new collisionHandler_1.CollisionHandler();
             leftStick = addStick(document.querySelector('#leftHand'));
             rightStick = addStick(document.querySelector('#rightHand'));
+            const keyCodes = ['Digit1', 'Digit2', 'Digit3', 'Digit4',
+                'KeyQ', 'KeyW', 'KeyE', 'KeyR',
+                'KeyA', 'KeyS', 'KeyD', 'KeyF',
+                'KeyZ', 'KeyX', 'KeyC', 'KeyV'];
             let theta = 0;
+            let keyIndex = 0;
             for (const track of samplePack.tracks) {
                 for (let i = 0; i < track.numSamples(); ++i) {
                     const clip = addClip(player, track, gameTime, theta, i);
                     collisionHandler.addPair(clip, leftStick, 0.1, () => {
-                        track.getSample(i).stop();
-                        track.getSample(i).playAt(gameTime.getAudioTimeNow());
+                        track.stop();
+                        track.getSample(i).playQuantized();
                     });
                     collisionHandler.addPair(clip, rightStick, 0.1, () => {
-                        track.getSample(i).stop();
-                        track.getSample(i).playAt(gameTime.getAudioTimeNow());
+                        track.stop();
+                        track.getSample(i).playQuantized();
                     });
+                    body.addEventListener('keydown', ((ki, track, sample) => {
+                        return (ev) => {
+                            if (ev.code === ki) {
+                                track.stop();
+                                sample.playQuantized();
+                            }
+                        };
+                    })(keyCodes[keyIndex], track, track.getSample(i)));
                     theta += Math.PI * 2 / 16;
+                    ++keyIndex;
                 }
             }
+            robot = new robot_1.Robot(document.querySelector('#camera'), document.querySelector('#leftHand'), document.querySelector('#rightHand'), document.querySelector('#robot'));
         });
     },
     tick: function (timeMs, timeDeltaMs) {
@@ -192,21 +209,31 @@ AFRAME.registerComponent("go", {
         if (collisionHandler) {
             collisionHandler.tick(timeMs, timeDeltaMs);
         }
+        if (robot) {
+            robot.tick(timeMs, timeDeltaMs);
+        }
     }
 });
 const body = document.getElementsByTagName('body')[0];
 body.innerHTML = `
-<a-scene go="1" background="black" transparent="false" cursor="rayOrigin: mouse" stats>
+<a-scene go="1" 
+  fog="type: linear; color: #112; near: 2; far: 300"
+  background="black" transparent="false" cursor="rayOrigin: mouse" stats>
 <a-entity obj-model="obj: url(obj/city.obj); mtl: url(obj/city.mtl)" rotation="0 180 0"></a-entity>
 <a-assets>
 </a-assets>
 
 <a-sky color="#112" radius=3000></a-sky>
-<a-entity light="type: ambient; color: #777"></a-entity>
+<a-entity light="type: ambient; color: #222"></a-entity>
+<a-entity light="type:directional; color: #777" position="1800 1000 1200"></a-entity>
+
 <a-entity id='player'>
-<a-entity light="type:directional; color: #777" position="100 300 400"></a-entity>
-<a-entity light="type:directional; color: #777" position="100 -200 500"></a-entity>
-<a-camera position="0 1.6 0"></a-camera>
+  <a-entity id='robot' position = "-2 0 -2" rotation = "0 180 0"></a-entity>
+  <a-sphere position="180 100 120" radius=20 color=#fff shader=flat></a-sphere>
+
+  <a-camera id="camera" position="0 1.6 0">
+    <a-entity light="type:point; intensity: 0.75; distance: 4; decay: 2" position="0 0.1 -0.1">
+  </a-camera>
   <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 5;" line="color: #44d"
     pointer></a-entity>
   <a-entity id="rightHand" laser-controls="hand: right" raycaster="objects: .clickable; far: 5;" line="color: #d44"
@@ -308,21 +335,31 @@ exports.Common = void 0;
 class Common {
     static getContext() {
         return __awaiter(this, void 0, void 0, function* () {
-            if (Common.audioCtx) {
-                return Common.audioCtx;
-            }
             return new Promise((resolve) => {
-                const context = new window.AudioContext();
-                if (context.state === 'running') {
-                    resolve(context);
+                if (Common.audioCtx) {
+                    console.log('Context established.');
+                    resolve(Common.audioCtx);
                 }
                 else {
-                    setTimeout(() => __awaiter(this, void 0, void 0, function* () {
-                        resolve(yield Common.getContext());
-                    }), 500);
+                    const context = new window.AudioContext();
+                    if (context.state === 'running') {
+                        Common.audioCtx = context;
+                        resolve(context);
+                    }
+                    else {
+                        setTimeout(() => __awaiter(this, void 0, void 0, function* () {
+                            resolve(yield Common.getContext());
+                        }), 500);
+                    }
                 }
             });
         });
+    }
+    static audioContext() {
+        if (!Common.audioCtx) {
+            throw new Error(`Context is not ready!`);
+        }
+        return Common.audioCtx;
     }
     static indexToTheta(index) {
         return (index * 2 * Math.PI) / 16 - Math.PI;
@@ -383,21 +420,24 @@ class GameTime {
         this.bpm = bpm;
         this.elapsedMs = 0;
         this.running = false;
-        this.audioCtx = null;
         this.audioCtxZero = 0;
     }
     static make(bpm) {
         return __awaiter(this, void 0, void 0, function* () {
             const result = new GameTime(bpm);
-            result.audioCtx = yield common_1.Common.getContext();
-            return result;
+            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                result.hiddenContext = yield common_1.Common.getContext();
+                console.log(result.hiddenContext.currentTime);
+                resolve(result);
+            }));
         });
     }
     start() {
-        this.running = true;
-        if (this.audioCtx) {
-            this.audioCtxZero = this.audioCtx.currentTime - this.elapsedMs * 1000;
-        }
+        return __awaiter(this, void 0, void 0, function* () {
+            this.running = true;
+            const audioCtx = yield common_1.Common.getContext();
+            this.audioCtxZero = audioCtx.currentTime - this.elapsedMs * 1000;
+        });
     }
     getBpm() {
         return this.bpm;
@@ -412,11 +452,11 @@ class GameTime {
         return this.audioCtxZero + gameMs / 1000;
     }
     getAudioTimeNow() {
-        return this.audioCtx.currentTime;
-        // return this.audioCtxZero + this.elapsedMs / 1000;
+        return common_1.Common.audioContext().currentTime;
+        // return Common.audioContext()Zero + this.elapsedMs / 1000;
     }
     roundQuantizeAudioTime(audioTimeS) {
-        const secondsPerBeat = 60 / this.bpm / 4;
+        const secondsPerBeat = 4 * 60 / this.bpm;
         const beat = Math.round(audioTimeS / secondsPerBeat);
         return beat * secondsPerBeat;
     }
@@ -434,6 +474,59 @@ class GameTime {
 }
 exports.GameTime = GameTime;
 //# sourceMappingURL=gameTime.js.map
+
+/***/ }),
+
+/***/ 607:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Robot = void 0;
+class Robot {
+    constructor(headRef, leftRef, rightRef, container) {
+        this.headRef = headRef;
+        this.leftRef = leftRef;
+        this.rightRef = rightRef;
+        this.container = container;
+        this.head = document.createElement('a-box');
+        this.head.setAttribute('color', '#fff');
+        this.head.setAttribute('width', '0.5');
+        this.head.setAttribute('height', '0.25');
+        this.head.setAttribute('depth', '0.25');
+        this.head.setAttribute('position', '0 0 0');
+        this.left = document.createElement('a-box');
+        this.left.setAttribute('color', '#fff');
+        this.left.setAttribute('width', '0.15');
+        this.left.setAttribute('height', '0.15');
+        this.left.setAttribute('depth', '0.15');
+        this.left.setAttribute('position', '0 0 0');
+        this.right = document.createElement('a-box');
+        this.right.setAttribute('color', '#fff');
+        this.right.setAttribute('width', '0.15');
+        this.right.setAttribute('height', '0.15');
+        this.right.setAttribute('depth', '0.15');
+        this.right.setAttribute('position', '0 0 0');
+        container.appendChild(this.head);
+        container.appendChild(this.left);
+        container.appendChild(this.right);
+        this.track();
+    }
+    track() {
+        this.head.object3D.position.copy(this.headRef.object3D.position);
+        this.left.object3D.position.copy(this.leftRef.object3D.position);
+        this.right.object3D.position.copy(this.rightRef.object3D.position);
+        this.head.object3D.rotation.copy(this.headRef.object3D.rotation);
+        this.left.object3D.rotation.copy(this.leftRef.object3D.rotation);
+        this.right.object3D.rotation.copy(this.rightRef.object3D.rotation);
+    }
+    tick(timeMs, timeDeltaMs) {
+        this.track();
+    }
+}
+exports.Robot = Robot;
+//# sourceMappingURL=robot.js.map
 
 /***/ }),
 
@@ -460,7 +553,6 @@ class Sample {
         this.url = url;
         this.gameTime = gameTime;
         this.previousNode = null;
-        this.audioCtx = null;
         this.buffer = null;
         this.init();
     }
@@ -471,14 +563,14 @@ class Sample {
     }
     getData() {
         return __awaiter(this, void 0, void 0, function* () {
-            this.audioCtx = yield common_1.Common.getContext();
             const request = new XMLHttpRequest();
             request.open('GET', this.url, true);
             request.responseType = 'arraybuffer';
             return new Promise((resolve, reject) => {
                 request.onload = () => {
                     const audioData = request.response;
-                    this.audioCtx.decodeAudioData(audioData, function (buffer) {
+                    common_1.Common.audioContext().decodeAudioData(audioData, function (buffer) {
+                        debug_1.Debug.set(`Decoded ${++(Sample.numDecoded)}`);
                         resolve(buffer);
                     }, function (err) {
                         debug_1.Debug.set(`Failed to decode ${this.url}`);
@@ -491,31 +583,44 @@ class Sample {
     }
     stop() {
         if (this.previousNode) {
-            this.previousNode.stop();
+            const quantizedAudioTimeS = this.gameTime.
+                roundQuantizeAudioTime(common_1.Common.audioContext().currentTime);
+            this.previousNode.stop(quantizedAudioTimeS);
             this.previousNode = null;
         }
     }
+    range() {
+        let a = 0;
+        let b = 0;
+        for (const x of this.buffer.getChannelData(0)) {
+            a = Math.min(a, x);
+            b = Math.max(b, x);
+        }
+        return `${a.toFixed(4)} to ${b.toFixed(4)}`;
+    }
     playAt(audioTimeS) {
-        if (!this.audioCtx || !this.buffer) {
+        if (!this.buffer) {
             console.error('Sample is not loaded!');
             debug_1.Debug.set(`Not loaded: ${this.url}`);
             return;
         }
         else {
-            debug_1.Debug.set(`Play @ ${audioTimeS.toFixed(3)}\n${this.url}`);
+            debug_1.Debug.set(`Play @ ${audioTimeS.toFixed(3)}\n${this.url}` +
+                `\nlength: ${this.buffer.length}` +
+                `\nrange: ${this.range()}`);
         }
-        const audioNode = this.audioCtx.createBufferSource();
+        const audioNode = common_1.Common.audioContext().createBufferSource();
         this.previousNode = audioNode;
         audioNode.buffer = this.buffer;
-        audioNode.connect(this.audioCtx.destination);
-        const nowAudioTime = this.audioCtx.currentTime;
+        audioNode.connect(common_1.Common.audioContext().destination);
+        const nowAudioTime = common_1.Common.audioContext().currentTime;
         const timeInFuture = audioTimeS - nowAudioTime;
         // console.log(`play in ${timeInFuture.toFixed(2)} seconds.`);
         audioNode.start(nowAudioTime + Math.max(timeInFuture, 0), Math.max(0, -timeInFuture));
     }
-    playQuantized(gameTimeMs) {
-        const audioTimeS = this.gameTime.getAudioTimeForGameTime(gameTimeMs);
-        const quantizedAudioTimeS = this.gameTime.roundQuantizeAudioTime(audioTimeS);
+    playQuantized() {
+        const quantizedAudioTimeS = this.gameTime.
+            roundQuantizeAudioTime(common_1.Common.audioContext().currentTime);
         this.playAt(quantizedAudioTimeS);
     }
     durationS() {
@@ -523,6 +628,7 @@ class Sample {
     }
 }
 exports.Sample = Sample;
+Sample.numDecoded = 0;
 //# sourceMappingURL=sample.js.map
 
 /***/ }),
@@ -599,6 +705,11 @@ class Track {
             // i.id = `trackImage${Track.idNumber++}`
             // this.images.push(i);
             // assets.appendChild(i);
+        }
+    }
+    stop() {
+        for (const s of this.samples) {
+            s.stop();
         }
     }
     getSample(i) {

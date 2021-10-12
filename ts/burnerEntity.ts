@@ -27,7 +27,7 @@ export class BurnerEntity {
         this.lastBeat = beatNumber;
         // TODO: Clean up the timing here.
         if (beatNumber % 4 == 0) {
-          this.sample.playAt(this.gameTime.getAudioTimeNow());
+          this.sample.playQuantized();
         }
       }
 
