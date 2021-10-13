@@ -14,23 +14,9 @@ export class BurnerEntity {
     this.secondsPerBeat = 60 / bpm;
     this.startTimeS = this.gameTime.getAudioTimeNow();
     this.gameTime.setBpm(bpm);
-  }
-
-  private lastBeat = -1;
-  tick(timeMs: number, timeDeltaMs: number) {
-    if (this.startTimeS) {
-      const beatNumber =
-        Math.trunc(
-          (this.gameTime.getAudioTimeNow() - this.startTimeS) /
-          this.secondsPerBeat);
-      if (this.lastBeat != beatNumber) {
-        this.lastBeat = beatNumber;
-        // TODO: Clean up the timing here.
-        if (beatNumber % 4 == 0) {
-          this.sample.playQuantized();
-        }
-      }
-
-    }
+    this.gameTime.addBeatCallback(
+      (audioTimeS: number, beatInt: number, beatFrac: number) => {
+        this.sample.playAt(audioTimeS);
+      })
   }
 }

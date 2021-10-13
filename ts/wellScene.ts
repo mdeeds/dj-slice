@@ -109,21 +109,19 @@ export class WellScene {
     clap.classList.add('clickable');
     clap.addEventListener("mouseenter", () => {
       const nowTime = gameTime.getAudioTimeNow();
+      clapSample.playAt(nowTime);
       for (const o of this.beatOrbs) {
         o.strike(nowTime);
       }
-      // TODO: Not quantized!!!
-      clapSample.playQuantized();
     });
     const body = document.getElementsByTagName('body')[0];
     body.addEventListener('keydown', (ev: KeyboardEvent) => {
       if (ev.code === 'Space') {
         const nowTime = gameTime.getAudioTimeNow();
+        clapSample.playAt(nowTime);
         for (const o of this.beatOrbs) {
           o.strike(nowTime);
         }
-        // TODO: Not quantized!!!
-        clapSample.playQuantized();
       }
     });
   }
@@ -140,6 +138,5 @@ export class WellScene {
     for (const o of this.beatOrbs) {
       o.tick(timeMs, timeDeltaMs);
     }
-    this.burnerEntity.tick(timeMs, timeDeltaMs);
   }
 }

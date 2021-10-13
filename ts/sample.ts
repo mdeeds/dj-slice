@@ -63,12 +63,6 @@ export class Sample {
       Math.max(0, -timeInFuture));
   }
 
-  playQuantized() {
-    const quantizedAudioTimeS = this.gameTime.
-      roundQuantizeAudioTime(Common.audioContext().currentTime);
-    this.playAt(quantizedAudioTimeS);
-  }
-
   durationS(): number {
     return this.buffer.duration;
   }
