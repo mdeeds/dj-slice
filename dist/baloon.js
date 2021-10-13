@@ -108,6 +108,7 @@ var leftStick = null;
 var rightStick = null;
 var collisionHandler = null;
 var robot = null;
+var tickers = [];
 AFRAME.registerComponent("go", {
     init: function () {
         return __awaiter(this, void 0, void 0, function* () {
@@ -120,6 +121,7 @@ AFRAME.registerComponent("go", {
             const samplePack = yield samplePack_1.SamplePack.load('funk', gameTime, assets);
             debug_1.Debug.init(document.querySelector('a-camera'));
             collisionHandler = new collisionHandler_1.CollisionHandler();
+            tickers.push(collisionHandler);
             leftStick = addStick(document.querySelector('#leftHand'));
             rightStick = addStick(document.querySelector('#rightHand'));
             let theta = 0;
@@ -137,18 +139,17 @@ AFRAME.registerComponent("go", {
                 }
             }
             robot = new robot_1.Robot(document.querySelector('#camera'), document.querySelector('#leftHand'), document.querySelector('#rightHand'), document.querySelector('#robot'));
+            tickers.push(robot);
         });
     },
     tick: function (timeMs, timeDeltaMs) {
         const p = (timeMs / 1000 / 60 / 3) % 1; // percentage of three minutes
         const h = Math.sin(Math.PI * p) * 100; // 100m maximum height
         const r = 0.5 * (1 - Math.cos(Math.PI * p)) * 2000; // glide 2km
-        player.setAttribute('position', `0, ${h}, ${-r}`);
-        if (collisionHandler) {
-            collisionHandler.tick(timeMs, timeDeltaMs);
-        }
-        if (robot) {
-            robot.tick(timeMs, timeDeltaMs);
+        const playerPos = player.object3D.position;
+        playerPos.set(0, h, -r);
+        for (const ticker of tickers) {
+            ticker.tick(timeMs, timeDeltaMs);
         }
     }
 });
@@ -577,9 +578,10 @@ class SampleEntity {
         this.addHandlers(container, this.collisionHandler, this.leftStick, this.rightStick, sampleIndex);
     }
     depress(sampleIndex) {
+        this.popUp();
         this.track.stop();
         this.track.getSample(sampleIndex).playQuantized();
-        this.images[sampleIndex].object3D.position.y = -0.8;
+        this.images[sampleIndex].object3D.position.y = -0.08;
     }
     popUp() {
         for (let sampleIndex = 0; sampleIndex < this.images.length; ++sampleIndex) {
