@@ -464,6 +464,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Robot = void 0;
 const AFRAME = __importStar(__webpack_require__(449));
+const debug_1 = __webpack_require__(756);
 class VectorRecording {
     constructor(gameTime, source, target) {
         this.gameTime = gameTime;
@@ -479,6 +480,7 @@ class VectorRecording {
     record() {
         const ts = this.gameTime.timeSummaryNow(0);
         const i = Math.trunc(4 * (ts.beatFrac % 8));
+        debug_1.Debug.set(`Recording ${i.toFixed(0)}`);
         this.positionRecord[i].copy(this.source.position);
         this.rotationRecord[i].copy(this.source.rotation);
         this.target.position.copy(this.source.position);
@@ -487,6 +489,7 @@ class VectorRecording {
     playback() {
         const ts = this.gameTime.timeSummaryNow(0);
         const i = Math.trunc(4 * (ts.beatFrac % 8));
+        debug_1.Debug.set(`Playing ${i.toFixed(0)}`);
         if (!this.positionRecord[i]) {
             this.positionRecord[i] = new AFRAME.THREE.Vector3();
             this.rotationRecord[i] = new AFRAME.THREE.Vector3();
@@ -647,13 +650,12 @@ Sample.numDecoded = 0;
 /***/ }),
 
 /***/ 480:
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SampleEntity = void 0;
-const debug_1 = __webpack_require__(756);
 class SampleEntity {
     constructor(track, collisionHandler, leftStick, rightStick, gameTime) {
         this.track = track;
@@ -666,9 +668,6 @@ class SampleEntity {
         this.nextLoopStart = 0;
         this.selectedSampleIndex = -1;
         this.beatCallback = (ts) => {
-            debug_1.Debug.set(`${ts.beatInt.toFixed(0)} = ${ts.audioTimeS.toFixed(2)}` +
-                `\nselected: ${this.selectedSampleIndex}` +
-                `\nnext: ${this.nextLoopStart}`);
             if (ts.beatInt > this.nextLoopStart) {
                 this.nextLoopStart += 8;
             }
@@ -691,8 +690,6 @@ class SampleEntity {
         this.selectedSampleIndex = sampleIndex;
         this.images[sampleIndex].object3D.position.y = -0.08;
         this.lights[sampleIndex].setAttribute('shader', 'flat');
-        debug_1.Debug.set(`selected: ${this.selectedSampleIndex}` +
-            `\nnext: ${this.nextLoopStart}`);
     }
     popUp() {
         for (let sampleIndex = 0; sampleIndex < this.images.length; ++sampleIndex) {
