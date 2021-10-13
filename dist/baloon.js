@@ -126,7 +126,7 @@ AFRAME.registerComponent("go", {
             rightStick = addStick(document.querySelector('#rightHand'));
             let theta = 0;
             for (const track of samplePack.tracks) {
-                const sampleEntity = new sampleEntity_1.SampleEntity(track, collisionHandler, leftStick, rightStick);
+                const sampleEntity = new sampleEntity_1.SampleEntity(track, collisionHandler, leftStick, rightStick, gameTime);
                 for (let i = 0; i < track.numSamples(); ++i) {
                     const container = document.createElement('a-entity');
                     const x = 0.7 * Math.sin(theta);
@@ -355,6 +355,8 @@ exports.GameTime = void 0;
 const common_1 = __webpack_require__(648);
 class GameTime {
     constructor(bpm) {
+        this.beatCallbacks = [];
+        this.lastBeatNumber = -1;
         console.assert(bpm);
         this.bpm = bpm;
         this.elapsedMs = 0;
@@ -377,6 +379,9 @@ class GameTime {
             const audioCtx = yield common_1.Common.getContext();
             this.audioCtxZero = audioCtx.currentTime - this.elapsedMs * 1000;
         });
+    }
+    addBeatCallback(cb) {
+        this.beatCallbacks.push(cb);
     }
     getBpm() {
         return this.bpm;
@@ -408,6 +413,17 @@ class GameTime {
     tick(timeMs, timeDeltaMs) {
         if (this.running) {
             this.elapsedMs += timeDeltaMs;
+        }
+        const elapsed = common_1.Common.audioContext().currentTime - this.audioCtxZero + 0.1;
+        const secondsPerBeat = 4 * 60 / this.bpm;
+        const beatFrac = elapsed / secondsPerBeat;
+        const beatInt = Math.trunc(beatFrac + 0.001);
+        if (beatInt != this.lastBeatNumber) {
+            this.lastBeatNumber = beatInt;
+            const callbackTime = this.audioCtxZero + beatInt * secondsPerBeat;
+            for (const cb of this.beatCallbacks) {
+                cb(callbackTime, beatInt, beatFrac);
+            }
         }
     }
 }
@@ -566,12 +582,25 @@ Sample.numDecoded = 0;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SampleEntity = void 0;
 class SampleEntity {
-    constructor(track, collisionHandler, leftStick, rightStick) {
+    constructor(track, collisionHandler, leftStick, rightStick, gameTime) {
         this.track = track;
         this.collisionHandler = collisionHandler;
         this.leftStick = leftStick;
         this.rightStick = rightStick;
+        this.gameTime = gameTime;
         this.images = [];
+        this.lights = [];
+        this.nextLoopStart = 0;
+        this.selectedSampleIndex = -1;
+        this.beatCallback = (audioTimeS, beatInt, beatFrac) => {
+            if (this.selectedSampleIndex >= 0)
+                if (beatInt === this.nextLoopStart) {
+                    this.track.stop();
+                    this.track.getSample(this.selectedSampleIndex).playAt(audioTimeS);
+                    this.nextLoopStart += 16;
+                }
+        };
+        gameTime.addBeatCallback(this.beatCallback);
     }
     addSample(container, sampleIndex) {
         this.addClip(container, this.track, sampleIndex);
@@ -579,15 +608,21 @@ class SampleEntity {
     }
     depress(sampleIndex) {
         this.popUp();
-        this.track.stop();
-        this.track.getSample(sampleIndex).playQuantized();
+        this.selectedSampleIndex = sampleIndex;
         this.images[sampleIndex].object3D.position.y = -0.08;
+        this.lights[sampleIndex].setAttribute('shader', 'flat');
     }
     popUp() {
         for (let sampleIndex = 0; sampleIndex < this.images.length; ++sampleIndex) {
             const image = this.images[sampleIndex];
             if (image) {
                 image.object3D.position.y = 0;
+            }
+            const light = this.lights[sampleIndex];
+            if (light) {
+                light.setAttribute('shader', 'standard');
+                light.setAttribute('metalness', '0.8');
+                light.setAttribute('roughness', '0.1');
             }
         }
     }
@@ -597,6 +632,7 @@ class SampleEntity {
                 this.depress(sampleIndex);
             }
             else {
+                this.selectedSampleIndex = -1;
                 this.popUp();
             }
         });
@@ -605,6 +641,7 @@ class SampleEntity {
                 this.depress(sampleIndex);
             }
             else {
+                this.selectedSampleIndex = -1;
                 this.popUp();
             }
         });
@@ -628,6 +665,22 @@ class SampleEntity {
             o.setAttribute('opacity', '0.5');
             o.setAttribute('shader', 'flat');
             this.images[sampleIndex] = o;
+            container.appendChild(o);
+        }
+        {
+            const o = document.createElement('a-sphere');
+            // o.setAttribute('segments-radial', '6');
+            o.setAttribute('segments-width', '6');
+            o.setAttribute('segments-height', '3');
+            o.setAttribute('color', 'green');
+            o.setAttribute('height', '0.02');
+            // o.setAttribute('shader', 'flat');
+            o.setAttribute('metalness', '0.8');
+            o.setAttribute('roughness', '0.1');
+            o.setAttribute('shader', 'standard');
+            o.setAttribute('position', '0 -0.1 0');
+            o.setAttribute('radius', '0.04');
+            this.lights.push(o);
             container.appendChild(o);
         }
     }
