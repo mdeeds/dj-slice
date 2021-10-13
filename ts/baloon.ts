@@ -94,6 +94,7 @@ AFRAME.registerComponent("go", {
     const assets = document.querySelector('a-assets');
     const gameTime = await GameTime.make(115);
     await gameTime.start();
+    tickers.push(gameTime);
     const samplePack = await SamplePack.load('funk', gameTime, assets)
     Debug.init(document.querySelector('a-camera'));
     collisionHandler = new CollisionHandler();
@@ -105,7 +106,7 @@ AFRAME.registerComponent("go", {
     let theta = 0;
     for (const track of samplePack.tracks) {
       const sampleEntity = new SampleEntity(
-        track, collisionHandler, leftStick, rightStick);
+        track, collisionHandler, leftStick, rightStick, gameTime);
       for (let i = 0; i < track.numSamples(); ++i) {
         const container = document.createElement('a-entity');
         const x = 0.7 * Math.sin(theta);

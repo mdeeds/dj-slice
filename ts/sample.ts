@@ -46,7 +46,7 @@ export class Sample {
     }
   }
 
-  private playAt(audioTimeS: number) {
+  public playAt(audioTimeS: number) {
     if (!this.buffer) {
       console.error('Sample is not loaded!');
       Debug.set(`Not loaded: ${this.url}`);

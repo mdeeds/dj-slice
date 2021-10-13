@@ -1,9 +1,10 @@
 import * as AFRAME from "aframe";
+import { Ticker } from "./ticker";
 
 export type CollisionDirection = 'up' | 'down';
 export type CollisionCallback = (dir: CollisionDirection) => void;
 
-class CollisionPair {
+class CollisionPair implements Ticker {
   constructor(
     private a: AFRAME.Entity,
     private b: AFRAME.Entity,
