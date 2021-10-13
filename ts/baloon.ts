@@ -1,13 +1,14 @@
 import * as AFRAME from "aframe";
+
 import { CollisionHandler } from "./collisionHandler";
 import { Debug } from "./debug";
 import { GameTime } from "./gameTime";
 import { Robot } from "./robot";
 import { Sample } from "./sample";
+import { SampleEntity } from "./sampleEntity";
 import { SamplePack } from "./samplePack";
+import { Ticker } from "./ticker";
 import { Track } from "./track";
-
-
 
 var player = null;
 
@@ -53,58 +54,6 @@ function makeBalloon(player: AFRAME.Entity) {
   player.appendChild(c);
 }
 
-function addClip(player: AFRAME.Entity, track: Track, gameTime: GameTime,
-  theta: number, sampleIndex: number) {
-  const container = document.createElement('a-entity');
-  const x = 0.7 * Math.sin(theta);
-  const z = -0.7 * Math.cos(theta);
-  container.setAttribute('position', `${x} 1 ${z}`);
-  container.setAttribute('rotation', `0 ${-180 / Math.PI * theta} 0`)
-  // {
-  //   const o = document.createElement('a-box');
-  //   o.setAttribute('width', '0.2');
-  //   o.setAttribute('height', '0.15');
-  //   o.setAttribute('depth', '0.05');
-  //   o.setAttribute('position', '0 0.30, 0');
-  //   o.setAttribute('shader', 'flat');
-  //   o.classList.add('clickable');
-  //   container.appendChild(o);
-  // }
-  {
-    const o = document.createElement('a-entity');
-    o.setAttribute('obj-model',
-      'obj: url(obj/trapezoid-full.obj); mtl: url(obj/trapezoid-full.mtl');
-    o.setAttribute('shader', 'flat');
-    o.setAttribute('rotation', '0 0 0')
-    o.classList.add('clickable');
-    container.appendChild(o);
-  }
-  {
-    const o = document.createElement('a-entity');
-    o.setAttribute('obj-model',
-      'obj: url(obj/trapezoid-full.obj); mtl: url(obj/trapezoid-full.mtl');
-    o.setAttribute('shader', 'flat');
-    o.setAttribute('rotation', '0 0 180')
-    o.classList.add('clickable');
-    o.addEventListener('mouseenter', () => {
-      Debug.set(`Enter ${Math.random().toFixed(5)}`);
-    });
-    container.appendChild(o);
-  }
-  {
-    const o = document.createElement('a-image');
-    o.setAttribute('height', '0.2');
-    o.setAttribute('width', '0.2');
-    o.setAttribute('src', track.getImage(sampleIndex));
-    o.setAttribute('transparent', 'true');
-    o.setAttribute('opacity', '0.5');
-    o.setAttribute('shader', 'flat');
-    container.appendChild(o);
-  }
-
-  player.appendChild(container);
-  return container;
-}
 
 const kStickLength = 0.25;
 function addStick(container: AFRAME.Entity) {
@@ -135,6 +84,7 @@ var leftStick: AFRAME.Entity = null;
 var rightStick: AFRAME.Entity = null;
 var collisionHandler: CollisionHandler = null;
 var robot: Robot = null;
+var tickers: Ticker[] = [];
 
 AFRAME.registerComponent("go", {
   init: async function () {
@@ -147,44 +97,31 @@ AFRAME.registerComponent("go", {
     const samplePack = await SamplePack.load('funk', gameTime, assets)
     Debug.init(document.querySelector('a-camera'));
     collisionHandler = new CollisionHandler();
+    tickers.push(collisionHandler);
 
     leftStick = addStick(document.querySelector('#leftHand'));
     rightStick = addStick(document.querySelector('#rightHand'));
 
-    const keyCodes = ['Digit1', 'Digit2', 'Digit3', 'Digit4',
-      'KeyQ', 'KeyW', 'KeyE', 'KeyR',
-      'KeyA', 'KeyS', 'KeyD', 'KeyF',
-      'KeyZ', 'KeyX', 'KeyC', 'KeyV'];
     let theta = 0;
-    let keyIndex = 0;
     for (const track of samplePack.tracks) {
+      const sampleEntity = new SampleEntity(
+        track, collisionHandler, leftStick, rightStick);
       for (let i = 0; i < track.numSamples(); ++i) {
-        const clip = addClip(player, track, gameTime, theta, i);
-        collisionHandler.addPair(clip, leftStick, 0.1, () => {
-          track.stop();
-          track.getSample(i).playQuantized();
-        });
-        collisionHandler.addPair(clip, rightStick, 0.1, () => {
-          track.stop();
-          track.getSample(i).playQuantized();
-        });
-        body.addEventListener('keydown',
-          ((ki: string, track: Track, sample: Sample) => {
-            return (ev: KeyboardEvent) => {
-              if (ev.code === ki) {
-                track.stop();
-                sample.playQuantized();
-              }
-            }
-          })(keyCodes[keyIndex], track, track.getSample(i)));
+        const container = document.createElement('a-entity');
+        const x = 0.7 * Math.sin(theta);
+        const z = -0.7 * Math.cos(theta);
+        container.setAttribute('position', `${x} 1 ${z}`);
+        container.setAttribute('rotation', `0 ${-180 / Math.PI * theta} 0`);
+        sampleEntity.addSample(container, i);
+        player.appendChild(container);
         theta += Math.PI * 2 / 16;
-        ++keyIndex;
       }
     }
     robot = new Robot(document.querySelector('#camera'),
       document.querySelector('#leftHand'),
       document.querySelector('#rightHand'),
       document.querySelector('#robot'));
+    tickers.push(robot);
   },
   tick: function (timeMs, timeDeltaMs) {
     const p = (timeMs / 1000 / 60 / 3) % 1; // percentage of three minutes
@@ -192,12 +129,10 @@ AFRAME.registerComponent("go", {
     const h = Math.sin(Math.PI * p) * 100;  // 100m maximum height
     const r = 0.5 * (1 - Math.cos(Math.PI * p)) * 2000;  // glide 2km
 
-    player.setAttribute('position', `0, ${h}, ${-r}`);
-    if (collisionHandler) {
-      collisionHandler.tick(timeMs, timeDeltaMs);
-    }
-    if (robot) {
-      robot.tick(timeMs, timeDeltaMs);
+    const playerPos = player.object3D.position;
+    playerPos.set(0, h, -r);
+    for (const ticker of tickers) {
+      ticker.tick(timeMs, timeDeltaMs);
     }
   }
 });

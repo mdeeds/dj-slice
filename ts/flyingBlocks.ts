@@ -1,7 +1,7 @@
+import * as AFRAME from "aframe";
+
 import { FlyingBlock } from "./flyingBlock";
 import { GameTime } from "./gameTime";
-import * as THREE from "three";
-import * as AFRAME from "aframe";
 import { RenderCollection } from "./renderCollection";
 
 export type BlockFactory = (trackIndex: number, startFlyingMs: number) => void;
@@ -10,14 +10,14 @@ export class FlyingBlocks {
   private gameTime: GameTime;
   private sceneEl: AFRAME.Scene;
   private flyingBlocks: FlyingBlock[];
-  private cameraQuaternion: THREE.Quaternion;
+  private cameraQuaternion: any;
   private renderCollection: RenderCollection;
 
   constructor(gameTime: GameTime, renderCollection: RenderCollection) {
     this.gameTime = gameTime;
     this.renderCollection = renderCollection;
     this.sceneEl = document.querySelector("a-scene");
-    this.cameraQuaternion = new THREE.Quaternion();
+    this.cameraQuaternion = new AFRAME.THREE.Quaternion();
     this.flyingBlocks = [];
   }
 

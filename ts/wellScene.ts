@@ -1,5 +1,4 @@
 import * as AFRAME from "aframe";
-import * as THREE from "three";
 import { BeatOrb } from "./beatOrb";
 import { BurnerEntity } from "./burnerEntity";
 import { GameTime } from "./gameTime";
@@ -89,7 +88,7 @@ export class WellScene {
     // const octohedron = document.createElement('a-sphere');
     octohedron.setAttribute('radius', '0.2');
     scene.appendChild(octohedron);
-    (octohedron.object3D.position as THREE.Vector3).
+    octohedron.object3D.position.
       set(2 * Math.sin(theta), 1, -2 * Math.cos(theta));
     return octohedron;
   }

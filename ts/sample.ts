@@ -46,25 +46,11 @@ export class Sample {
     }
   }
 
-  private range() {
-    let a = 0;
-    let b = 0;
-    for (const x of this.buffer.getChannelData(0)) {
-      a = Math.min(a, x);
-      b = Math.max(b, x);
-    }
-    return `${a.toFixed(4)} to ${b.toFixed(4)}`;
-  }
-
   private playAt(audioTimeS: number) {
     if (!this.buffer) {
       console.error('Sample is not loaded!');
       Debug.set(`Not loaded: ${this.url}`);
       return;
-    } else {
-      Debug.set(`Play @ ${audioTimeS.toFixed(3)}\n${this.url}` +
-        `\nlength: ${this.buffer.length}` +
-        `\nrange: ${this.range()}`);
     }
     const audioNode = Common.audioContext().createBufferSource();
     this.previousNode = audioNode;
