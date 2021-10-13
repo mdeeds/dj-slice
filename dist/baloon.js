@@ -139,7 +139,7 @@ AFRAME.registerComponent("go", {
                     theta += Math.PI * 2 / 16;
                 }
             }
-            robot = new robot_1.Robot(document.querySelector('#camera'), document.querySelector('#leftHand'), document.querySelector('#rightHand'), document.querySelector('#robot'));
+            robot = new robot_1.Robot(document.querySelector('#camera'), document.querySelector('#leftHand'), document.querySelector('#rightHand'), document.querySelector('#robot'), gameTime);
             tickers.push(robot);
         });
     },
@@ -352,8 +352,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.GameTime = void 0;
+exports.GameTime = exports.TimeSummary = void 0;
 const common_1 = __webpack_require__(648);
+class TimeSummary {
+    constructor(audioTimeS, beatInt, beatFrac) {
+        this.audioTimeS = audioTimeS;
+        this.beatInt = beatInt;
+        this.beatFrac = beatFrac;
+    }
+}
+exports.TimeSummary = TimeSummary;
 class GameTime {
     constructor(bpm) {
         this.beatCallbacks = [];
@@ -396,34 +404,30 @@ class GameTime {
     getAudioTimeForGameTime(gameMs) {
         return this.audioCtxZero + gameMs / 1000;
     }
-    getAudioTimeNow() {
-        return common_1.Common.audioContext().currentTime;
-        // return Common.audioContext()Zero + this.elapsedMs / 1000;
-    }
     roundQuantizeAudioTime(audioTimeS) {
         const secondsPerBeat = 4 * 60 / this.bpm;
         const beat = Math.round(audioTimeS / secondsPerBeat);
         return beat * secondsPerBeat;
     }
-    getRoundQuantizedAudioTimeNow() {
-        return this.roundQuantizeAudioTime(this.getAudioTimeNow());
-    }
-    getDurationForBeats(beatCount) {
-        return 60 / this.bpm * beatCount;
+    timeSummaryNow(lookaheadS) {
+        const audioTimeNowS = common_1.Common.audioContext().currentTime;
+        const elapsed = audioTimeNowS - this.audioCtxZero + lookaheadS;
+        const secondsPerBeat = 60 / this.bpm;
+        const beatFrac = elapsed / secondsPerBeat;
+        const beatInt = Math.trunc(beatFrac + 0.001);
+        return new TimeSummary(audioTimeNowS, beatInt, beatFrac);
     }
     tick(timeMs, timeDeltaMs) {
         if (this.running) {
             this.elapsedMs += timeDeltaMs;
         }
-        const elapsed = common_1.Common.audioContext().currentTime - this.audioCtxZero + 0.1;
-        const secondsPerBeat = 60 / this.bpm;
-        const beatFrac = elapsed / secondsPerBeat;
-        const beatInt = Math.trunc(beatFrac + 0.001);
-        if (beatInt != this.lastBeatNumber) {
-            this.lastBeatNumber = beatInt;
-            const callbackTime = this.audioCtxZero + beatInt * secondsPerBeat;
+        const ts = this.timeSummaryNow(0.1);
+        if (ts.beatInt != this.lastBeatNumber) {
+            this.lastBeatNumber = ts.beatInt;
+            const secondsPerBeat = 60 / this.bpm;
+            const callbackTime = this.audioCtxZero + ts.beatInt * secondsPerBeat;
             for (const cb of this.beatCallbacks) {
-                cb(callbackTime, beatInt, beatFrac);
+                cb(new TimeSummary(callbackTime, ts.beatInt, ts.beatFrac));
             }
         }
     }
@@ -434,18 +438,73 @@ exports.GameTime = GameTime;
 /***/ }),
 
 /***/ 607:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Robot = void 0;
+const AFRAME = __importStar(__webpack_require__(449));
+class VectorRecording {
+    constructor(gameTime, source, target) {
+        this.gameTime = gameTime;
+        this.source = source;
+        this.target = target;
+        this.positionRecord = [];
+        this.rotationRecord = [];
+        for (let i = 0; i < 4 * 8; ++i) {
+            this.positionRecord.push(new AFRAME.THREE.Vector3());
+            this.rotationRecord.push(new AFRAME.THREE.Vector3());
+        }
+    }
+    record() {
+        const ts = this.gameTime.timeSummaryNow(0);
+        const i = Math.trunc(4 * (ts.beatFrac % 8));
+        this.positionRecord[i].copy(this.source.position);
+        this.rotationRecord[i].copy(this.source.rotation);
+        this.target.position.copy(this.source.position);
+        this.target.rotation.copy(this.source.rotation);
+    }
+    playback() {
+        const ts = this.gameTime.timeSummaryNow(0);
+        const i = Math.trunc(4 * (ts.beatFrac % 8));
+        if (!this.positionRecord[i]) {
+            this.positionRecord[i] = new AFRAME.THREE.Vector3();
+            this.rotationRecord[i] = new AFRAME.THREE.Vector3();
+            this.record();
+        }
+        else {
+            this.target.position.copy(this.positionRecord[i]);
+            this.target.rotation.copy(this.rotationRecord[i]);
+        }
+    }
+}
 class Robot {
-    constructor(headRef, leftRef, rightRef, container) {
+    constructor(headRef, leftRef, rightRef, container, gameTime) {
         this.headRef = headRef;
         this.leftRef = leftRef;
         this.rightRef = rightRef;
         this.container = container;
+        this.gameTime = gameTime;
         this.head = document.createElement('a-box');
         this.head.setAttribute('color', '#fff');
         this.head.setAttribute('width', '0.5');
@@ -467,9 +526,26 @@ class Robot {
         container.appendChild(this.head);
         container.appendChild(this.left);
         container.appendChild(this.right);
+        this.headRecord =
+            new VectorRecording(gameTime, headRef.object3D, this.head.object3D);
+        this.leftRecord =
+            new VectorRecording(gameTime, leftRef.object3D, this.left.object3D);
+        this.rightRecord =
+            new VectorRecording(gameTime, rightRef.object3D, this.right.object3D);
         this.track();
     }
     track() {
+        if (this.headRef.object3D.position.y < this.leftRef.object3D.position.y ||
+            this.headRef.object3D.position.y < this.leftRef.object3D.position.y) {
+            this.headRecord.record();
+            this.leftRecord.record();
+            this.rightRecord.record();
+        }
+        else {
+            this.headRecord.playback();
+            this.headRecord.playback();
+            this.headRecord.playback();
+        }
         this.head.object3D.position.copy(this.headRef.object3D.position);
         this.left.object3D.position.copy(this.leftRef.object3D.position);
         this.right.object3D.position.copy(this.rightRef.object3D.position);
@@ -560,11 +636,6 @@ class Sample {
         // console.log(`play in ${timeInFuture.toFixed(2)} seconds.`);
         audioNode.start(nowAudioTime + Math.max(timeInFuture, 0), Math.max(0, -timeInFuture));
     }
-    playQuantized() {
-        const quantizedAudioTimeS = this.gameTime.
-            roundQuantizeAudioTime(common_1.Common.audioContext().currentTime);
-        this.playAt(quantizedAudioTimeS);
-    }
     durationS() {
         return this.buffer.duration;
     }
@@ -594,18 +665,18 @@ class SampleEntity {
         this.lights = [];
         this.nextLoopStart = 0;
         this.selectedSampleIndex = -1;
-        this.beatCallback = (audioTimeS, beatInt, beatFrac) => {
-            debug_1.Debug.set(`${beatInt.toFixed(0)} = ${audioTimeS.toFixed(2)}` +
+        this.beatCallback = (ts) => {
+            debug_1.Debug.set(`${ts.beatInt.toFixed(0)} = ${ts.audioTimeS.toFixed(2)}` +
                 `\nselected: ${this.selectedSampleIndex}` +
                 `\nnext: ${this.nextLoopStart}`);
-            if (beatInt > this.nextLoopStart) {
+            if (ts.beatInt > this.nextLoopStart) {
                 this.nextLoopStart += 8;
             }
-            else if (beatInt === this.nextLoopStart) {
+            else if (ts.beatInt === this.nextLoopStart) {
                 this.nextLoopStart += 8;
                 if (this.selectedSampleIndex >= 0) {
                     this.track.stop();
-                    this.track.getSample(this.selectedSampleIndex).playAt(audioTimeS);
+                    this.track.getSample(this.selectedSampleIndex).playAt(ts.audioTimeS);
                 }
             }
         };
