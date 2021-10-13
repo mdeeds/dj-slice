@@ -575,12 +575,13 @@ Sample.numDecoded = 0;
 /***/ }),
 
 /***/ 480:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SampleEntity = void 0;
+const debug_1 = __webpack_require__(756);
 class SampleEntity {
     constructor(track, collisionHandler, leftStick, rightStick, gameTime) {
         this.track = track;
@@ -593,12 +594,16 @@ class SampleEntity {
         this.nextLoopStart = 0;
         this.selectedSampleIndex = -1;
         this.beatCallback = (audioTimeS, beatInt, beatFrac) => {
-            if (this.selectedSampleIndex >= 0)
-                if (beatInt === this.nextLoopStart) {
+            debug_1.Debug.set(`${beatInt.toFixed(0)} = ${audioTimeS.toFixed(2)}` +
+                `\nselected: ${this.selectedSampleIndex}` +
+                `\nnext: ${this.nextLoopStart}`);
+            if (beatInt === this.nextLoopStart) {
+                this.nextLoopStart += 16;
+                if (this.selectedSampleIndex >= 0) {
                     this.track.stop();
                     this.track.getSample(this.selectedSampleIndex).playAt(audioTimeS);
-                    this.nextLoopStart += 16;
                 }
+            }
         };
         gameTime.addBeatCallback(this.beatCallback);
     }
