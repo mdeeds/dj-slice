@@ -599,10 +599,10 @@ class SampleEntity {
                 `\nselected: ${this.selectedSampleIndex}` +
                 `\nnext: ${this.nextLoopStart}`);
             if (beatInt > this.nextLoopStart) {
-                this.nextLoopStart += 16;
+                this.nextLoopStart += 8;
             }
             else if (beatInt === this.nextLoopStart) {
-                this.nextLoopStart += 16;
+                this.nextLoopStart += 8;
                 if (this.selectedSampleIndex >= 0) {
                     this.track.stop();
                     this.track.getSample(this.selectedSampleIndex).playAt(audioTimeS);
