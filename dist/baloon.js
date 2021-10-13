@@ -124,13 +124,14 @@ AFRAME.registerComponent("go", {
             rightStick = addStick(document.querySelector('#rightHand'));
             let theta = 0;
             for (const track of samplePack.tracks) {
+                const sampleEntity = new sampleEntity_1.SampleEntity(track, collisionHandler, leftStick, rightStick);
                 for (let i = 0; i < track.numSamples(); ++i) {
                     const container = document.createElement('a-entity');
                     const x = 0.7 * Math.sin(theta);
                     const z = -0.7 * Math.cos(theta);
                     container.setAttribute('position', `${x} 1 ${z}`);
                     container.setAttribute('rotation', `0 ${-180 / Math.PI * theta} 0`);
-                    const se = new sampleEntity_1.SampleEntity(track, i, container, collisionHandler, leftStick, rightStick);
+                    sampleEntity.addSample(container, i);
                     player.appendChild(container);
                     theta += Math.PI * 2 / 16;
                 }
@@ -564,24 +565,49 @@ Sample.numDecoded = 0;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SampleEntity = void 0;
 class SampleEntity {
-    constructor(track, sampleIndex, container, collisionHandler, leftStick, rightStick) {
+    constructor(track, collisionHandler, leftStick, rightStick) {
         this.track = track;
-        this.sampleIndex = sampleIndex;
-        this.container = container;
-        this.addClip(track, sampleIndex);
-        this.addHandlers(collisionHandler, leftStick, rightStick);
+        this.collisionHandler = collisionHandler;
+        this.leftStick = leftStick;
+        this.rightStick = rightStick;
+        this.images = [];
     }
-    addHandlers(collisionHandler, leftStick, rightStick) {
-        collisionHandler.addPair(this.container, leftStick, 0.1, (direction) => {
-            this.track.stop();
-            this.track.getSample(this.sampleIndex).playQuantized();
+    addSample(container, sampleIndex) {
+        this.addClip(container, this.track, sampleIndex);
+        this.addHandlers(container, this.collisionHandler, this.leftStick, this.rightStick, sampleIndex);
+    }
+    depress(sampleIndex) {
+        this.track.stop();
+        this.track.getSample(sampleIndex).playQuantized();
+        this.images[sampleIndex].object3D.position.y = -0.8;
+    }
+    popUp() {
+        for (let sampleIndex = 0; sampleIndex < this.images.length; ++sampleIndex) {
+            const image = this.images[sampleIndex];
+            if (image) {
+                image.object3D.position.y = 0;
+            }
+        }
+    }
+    addHandlers(container, collisionHandler, leftStick, rightStick, sampleIndex) {
+        collisionHandler.addPair(container, leftStick, 0.1, (direction) => {
+            if (direction == 'down') {
+                this.depress(sampleIndex);
+            }
+            else {
+                this.popUp();
+            }
         });
-        collisionHandler.addPair(this.container, rightStick, 0.1, (direction) => {
-            this.track.stop();
-            this.track.getSample(this.sampleIndex).playQuantized();
+        collisionHandler.addPair(container, rightStick, 0.1, (direction) => {
+            if (direction == 'down') {
+                this.depress(sampleIndex);
+            }
+            else {
+                this.popUp();
+            }
         });
     }
-    addClip(track, sampleIndex) {
+    addClip(container, track, sampleIndex) {
         // {
         //   const o = document.createElement('a-entity');
         //   o.setAttribute('obj-model',
@@ -599,7 +625,8 @@ class SampleEntity {
             o.setAttribute('transparent', 'true');
             o.setAttribute('opacity', '0.5');
             o.setAttribute('shader', 'flat');
-            this.container.appendChild(o);
+            this.images[sampleIndex] = o;
+            container.appendChild(o);
         }
     }
 }
