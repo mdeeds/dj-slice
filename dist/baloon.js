@@ -118,6 +118,7 @@ AFRAME.registerComponent("go", {
             const assets = document.querySelector('a-assets');
             const gameTime = yield gameTime_1.GameTime.make(115);
             yield gameTime.start();
+            tickers.push(gameTime);
             const samplePack = yield samplePack_1.SamplePack.load('funk', gameTime, assets);
             debug_1.Debug.init(document.querySelector('a-camera'));
             collisionHandler = new collisionHandler_1.CollisionHandler();
@@ -415,7 +416,7 @@ class GameTime {
             this.elapsedMs += timeDeltaMs;
         }
         const elapsed = common_1.Common.audioContext().currentTime - this.audioCtxZero + 0.1;
-        const secondsPerBeat = 4 * 60 / this.bpm;
+        const secondsPerBeat = 60 / this.bpm;
         const beatFrac = elapsed / secondsPerBeat;
         const beatInt = Math.trunc(beatFrac + 0.001);
         if (beatInt != this.lastBeatNumber) {
@@ -597,7 +598,10 @@ class SampleEntity {
             debug_1.Debug.set(`${beatInt.toFixed(0)} = ${audioTimeS.toFixed(2)}` +
                 `\nselected: ${this.selectedSampleIndex}` +
                 `\nnext: ${this.nextLoopStart}`);
-            if (beatInt === this.nextLoopStart) {
+            if (beatInt > this.nextLoopStart) {
+                this.nextLoopStart += 16;
+            }
+            else if (beatInt === this.nextLoopStart) {
                 this.nextLoopStart += 16;
                 if (this.selectedSampleIndex >= 0) {
                     this.track.stop();
@@ -616,6 +620,8 @@ class SampleEntity {
         this.selectedSampleIndex = sampleIndex;
         this.images[sampleIndex].object3D.position.y = -0.08;
         this.lights[sampleIndex].setAttribute('shader', 'flat');
+        debug_1.Debug.set(`selected: ${this.selectedSampleIndex}` +
+            `\nnext: ${this.nextLoopStart}`);
     }
     popUp() {
         for (let sampleIndex = 0; sampleIndex < this.images.length; ++sampleIndex) {
