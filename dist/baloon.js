@@ -229,7 +229,7 @@ class CollisionPair {
         if (this.aPos.length() <= this.r) {
             if (!this.isColliding) {
                 this.isColliding = true;
-                this.f(this.aPos.y > 0 ? 'down' : 'up');
+                this.f(this.aPos.y < 0 ? 'down' : 'up');
             }
         }
         else {
