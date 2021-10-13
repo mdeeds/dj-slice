@@ -1,8 +1,8 @@
 import * as AFRAME from "aframe";
-import * as THREE from "three";
 import { CollisionHandler } from "./collisionHandler";
 import { Debug } from "./debug";
 import { GameTime } from "./gameTime";
+import { Robot } from "./robot";
 import { Sample } from "./sample";
 import { SamplePack } from "./samplePack";
 import { Track } from "./track";
@@ -134,6 +134,7 @@ function addStick(container: AFRAME.Entity) {
 var leftStick: AFRAME.Entity = null;
 var rightStick: AFRAME.Entity = null;
 var collisionHandler: CollisionHandler = null;
+var robot: Robot = null;
 
 AFRAME.registerComponent("go", {
   init: async function () {
@@ -180,6 +181,10 @@ AFRAME.registerComponent("go", {
         ++keyIndex;
       }
     }
+    robot = new Robot(document.querySelector('#camera'),
+      document.querySelector('#leftHand'),
+      document.querySelector('#rightHand'),
+      document.querySelector('#robot'));
   },
   tick: function (timeMs, timeDeltaMs) {
     const p = (timeMs / 1000 / 60 / 3) % 1; // percentage of three minutes
@@ -190,6 +195,9 @@ AFRAME.registerComponent("go", {
     player.setAttribute('position', `0, ${h}, ${-r}`);
     if (collisionHandler) {
       collisionHandler.tick(timeMs, timeDeltaMs);
+    }
+    if (robot) {
+      robot.tick(timeMs, timeDeltaMs);
     }
   }
 });
@@ -206,9 +214,12 @@ body.innerHTML = `
 <a-sky color="#112" radius=3000></a-sky>
 <a-entity light="type: ambient; color: #222"></a-entity>
 <a-entity light="type:directional; color: #777" position="1800 1000 1200"></a-entity>
+
 <a-entity id='player'>
+  <a-entity id='robot' position = "-2 0 -2" rotation = "0 180 0"></a-entity>
   <a-sphere position="180 100 120" radius=20 color=#fff shader=flat></a-sphere>
-  <a-camera position="0 1.6 0">
+
+  <a-camera id="camera" position="0 1.6 0">
     <a-entity light="type:point; intensity: 0.75; distance: 4; decay: 2" position="0 0.1 -0.1">
   </a-camera>
   <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 5;" line="color: #44d"
