@@ -56,23 +56,10 @@ export class GameTime {
     return this.audioCtxZero + gameMs / 1000;
   }
 
-  getAudioTimeNow() {
-    return Common.audioContext().currentTime;
-    // return Common.audioContext()Zero + this.elapsedMs / 1000;
-  }
-
   roundQuantizeAudioTime(audioTimeS: number) {
     const secondsPerBeat = 4 * 60 / this.bpm;
     const beat = Math.round(audioTimeS / secondsPerBeat);
     return beat * secondsPerBeat;
-  }
-
-  getRoundQuantizedAudioTimeNow() {
-    return this.roundQuantizeAudioTime(this.getAudioTimeNow());
-  }
-
-  getDurationForBeats(beatCount: number): number {
-    return 60 / this.bpm * beatCount;
   }
 
   private lastBeatNumber = -1;

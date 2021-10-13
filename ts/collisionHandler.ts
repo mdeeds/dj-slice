@@ -29,7 +29,7 @@ class CollisionPair implements Ticker {
   }
 }
 
-export class CollisionHandler {
+export class CollisionHandler implements Ticker {
   private pairs: CollisionPair[] = [];
   constructor() { }
 
