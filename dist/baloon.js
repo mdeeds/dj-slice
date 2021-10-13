@@ -472,14 +472,15 @@ class VectorRecording {
         this.target = target;
         this.positionRecord = [];
         this.rotationRecord = [];
-        for (let i = 0; i < 4 * 8; ++i) {
-            this.positionRecord.push(new AFRAME.THREE.Vector3());
-            this.rotationRecord.push(new AFRAME.THREE.Vector3());
-        }
+        this.lastBeat = -1;
     }
     record() {
         const ts = this.gameTime.timeSummaryNow(0);
         const i = Math.trunc(4 * (ts.beatFrac % 8));
+        if (i == this.lastBeat) {
+            return;
+        }
+        this.lastBeat = i;
         debug_1.Debug.set(`Recording ${i.toFixed(0)}`);
         this.positionRecord[i].copy(this.source.position);
         this.rotationRecord[i].copy(this.source.rotation);
@@ -489,13 +490,17 @@ class VectorRecording {
     playback() {
         const ts = this.gameTime.timeSummaryNow(0);
         const i = Math.trunc(4 * (ts.beatFrac % 8));
-        debug_1.Debug.set(`Playing ${i.toFixed(0)}`);
         if (!this.positionRecord[i]) {
             this.positionRecord[i] = new AFRAME.THREE.Vector3();
             this.rotationRecord[i] = new AFRAME.THREE.Vector3();
             this.record();
         }
         else {
+            if (i == this.lastBeat) {
+                return;
+            }
+            this.lastBeat = i;
+            debug_1.Debug.set(`Playing ${i.toFixed(0)}`);
             this.target.position.copy(this.positionRecord[i]);
             this.target.rotation.copy(this.rotationRecord[i]);
         }
@@ -539,7 +544,7 @@ class Robot {
     }
     track() {
         if (this.headRef.object3D.position.y < this.leftRef.object3D.position.y ||
-            this.headRef.object3D.position.y < this.leftRef.object3D.position.y) {
+            this.headRef.object3D.position.y < this.rightRef.object3D.position.y) {
             this.headRecord.record();
             this.leftRecord.record();
             this.rightRecord.record();
@@ -549,12 +554,6 @@ class Robot {
             this.headRecord.playback();
             this.headRecord.playback();
         }
-        this.head.object3D.position.copy(this.headRef.object3D.position);
-        this.left.object3D.position.copy(this.leftRef.object3D.position);
-        this.right.object3D.position.copy(this.rightRef.object3D.position);
-        this.head.object3D.rotation.copy(this.headRef.object3D.rotation);
-        this.left.object3D.rotation.copy(this.leftRef.object3D.rotation);
-        this.right.object3D.rotation.copy(this.rightRef.object3D.rotation);
     }
     tick(timeMs, timeDeltaMs) {
         this.track();
