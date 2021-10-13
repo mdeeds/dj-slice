@@ -58,20 +58,10 @@ function makeBalloon(player) {
     baloon.setAttribute('radius', '7');
     baloon.setAttribute('position', '0 11 0');
     player.appendChild(baloon);
-    const basket = document.createElement('a-cylinder');
-    basket.setAttribute('color', 'burlywood');
-    basket.setAttribute('radius', '0.75');
-    basket.setAttribute('height', '1.0');
-    basket.setAttribute('position', '0 0.5 0');
-    basket.setAttribute('material', 'side', 'double');
-    basket.setAttribute('open-ended', 'true');
+    const basket = document.createElement('a-entity');
+    basket.setAttribute('obj-model', "obj: url(obj/basket-pipe.obj);");
+    basket.setAttribute('material', 'color: #222; vertexColors: none');
     player.appendChild(basket);
-    const floor = document.createElement('a-cylinder');
-    floor.setAttribute('color', 'burlywood');
-    floor.setAttribute('radius', '0.75');
-    floor.setAttribute('height', '0.02');
-    floor.setAttribute('position', '0 -0.01 0');
-    player.appendChild(floor);
     const c = document.createElement('a-cylinder');
     c.setAttribute('height', '0.8');
     c.setAttribute('radius', '1.0');
@@ -474,6 +464,13 @@ class VectorRecording {
         this.rotationRecord = [];
         this.lastBeat = -1;
     }
+    recordInternal(i) {
+        debug_1.Debug.set(`Recording ${i.toFixed(0)}`);
+        this.positionRecord[i].copy(this.source.position);
+        this.rotationRecord[i].copy(this.source.rotation);
+        this.target.position.copy(this.source.position);
+        this.target.rotation.copy(this.source.rotation);
+    }
     record() {
         const ts = this.gameTime.timeSummaryNow(0);
         const i = Math.trunc(4 * (ts.beatFrac % 8));
@@ -481,26 +478,23 @@ class VectorRecording {
             return;
         }
         this.lastBeat = i;
-        debug_1.Debug.set(`Recording ${i.toFixed(0)}`);
-        this.positionRecord[i].copy(this.source.position);
-        this.rotationRecord[i].copy(this.source.rotation);
-        this.target.position.copy(this.source.position);
-        this.target.rotation.copy(this.source.rotation);
+        this.recordInternal(i);
     }
     playback() {
         const ts = this.gameTime.timeSummaryNow(0);
         const i = Math.trunc(4 * (ts.beatFrac % 8));
+        if (i == this.lastBeat) {
+            return;
+        }
+        this.lastBeat = i;
         if (!this.positionRecord[i]) {
             this.positionRecord[i] = new AFRAME.THREE.Vector3();
-            this.rotationRecord[i] = new AFRAME.THREE.Vector3();
-            this.record();
+            this.rotationRecord[i] = new AFRAME.THREE.Euler();
+            this.recordInternal(i);
         }
         else {
-            if (i == this.lastBeat) {
-                return;
-            }
-            this.lastBeat = i;
             debug_1.Debug.set(`Playing ${i.toFixed(0)}`);
+            // console.log(`${this.rotationRecord[i].y}`);
             this.target.position.copy(this.positionRecord[i]);
             this.target.rotation.copy(this.rotationRecord[i]);
         }
