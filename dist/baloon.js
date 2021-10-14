@@ -466,6 +466,10 @@ class VectorRecording {
     }
     recordInternal(i) {
         debug_1.Debug.set(`Recording ${i.toFixed(0)}`);
+        if (!this.positionRecord[i]) {
+            this.positionRecord[i] = new AFRAME.THREE.Vector3();
+            this.rotationRecord[i] = new AFRAME.THREE.Euler();
+        }
         this.positionRecord[i].copy(this.source.position);
         this.rotationRecord[i].copy(this.source.rotation);
         this.target.position.copy(this.source.position);
@@ -488,8 +492,6 @@ class VectorRecording {
         }
         this.lastBeat = i;
         if (!this.positionRecord[i]) {
-            this.positionRecord[i] = new AFRAME.THREE.Vector3();
-            this.rotationRecord[i] = new AFRAME.THREE.Euler();
             this.recordInternal(i);
         }
         else {
