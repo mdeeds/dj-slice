@@ -454,7 +454,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Robot = void 0;
 const AFRAME = __importStar(__webpack_require__(449));
-const debug_1 = __webpack_require__(756);
 class VectorRecording {
     constructor(gameTime, source, target) {
         this.gameTime = gameTime;
@@ -465,7 +464,6 @@ class VectorRecording {
         this.lastBeat = -1;
     }
     recordInternal(i) {
-        debug_1.Debug.set(`Recording ${i.toFixed(0)}`);
         if (!this.positionRecord[i]) {
             this.positionRecord[i] = new AFRAME.THREE.Vector3();
             this.rotationRecord[i] = new AFRAME.THREE.Euler();
@@ -483,7 +481,6 @@ class VectorRecording {
             VectorRecording.kTotalDivisions;
         while (beatsSkipped > 0) {
             --beatsSkipped;
-            ++this.lastBeat;
             this.lastBeat = (this.lastBeat + 1) % VectorRecording.kTotalDivisions;
             this.recordInternal(this.lastBeat);
         }
@@ -501,8 +498,6 @@ class VectorRecording {
                 this.recordInternal(this.lastBeat);
             }
             else {
-                debug_1.Debug.set(`Playing ${i.toFixed(0)}`);
-                // console.log(`${this.rotationRecord[i].y}`);
                 this.target.position.copy(this.positionRecord[this.lastBeat]);
                 this.target.rotation.copy(this.rotationRecord[this.lastBeat]);
             }
