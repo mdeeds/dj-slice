@@ -477,31 +477,41 @@ class VectorRecording {
     }
     record() {
         const ts = this.gameTime.timeSummaryNow(0);
-        const i = Math.trunc(4 * (ts.beatFrac % 8));
-        if (i == this.lastBeat) {
-            return;
+        const i = Math.trunc(VectorRecording.kDivisionsPerBeat *
+            (ts.beatFrac % VectorRecording.kBeatsRecorded));
+        let beatsSkipped = (i - this.lastBeat + VectorRecording.kTotalDivisions) %
+            VectorRecording.kTotalDivisions;
+        while (beatsSkipped > 0) {
+            --beatsSkipped;
+            ++this.lastBeat;
+            this.lastBeat = (this.lastBeat + 1) % VectorRecording.kTotalDivisions;
+            this.recordInternal(this.lastBeat);
         }
-        this.lastBeat = i;
-        this.recordInternal(i);
     }
     playback() {
         const ts = this.gameTime.timeSummaryNow(0);
-        const i = Math.trunc(4 * (ts.beatFrac % 8));
-        if (i == this.lastBeat) {
-            return;
-        }
-        this.lastBeat = i;
-        if (!this.positionRecord[i]) {
-            this.recordInternal(i);
-        }
-        else {
-            debug_1.Debug.set(`Playing ${i.toFixed(0)}`);
-            // console.log(`${this.rotationRecord[i].y}`);
-            this.target.position.copy(this.positionRecord[i]);
-            this.target.rotation.copy(this.rotationRecord[i]);
+        const i = Math.trunc(VectorRecording.kDivisionsPerBeat *
+            (ts.beatFrac % VectorRecording.kBeatsRecorded));
+        let beatsSkipped = (i - this.lastBeat + VectorRecording.kTotalDivisions) %
+            VectorRecording.kTotalDivisions;
+        while (beatsSkipped > 0) {
+            --beatsSkipped;
+            this.lastBeat = (this.lastBeat + 1) % VectorRecording.kTotalDivisions;
+            if (!this.positionRecord[this.lastBeat]) {
+                this.recordInternal(this.lastBeat);
+            }
+            else {
+                debug_1.Debug.set(`Playing ${i.toFixed(0)}`);
+                // console.log(`${this.rotationRecord[i].y}`);
+                this.target.position.copy(this.positionRecord[this.lastBeat]);
+                this.target.rotation.copy(this.rotationRecord[this.lastBeat]);
+            }
         }
     }
 }
+VectorRecording.kDivisionsPerBeat = 16;
+VectorRecording.kBeatsRecorded = 8;
+VectorRecording.kTotalDivisions = VectorRecording.kDivisionsPerBeat * VectorRecording.kBeatsRecorded;
 class Robot {
     constructor(headRef, leftRef, rightRef, container, gameTime) {
         this.headRef = headRef;
