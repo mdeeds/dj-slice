@@ -1,4 +1,5 @@
 import * as AFRAME from "aframe";
+import { AssetLibrary } from "./assetLibrary";
 import { CollisionDirection, CollisionHandler } from "./collisionHandler";
 import { Debug } from "./debug";
 import { AudioCallback, GameTime, TimeSummary } from "./gameTime";
@@ -16,7 +17,8 @@ export class SampleEntity {
     private collisionHandler: CollisionHandler,
     private leftStick: AFRAME.Entity,
     private rightStick: AFRAME.Entity,
-    private gameTime: GameTime) {
+    private gameTime: GameTime,
+    private assets: AssetLibrary) {
     gameTime.addBeatCallback(this.beatCallback);
   }
 
@@ -42,7 +44,7 @@ export class SampleEntity {
   private depress(sampleIndex: number) {
     this.popUp();
     this.selectedSampleIndex = sampleIndex;
-    this.images[sampleIndex].object3D.position.y = -0.08;
+    this.images[sampleIndex].object3D.position.y = -0.04;
     this.lights[sampleIndex].setAttribute('shader', 'flat');
   }
 
@@ -95,16 +97,31 @@ export class SampleEntity {
     //   o.classList.add('clickable');
     //   container.appendChild(o);
     // }
+    const imageContainer = document.createElement('a-entity');
+    container.appendChild(imageContainer);
     {
       const o = document.createElement('a-image');
       o.setAttribute('height', '0.2');
       o.setAttribute('width', '0.2');
-      o.setAttribute('src', track.getImage(sampleIndex));
+      o.setAttribute('src',
+        `#${this.assets.getId('img/dial/dial_off.png')}`);
+      o.setAttribute('transparent', 'true');
+      o.setAttribute('shader', 'flat');
+      o.setAttribute('position', '0 0 -0.01');
+      this.images[sampleIndex] = o;
+      imageContainer.appendChild(o);
+    }
+    {
+      const o = document.createElement('a-image');
+      o.setAttribute('height', '0.2');
+      o.setAttribute('width', '0.2');
+      o.setAttribute('src',
+        `#${this.assets.getId(track.getImage(sampleIndex))}`);
       o.setAttribute('transparent', 'true');
       o.setAttribute('opacity', '0.5');
       o.setAttribute('shader', 'flat');
       this.images[sampleIndex] = o;
-      container.appendChild(o);
+      imageContainer.appendChild(o);
     }
     {
       const o = document.createElement('a-sphere');
@@ -119,6 +136,7 @@ export class SampleEntity {
       o.setAttribute('shader', 'standard');
       o.setAttribute('position', '0 -0.1 0');
       o.setAttribute('radius', '0.04');
+      o.setAttribute('scale', '1 0.3 1');
       this.lights.push(o);
       container.appendChild(o);
     }

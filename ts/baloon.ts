@@ -1,4 +1,5 @@
 import * as AFRAME from "aframe";
+import { AssetLibrary } from "./assetLibrary";
 
 import { CollisionHandler } from "./collisionHandler";
 import { Debug } from "./debug";
@@ -91,16 +92,17 @@ AFRAME.registerComponent("go", {
 
     leftStick = addStick(document.querySelector('#leftHand'));
     rightStick = addStick(document.querySelector('#rightHand'));
+    const assetLibrary = new AssetLibrary(document.querySelector('a-assets'));
 
     let theta = 0;
     for (const track of samplePack.tracks) {
       const sampleEntity = new SampleEntity(
-        track, collisionHandler, leftStick, rightStick, gameTime);
+        track, collisionHandler, leftStick, rightStick, gameTime, assetLibrary);
       for (let i = 0; i < track.numSamples(); ++i) {
         const container = document.createElement('a-entity');
         const x = 0.7 * Math.sin(theta);
         const z = -0.7 * Math.cos(theta);
-        container.setAttribute('position', `${x} 1 ${z}`);
+        container.setAttribute('position', `${x} 1.2 ${z}`);
         container.setAttribute('rotation', `0 ${-180 / Math.PI * theta} 0`);
         sampleEntity.addSample(container, i);
         player.appendChild(container);
