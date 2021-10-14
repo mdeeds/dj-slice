@@ -547,8 +547,8 @@ class Robot {
         }
         else {
             this.headRecord.playback();
-            this.headRecord.playback();
-            this.headRecord.playback();
+            this.leftRecord.playback();
+            this.rightRecord.playback();
         }
     }
     tick(timeMs, timeDeltaMs) {
