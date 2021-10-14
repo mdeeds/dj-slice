@@ -82,8 +82,28 @@ function addBuilding(x, z, scene) {
     box.setAttribute('position', `${x} ${h / 2} ${z}`);
     scene.appendChild(box);
 }
+// Building the scene out of entities at least doubles the rendering cost.
+function buildEntityWoodland() {
+    const kTreesPerMeter = 0.01;
+    const kForestSize = 700;
+    const kNumTrees = kForestSize * kForestSize * kTreesPerMeter;
+    const forest = document.createElement('a-entity');
+    for (let i = 0; i < kNumTrees; ++i) {
+        const h = Math.random() * 10 + 5;
+        const tree = document.createElement('a-cone');
+        tree.setAttribute('radius', 0.5 + Math.random());
+        tree.setAttribute('height', h);
+        tree.setAttribute('segments-radial', 4);
+        tree.setAttribute('segments-height', 1);
+        tree.setAttribute('open-ended', 'true');
+        tree.setAttribute('color', '#3f5');
+        tree.setAttribute('position', `${(Math.random() - 0.5) * kForestSize} ${h / 2} ${(Math.random() - 0.5) * kForestSize}`);
+        forest.appendChild(tree);
+    }
+    document.querySelector('a-scene').appendChild(forest);
+}
 function buildWoodland() {
-    const kTreesPerMeter = 0.02;
+    const kTreesPerMeter = 0.01;
     const kForestSize = 700;
     const kNumTrees = kForestSize * kForestSize * kTreesPerMeter;
     const forest = document.createElement('a-entity');
@@ -104,9 +124,42 @@ function buildWoodland() {
     forest.object3D = geometry;
     document.querySelector('a-scene').appendChild(forest);
 }
+function buildValley() {
+    const kValleySize = 2000;
+    const valley = document.createElement('a-entity');
+    const geometry = new AFRAME.THREE.Group();
+    const hillTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x4422cc });
+    const floor = new AFRAME.THREE.BoxGeometry(1000, 1000)
+        .rotateX(-Math.PI / 2);
+    const blueFloor = new AFRAME.THREE.Mesh(floor, hillTex);
+    geometry.add(blueFloor);
+    for (let z = -kValleySize / 2; z < kValleySize / 2; z += 30 + Math.random() * 70) {
+        {
+            const w = Math.random() * 50 + 100;
+            const hill = new AFRAME.THREE.BoxGeometry(w, w, w)
+                .rotateZ(-Math.PI / 4 + Math.random() * 0.2)
+                .rotateX(-Math.PI / 4 + (Math.random() - 0.5) * 0.1)
+                .translate(w, 0, z);
+            const blueHill = new AFRAME.THREE.Mesh(hill, hillTex);
+            geometry.add(blueHill);
+        }
+        {
+            const w = Math.random() * 50 + 100;
+            const hill = new AFRAME.THREE.BoxGeometry(w, w, w)
+                .rotateZ(Math.PI / 4 - Math.random() * 0.2)
+                .rotateX(-Math.PI / 4 + (Math.random() - 0.5) * 0.1)
+                .translate(-w, 0, z);
+            const blueHill = new AFRAME.THREE.Mesh(hill, hillTex);
+            geometry.add(blueHill);
+        }
+    }
+    valley.object3D = geometry;
+    document.querySelector('a-scene').appendChild(valley);
+}
 function buildScene() {
     // <a-entity obj-model="obj: url(obj/city.obj); mtl: url(obj/city.mtl)" rotation="0 180 0"></a-entity>
     buildWoodland();
+    // buildValley();
 }
 function makeBalloon(player) {
     const baloon = document.createElement('a-sphere');
@@ -155,6 +208,8 @@ var rightStick = null;
 var collisionHandler = null;
 var robot = null;
 var tickers = [];
+var totalElapsed = 0;
+var numTicks = 0;
 AFRAME.registerComponent("go", {
     init: function () {
         return __awaiter(this, void 0, void 0, function* () {
@@ -199,6 +254,14 @@ AFRAME.registerComponent("go", {
         playerPos.set(0, h, -r);
         for (const ticker of tickers) {
             ticker.tick(timeMs, timeDeltaMs);
+        }
+        totalElapsed += timeDeltaMs;
+        numTicks++;
+        if (numTicks >= 10) {
+            const fps = numTicks * 1000 / totalElapsed;
+            debug_1.Debug.set(`${fps.toFixed(1)} fps`);
+            totalElapsed = 0;
+            numTicks = 0;
         }
     }
 });
@@ -662,7 +725,6 @@ class Sample {
                 request.onload = () => {
                     const audioData = request.response;
                     common_1.Common.audioContext().decodeAudioData(audioData, function (buffer) {
-                        debug_1.Debug.set(`Decoded ${++(Sample.numDecoded)}`);
                         resolve(buffer);
                     }, function (err) {
                         debug_1.Debug.set(`Failed to decode ${this.url}`);
@@ -701,7 +763,6 @@ class Sample {
     }
 }
 exports.Sample = Sample;
-Sample.numDecoded = 0;
 //# sourceMappingURL=sample.js.map
 
 /***/ }),
