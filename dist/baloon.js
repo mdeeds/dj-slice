@@ -103,7 +103,7 @@ function buildEntityWoodland() {
     document.querySelector('a-scene').appendChild(forest);
 }
 function buildWoodland() {
-    const kTreesPerMeter = 0.01;
+    const kTreesPerMeter = 0.002;
     const kForestSize = 700;
     const kNumTrees = kForestSize * kForestSize * kTreesPerMeter;
     const forest = document.createElement('a-entity');
@@ -125,30 +125,30 @@ function buildWoodland() {
     document.querySelector('a-scene').appendChild(forest);
 }
 function buildValley() {
-    const kValleySize = 2000;
+    const kValleySize = 800;
     const valley = document.createElement('a-entity');
     const geometry = new AFRAME.THREE.Group();
     const hillTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x4422cc });
-    const floor = new AFRAME.THREE.BoxGeometry(1000, 1000)
+    const floor = new AFRAME.THREE.BoxGeometry(2000, 2000)
         .rotateX(-Math.PI / 2);
     const blueFloor = new AFRAME.THREE.Mesh(floor, hillTex);
     geometry.add(blueFloor);
     for (let z = -kValleySize / 2; z < kValleySize / 2; z += 30 + Math.random() * 70) {
         {
-            const w = Math.random() * 50 + 100;
-            const hill = new AFRAME.THREE.BoxGeometry(w, w, w)
-                .rotateZ(-Math.PI / 4 + Math.random() * 0.2)
+            const w = Math.random() * 300 + 200;
+            const hill = new AFRAME.THREE.BoxGeometry(10, w, w)
                 .rotateX(-Math.PI / 4 + (Math.random() - 0.5) * 0.1)
-                .translate(w, 0, z);
+                .rotateZ(-Math.PI / 4 + Math.random() * 0.2)
+                .translate(10 + Math.random() * 10, 0, z);
             const blueHill = new AFRAME.THREE.Mesh(hill, hillTex);
             geometry.add(blueHill);
         }
         {
             const w = Math.random() * 50 + 100;
-            const hill = new AFRAME.THREE.BoxGeometry(w, w, w)
-                .rotateZ(Math.PI / 4 - Math.random() * 0.2)
+            const hill = new AFRAME.THREE.BoxGeometry(10, w, w)
                 .rotateX(-Math.PI / 4 + (Math.random() - 0.5) * 0.1)
-                .translate(-w, 0, z);
+                .rotateZ(Math.PI / 4 - Math.random() * 0.2)
+                .translate(-10 - Math.random() * 10, 0, z);
             const blueHill = new AFRAME.THREE.Mesh(hill, hillTex);
             geometry.add(blueHill);
         }
@@ -158,8 +158,8 @@ function buildValley() {
 }
 function buildScene() {
     // <a-entity obj-model="obj: url(obj/city.obj); mtl: url(obj/city.mtl)" rotation="0 180 0"></a-entity>
-    buildWoodland();
-    // buildValley();
+    // buildWoodland();
+    buildValley();
 }
 function makeBalloon(player) {
     const baloon = document.createElement('a-sphere');
@@ -275,7 +275,7 @@ body.innerHTML = `
 
 <a-sky color="#112" radius=3000></a-sky>
 <a-entity light="type: ambient; color: #222"></a-entity>
-<a-entity light="type:directional; color: #777" position="1800 1000 1200"></a-entity>
+<a-entity light="type:directional; color: #777" position="1800 5000 1200"></a-entity>
 
 <a-entity id='player'>
   <a-entity id='robot' position = "-2 0 -2" rotation = "0 180 0"></a-entity>
