@@ -23,6 +23,37 @@ function addBuilding(x: number, z: number, scene: AFRAME.Entity) {
   scene.appendChild(box);
 }
 
+function buildWoodland() {
+  const kTreesPerMeter = 0.02;
+  const kForestSize = 700;
+  const kNumTrees = kForestSize * kForestSize * kTreesPerMeter;
+  const forest = document.createElement('a-entity');
+  const geometry = new AFRAME.THREE.Group();
+  const treeTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x33ff55 });
+  for (let i = 0; i < kNumTrees; ++i) {
+    const h = Math.random() * 10 + 5;
+    const tree = new AFRAME.THREE.ConeGeometry(
+      /*r=*/0.5 + Math.random(),
+      /*h=*/h,
+      /*radial=*/4,
+      /*vertical=*/1,
+      /*open-ended=*/true).
+      translate(
+        (Math.random() - 0.5) * kForestSize,
+        h / 2,
+        (Math.random() - 0.5) * kForestSize);
+    const greenTree = new AFRAME.THREE.Mesh(tree, treeTex);
+    geometry.add(greenTree);
+  }
+  forest.object3D = geometry;
+  document.querySelector('a-scene').appendChild(forest);
+}
+
+function buildScene() {
+  // <a-entity obj-model="obj: url(obj/city.obj); mtl: url(obj/city.mtl)" rotation="0 180 0"></a-entity>
+  buildWoodland();
+}
+
 function makeBalloon(player: AFRAME.Entity) {
   const baloon = document.createElement('a-sphere') as AFRAME.Entity;
   baloon.setAttribute('color', 'purple');
@@ -79,6 +110,7 @@ var tickers: Ticker[] = [];
 AFRAME.registerComponent("go", {
   init: async function () {
     const scene = document.querySelector('a-scene');
+    buildScene();
     player = document.querySelector('#player') as AFRAME.Entity;
     makeBalloon(player);
     const assets = document.querySelector('a-assets');
@@ -135,7 +167,6 @@ body.innerHTML = `
 <a-scene go="1" 
   fog="type: linear; color: #112; near: 2; far: 300"
   background="black" transparent="false" cursor="rayOrigin: mouse" stats>
-<a-entity obj-model="obj: url(obj/city.obj); mtl: url(obj/city.mtl)" rotation="0 180 0"></a-entity>
 <a-assets>
 </a-assets>
 
