@@ -1,6 +1,6 @@
 import * as AFRAME from "aframe";
 import { Common } from "./common";
-import { GameTime } from "./gameTime";
+import { GameTime, TimeSummary } from "./gameTime";
 import { Sample } from "./sample";
 
 export class BurnerEntity {
@@ -16,8 +16,8 @@ export class BurnerEntity {
     this.startTimeS = Common.audioContext().currentTime;
     this.gameTime.setBpm(bpm);
     this.gameTime.addBeatCallback(
-      (audioTimeS: number, beatInt: number, beatFrac: number) => {
-        this.sample.playAt(audioTimeS);
+      (timeSummary: TimeSummary) => {
+        this.sample.playAt(timeSummary.audioTimeS);
       })
   }
 }

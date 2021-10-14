@@ -1,10 +1,8 @@
 import * as AFRAME from "aframe";
 import { CollisionDirection, CollisionHandler } from "./collisionHandler";
 import { Debug } from "./debug";
-import { AudioCallback, GameTime } from "./gameTime";
+import { AudioCallback, GameTime, TimeSummary } from "./gameTime";
 
-import { Sample } from "./sample";
-import { Ticker } from "./ticker";
 import { Track } from "./track";
 
 export class SampleEntity {
@@ -23,17 +21,14 @@ export class SampleEntity {
   }
 
   private beatCallback: AudioCallback =
-    (audioTimeS: number, beatInt: number, beatFrac: number) => {
-      Debug.set(`${beatInt.toFixed(0)} = ${audioTimeS.toFixed(2)}` +
-        `\nselected: ${this.selectedSampleIndex}` +
-        `\nnext: ${this.nextLoopStart}`);
-      if (beatInt > this.nextLoopStart) {
+    (ts: TimeSummary) => {
+      if (ts.beatInt > this.nextLoopStart) {
         this.nextLoopStart += 8;
-      } else if (beatInt === this.nextLoopStart) {
+      } else if (ts.beatInt === this.nextLoopStart) {
         this.nextLoopStart += 8;
         if (this.selectedSampleIndex >= 0) {
           this.track.stop();
-          this.track.getSample(this.selectedSampleIndex).playAt(audioTimeS);
+          this.track.getSample(this.selectedSampleIndex).playAt(ts.audioTimeS);
         }
       }
     };
@@ -49,8 +44,6 @@ export class SampleEntity {
     this.selectedSampleIndex = sampleIndex;
     this.images[sampleIndex].object3D.position.y = -0.08;
     this.lights[sampleIndex].setAttribute('shader', 'flat');
-    Debug.set(`selected: ${this.selectedSampleIndex}` +
-      `\nnext: ${this.nextLoopStart}`);
   }
 
   private popUp() {

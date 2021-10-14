@@ -29,21 +29,10 @@ function makeBalloon(player: AFRAME.Entity) {
   baloon.setAttribute('position', '0 11 0');
   player.appendChild(baloon);
 
-  const basket = document.createElement('a-cylinder') as AFRAME.Entity;
-  basket.setAttribute('color', 'burlywood');
-  basket.setAttribute('radius', '0.75');
-  basket.setAttribute('height', '1.0');
-  basket.setAttribute('position', '0 0.5 0');
-  basket.setAttribute('material', 'side', 'double');
-  basket.setAttribute('open-ended', 'true');
+  const basket = document.createElement('a-entity') as AFRAME.Entity;
+  basket.setAttribute('obj-model', "obj: url(obj/basket-pipe.obj);");
+  basket.setAttribute('material', 'color: #222; vertexColors: none');
   player.appendChild(basket);
-
-  const floor = document.createElement('a-cylinder') as AFRAME.Entity;
-  floor.setAttribute('color', 'burlywood');
-  floor.setAttribute('radius', '0.75');
-  floor.setAttribute('height', '0.02');
-  floor.setAttribute('position', '0 -0.01 0');
-  player.appendChild(floor);
 
   const c = document.createElement('a-cylinder');
   c.setAttribute('height', '0.8');
@@ -121,7 +110,8 @@ AFRAME.registerComponent("go", {
     robot = new Robot(document.querySelector('#camera'),
       document.querySelector('#leftHand'),
       document.querySelector('#rightHand'),
-      document.querySelector('#robot'));
+      document.querySelector('#robot'),
+      gameTime);
     tickers.push(robot);
   },
   tick: function (timeMs, timeDeltaMs) {

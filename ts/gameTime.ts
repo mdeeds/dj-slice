@@ -1,8 +1,15 @@
 import { Common } from "./common";
 import { Debug } from "./debug";
 
-export type AudioCallback = (
-  audioTimeS: number, beatInt: number, beatFrac: number) => void;
+export class TimeSummary {
+  constructor(
+    readonly audioTimeS: number,
+    readonly beatInt: number,
+    readonly beatFrac: number
+  ) { }
+}
+
+export type AudioCallback = (TimeSummary) => void;
 
 export class GameTime {
   private bpm: number;
@@ -62,20 +69,27 @@ export class GameTime {
     return beat * secondsPerBeat;
   }
 
+  timeSummaryNow(lookaheadS: number) {
+    const audioTimeNowS = Common.audioContext().currentTime;
+    const elapsed = audioTimeNowS - this.audioCtxZero + lookaheadS;
+    const secondsPerBeat = 60 / this.bpm;
+    const beatFrac = elapsed / secondsPerBeat;
+    const beatInt = Math.trunc(beatFrac + 0.001);
+    return new TimeSummary(audioTimeNowS, beatInt, beatFrac)
+  }
+
   private lastBeatNumber = -1;
   tick(timeMs: number, timeDeltaMs: number) {
     if (this.running) {
       this.elapsedMs += timeDeltaMs;
     }
-    const elapsed = Common.audioContext().currentTime - this.audioCtxZero + 0.1;
-    const secondsPerBeat = 60 / this.bpm;
-    const beatFrac = elapsed / secondsPerBeat;
-    const beatInt = Math.trunc(beatFrac + 0.001);
-    if (beatInt != this.lastBeatNumber) {
-      this.lastBeatNumber = beatInt;
-      const callbackTime = this.audioCtxZero + beatInt * secondsPerBeat;
+    const ts = this.timeSummaryNow(0.1);
+    if (ts.beatInt != this.lastBeatNumber) {
+      this.lastBeatNumber = ts.beatInt;
+      const secondsPerBeat = 60 / this.bpm;
+      const callbackTime = this.audioCtxZero + ts.beatInt * secondsPerBeat;
       for (const cb of this.beatCallbacks) {
-        cb(callbackTime, beatInt, beatFrac);
+        cb(new TimeSummary(callbackTime, ts.beatInt, ts.beatFrac));
       }
     }
   }

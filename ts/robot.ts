@@ -1,17 +1,82 @@
 import * as AFRAME from "aframe";
-import * as THREE from "three";
 import { Debug } from "./debug";
+import { GameTime } from "./gameTime";
+import { Ticker } from "./ticker";
 
-export class Robot {
+class VectorRecording {
+  private static kDivisionsPerBeat = 16;
+  private static kBeatsRecorded = 8;
+  private static kTotalDivisions = VectorRecording.kDivisionsPerBeat * VectorRecording.kBeatsRecorded;
+  public positionRecord: any[] = [];
+  public rotationRecord: any[] = [];
+  constructor(private gameTime: GameTime,
+    private source: any,
+    private target: any) {
+  }
 
+  private lastBeat = -1;
+
+  private recordInternal(i: number) {
+    if (!this.positionRecord[i]) {
+      this.positionRecord[i] = new AFRAME.THREE.Vector3();
+      this.rotationRecord[i] = new AFRAME.THREE.Euler();
+    }
+    this.positionRecord[i].copy(this.source.position);
+    this.rotationRecord[i].copy(this.source.rotation);
+    this.target.position.copy(this.source.position);
+    this.target.rotation.copy(this.source.rotation);
+  }
+
+  record() {
+    const ts = this.gameTime.timeSummaryNow(0);
+    const i = Math.trunc(
+      VectorRecording.kDivisionsPerBeat *
+      (ts.beatFrac % VectorRecording.kBeatsRecorded));
+    let beatsSkipped =
+      (i - this.lastBeat + VectorRecording.kTotalDivisions) %
+      VectorRecording.kTotalDivisions;
+    while (beatsSkipped > 0) {
+      --beatsSkipped;
+      this.lastBeat = (this.lastBeat + 1) % VectorRecording.kTotalDivisions;
+      this.recordInternal(this.lastBeat);
+    }
+  }
+
+  playback() {
+    const ts = this.gameTime.timeSummaryNow(0);
+    const i = Math.trunc(VectorRecording.kDivisionsPerBeat *
+      (ts.beatFrac % VectorRecording.kBeatsRecorded));
+    let beatsSkipped =
+      (i - this.lastBeat + VectorRecording.kTotalDivisions) %
+      VectorRecording.kTotalDivisions;
+    while (beatsSkipped > 0) {
+      --beatsSkipped;
+      this.lastBeat = (this.lastBeat + 1) % VectorRecording.kTotalDivisions;
+      if (!this.positionRecord[this.lastBeat]) {
+        this.recordInternal(this.lastBeat);
+      } else {
+        this.target.position.copy(this.positionRecord[this.lastBeat]);
+        this.target.rotation.copy(this.rotationRecord[this.lastBeat]);
+      }
+    }
+  }
+}
+
+export class Robot implements Ticker {
   private head: AFRAME.Entity;
   private left: AFRAME.Entity;
   private right: AFRAME.Entity;
+
+  private headRecord: VectorRecording;
+  private leftRecord: VectorRecording;
+  private rightRecord: VectorRecording;
+
   constructor(
     private headRef: AFRAME.Entity,
     private leftRef: AFRAME.Entity,
     private rightRef: AFRAME.Entity,
-    private container: AFRAME.Entity) {
+    private container: AFRAME.Entity,
+    private gameTime: GameTime) {
     this.head = document.createElement('a-box');
     this.head.setAttribute('color', '#fff');
     this.head.setAttribute('width', '0.5');
@@ -34,16 +99,28 @@ export class Robot {
     container.appendChild(this.left);
     container.appendChild(this.right);
 
+    this.headRecord =
+      new VectorRecording(gameTime, headRef.object3D, this.head.object3D);
+    this.leftRecord =
+      new VectorRecording(gameTime, leftRef.object3D, this.left.object3D);
+    this.rightRecord =
+      new VectorRecording(gameTime, rightRef.object3D, this.right.object3D);
+
     this.track();
   }
 
   private track() {
-    this.head.object3D.position.copy(this.headRef.object3D.position);
-    this.left.object3D.position.copy(this.leftRef.object3D.position);
-    this.right.object3D.position.copy(this.rightRef.object3D.position);
-    this.head.object3D.rotation.copy(this.headRef.object3D.rotation);
-    this.left.object3D.rotation.copy(this.leftRef.object3D.rotation);
-    this.right.object3D.rotation.copy(this.rightRef.object3D.rotation);
+    if (
+      this.headRef.object3D.position.y < this.leftRef.object3D.position.y ||
+      this.headRef.object3D.position.y < this.rightRef.object3D.position.y) {
+      this.headRecord.record();
+      this.leftRecord.record();
+      this.rightRecord.record();
+    } else {
+      this.headRecord.playback();
+      this.leftRecord.playback();
+      this.rightRecord.playback();
+    }
   }
 
   tick(timeMs: number, timeDeltaMs: number) {
