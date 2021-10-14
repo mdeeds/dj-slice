@@ -1,6 +1,35 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 673:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AssetLibrary = void 0;
+class AssetLibrary {
+    constructor(assetCollection) {
+        this.assetCollection = assetCollection;
+        this.idMap = new Map();
+    }
+    getId(url) {
+        if (this.idMap.has(url)) {
+            return this.idMap.get(url);
+        }
+        const img = document.createElement('img');
+        img.setAttribute('src', url);
+        img.id = `asset${this.idMap.size}`;
+        this.assetCollection.appendChild(img);
+        this.idMap.set(url, img.id);
+        return img.id;
+    }
+}
+exports.AssetLibrary = AssetLibrary;
+//# sourceMappingURL=assetLibrary.js.map
+
+/***/ }),
+
 /***/ 690:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -36,6 +65,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const AFRAME = __importStar(__webpack_require__(449));
+const assetLibrary_1 = __webpack_require__(673);
 const collisionHandler_1 = __webpack_require__(44);
 const debug_1 = __webpack_require__(756);
 const gameTime_1 = __webpack_require__(669);
@@ -51,6 +81,32 @@ function addBuilding(x, z, scene) {
     box.setAttribute('height', h);
     box.setAttribute('position', `${x} ${h / 2} ${z}`);
     scene.appendChild(box);
+}
+function buildWoodland() {
+    const kTreesPerMeter = 0.02;
+    const kForestSize = 700;
+    const kNumTrees = kForestSize * kForestSize * kTreesPerMeter;
+    const forest = document.createElement('a-entity');
+    const geometry = new AFRAME.THREE.Group();
+    const treeTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x33ff55 });
+    for (let i = 0; i < kNumTrees; ++i) {
+        const h = Math.random() * 10 + 5;
+        const tree = new AFRAME.THREE.ConeGeometry(
+        /*r=*/ 0.5 + Math.random(), 
+        /*h=*/ h, 
+        /*radial=*/ 4, 
+        /*vertical=*/ 1, 
+        /*open-ended=*/ true).
+            translate((Math.random() - 0.5) * kForestSize, h / 2, (Math.random() - 0.5) * kForestSize);
+        const greenTree = new AFRAME.THREE.Mesh(tree, treeTex);
+        geometry.add(greenTree);
+    }
+    forest.object3D = geometry;
+    document.querySelector('a-scene').appendChild(forest);
+}
+function buildScene() {
+    // <a-entity obj-model="obj: url(obj/city.obj); mtl: url(obj/city.mtl)" rotation="0 180 0"></a-entity>
+    buildWoodland();
 }
 function makeBalloon(player) {
     const baloon = document.createElement('a-sphere');
@@ -103,6 +159,7 @@ AFRAME.registerComponent("go", {
     init: function () {
         return __awaiter(this, void 0, void 0, function* () {
             const scene = document.querySelector('a-scene');
+            buildScene();
             player = document.querySelector('#player');
             makeBalloon(player);
             const assets = document.querySelector('a-assets');
@@ -115,14 +172,15 @@ AFRAME.registerComponent("go", {
             tickers.push(collisionHandler);
             leftStick = addStick(document.querySelector('#leftHand'));
             rightStick = addStick(document.querySelector('#rightHand'));
+            const assetLibrary = new assetLibrary_1.AssetLibrary(document.querySelector('a-assets'));
             let theta = 0;
             for (const track of samplePack.tracks) {
-                const sampleEntity = new sampleEntity_1.SampleEntity(track, collisionHandler, leftStick, rightStick, gameTime);
+                const sampleEntity = new sampleEntity_1.SampleEntity(track, collisionHandler, leftStick, rightStick, gameTime, assetLibrary);
                 for (let i = 0; i < track.numSamples(); ++i) {
                     const container = document.createElement('a-entity');
                     const x = 0.7 * Math.sin(theta);
                     const z = -0.7 * Math.cos(theta);
-                    container.setAttribute('position', `${x} 1 ${z}`);
+                    container.setAttribute('position', `${x} 1.2 ${z}`);
                     container.setAttribute('rotation', `0 ${-180 / Math.PI * theta} 0`);
                     sampleEntity.addSample(container, i);
                     player.appendChild(container);
@@ -149,7 +207,6 @@ body.innerHTML = `
 <a-scene go="1" 
   fog="type: linear; color: #112; near: 2; far: 300"
   background="black" transparent="false" cursor="rayOrigin: mouse" stats>
-<a-entity obj-model="obj: url(obj/city.obj); mtl: url(obj/city.mtl)" rotation="0 180 0"></a-entity>
 <a-assets>
 </a-assets>
 
@@ -657,12 +714,13 @@ Sample.numDecoded = 0;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SampleEntity = void 0;
 class SampleEntity {
-    constructor(track, collisionHandler, leftStick, rightStick, gameTime) {
+    constructor(track, collisionHandler, leftStick, rightStick, gameTime, assets) {
         this.track = track;
         this.collisionHandler = collisionHandler;
         this.leftStick = leftStick;
         this.rightStick = rightStick;
         this.gameTime = gameTime;
+        this.assets = assets;
         this.images = [];
         this.lights = [];
         this.nextLoopStart = 0;
@@ -688,7 +746,7 @@ class SampleEntity {
     depress(sampleIndex) {
         this.popUp();
         this.selectedSampleIndex = sampleIndex;
-        this.images[sampleIndex].object3D.position.y = -0.08;
+        this.images[sampleIndex].object3D.position.y = -0.04;
         this.lights[sampleIndex].setAttribute('shader', 'flat');
     }
     popUp() {
@@ -735,16 +793,29 @@ class SampleEntity {
         //   o.classList.add('clickable');
         //   container.appendChild(o);
         // }
+        const imageContainer = document.createElement('a-entity');
+        container.appendChild(imageContainer);
         {
             const o = document.createElement('a-image');
             o.setAttribute('height', '0.2');
             o.setAttribute('width', '0.2');
-            o.setAttribute('src', track.getImage(sampleIndex));
+            o.setAttribute('src', `#${this.assets.getId('img/dial/dial_off.png')}`);
+            o.setAttribute('transparent', 'true');
+            o.setAttribute('shader', 'flat');
+            o.setAttribute('position', '0 0 -0.01');
+            this.images[sampleIndex] = o;
+            imageContainer.appendChild(o);
+        }
+        {
+            const o = document.createElement('a-image');
+            o.setAttribute('height', '0.2');
+            o.setAttribute('width', '0.2');
+            o.setAttribute('src', `#${this.assets.getId(track.getImage(sampleIndex))}`);
             o.setAttribute('transparent', 'true');
             o.setAttribute('opacity', '0.5');
             o.setAttribute('shader', 'flat');
             this.images[sampleIndex] = o;
-            container.appendChild(o);
+            imageContainer.appendChild(o);
         }
         {
             const o = document.createElement('a-sphere');
@@ -759,6 +830,7 @@ class SampleEntity {
             o.setAttribute('shader', 'standard');
             o.setAttribute('position', '0 -0.1 0');
             o.setAttribute('radius', '0.04');
+            o.setAttribute('scale', '1 0.3 1');
             this.lights.push(o);
             container.appendChild(o);
         }
