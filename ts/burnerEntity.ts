@@ -1,5 +1,6 @@
 import * as AFRAME from "aframe";
-import { GameTime } from "./gameTime";
+import { Common } from "./common";
+import { GameTime, TimeSummary } from "./gameTime";
 import { Sample } from "./sample";
 
 export class BurnerEntity {
@@ -12,25 +13,11 @@ export class BurnerEntity {
 
   start(bpm: number) {
     this.secondsPerBeat = 60 / bpm;
-    this.startTimeS = this.gameTime.getAudioTimeNow();
+    this.startTimeS = Common.audioContext().currentTime;
     this.gameTime.setBpm(bpm);
-  }
-
-  private lastBeat = -1;
-  tick(timeMs: number, timeDeltaMs: number) {
-    if (this.startTimeS) {
-      const beatNumber =
-        Math.trunc(
-          (this.gameTime.getAudioTimeNow() - this.startTimeS) /
-          this.secondsPerBeat);
-      if (this.lastBeat != beatNumber) {
-        this.lastBeat = beatNumber;
-        // TODO: Clean up the timing here.
-        if (beatNumber % 4 == 0) {
-          this.sample.playQuantized();
-        }
-      }
-
-    }
+    this.gameTime.addBeatCallback(
+      (timeSummary: TimeSummary) => {
+        this.sample.playAt(timeSummary.audioTimeS);
+      })
   }
 }

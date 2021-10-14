@@ -1,7 +1,7 @@
 import * as AFRAME from "aframe";
-import * as THREE from "three";
 import { BeatOrb } from "./beatOrb";
 import { BurnerEntity } from "./burnerEntity";
+import { Common } from "./common";
 import { GameTime } from "./gameTime";
 import { Sample } from "./sample";
 
@@ -89,7 +89,7 @@ export class WellScene {
     // const octohedron = document.createElement('a-sphere');
     octohedron.setAttribute('radius', '0.2');
     scene.appendChild(octohedron);
-    (octohedron.object3D.position as THREE.Vector3).
+    octohedron.object3D.position.
       set(2 * Math.sin(theta), 1, -2 * Math.cos(theta));
     return octohedron;
   }
@@ -109,22 +109,20 @@ export class WellScene {
     const clap = this.addBasket(player);
     clap.classList.add('clickable');
     clap.addEventListener("mouseenter", () => {
-      const nowTime = gameTime.getAudioTimeNow();
+      const nowTime = Common.audioContext().currentTime;
+      clapSample.playAt(nowTime);
       for (const o of this.beatOrbs) {
         o.strike(nowTime);
       }
-      // TODO: Not quantized!!!
-      clapSample.playQuantized();
     });
     const body = document.getElementsByTagName('body')[0];
     body.addEventListener('keydown', (ev: KeyboardEvent) => {
       if (ev.code === 'Space') {
-        const nowTime = gameTime.getAudioTimeNow();
+        const nowTime = Common.audioContext().currentTime;
+        clapSample.playAt(nowTime);
         for (const o of this.beatOrbs) {
           o.strike(nowTime);
         }
-        // TODO: Not quantized!!!
-        clapSample.playQuantized();
       }
     });
   }
@@ -141,6 +139,5 @@ export class WellScene {
     for (const o of this.beatOrbs) {
       o.tick(timeMs, timeDeltaMs);
     }
-    this.burnerEntity.tick(timeMs, timeDeltaMs);
   }
 }

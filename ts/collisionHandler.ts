@@ -1,18 +1,18 @@
 import * as AFRAME from "aframe";
-import * as THREE from "three";
+import { Ticker } from "./ticker";
 
-export type CollisionCallback = () => void;
+export type CollisionDirection = 'up' | 'down';
+export type CollisionCallback = (dir: CollisionDirection) => void;
 
-
-class CollisionPair {
+class CollisionPair implements Ticker {
   constructor(
     private a: AFRAME.Entity,
     private b: AFRAME.Entity,
     private r: number,
     private f: CollisionCallback) {
   }
-  private aPos = new THREE.Vector3();
-  private bPos = new THREE.Vector3();
+  private aPos = new AFRAME.THREE.Vector3();
+  private bPos = new AFRAME.THREE.Vector3();
   private isColliding = false;
   tick(timeMs: number, timeDeltaMs: number) {
     this.a.object3D.getWorldPosition(this.aPos);
@@ -21,7 +21,7 @@ class CollisionPair {
     if (this.aPos.length() <= this.r) {
       if (!this.isColliding) {
         this.isColliding = true;
-        this.f();
+        this.f(this.aPos.y < 0 ? 'down' : 'up');
       }
     } else {
       this.isColliding = false;
@@ -29,7 +29,7 @@ class CollisionPair {
   }
 }
 
-export class CollisionHandler {
+export class CollisionHandler implements Ticker {
   private pairs: CollisionPair[] = [];
   constructor() { }
 

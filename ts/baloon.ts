@@ -1,13 +1,15 @@
 import * as AFRAME from "aframe";
-import * as THREE from "three";
+import { AssetLibrary } from "./assetLibrary";
+
 import { CollisionHandler } from "./collisionHandler";
 import { Debug } from "./debug";
 import { GameTime } from "./gameTime";
+import { Robot } from "./robot";
 import { Sample } from "./sample";
+import { SampleEntity } from "./sampleEntity";
 import { SamplePack } from "./samplePack";
+import { Ticker } from "./ticker";
 import { Track } from "./track";
-
-
 
 var player = null;
 
@@ -21,6 +23,37 @@ function addBuilding(x: number, z: number, scene: AFRAME.Entity) {
   scene.appendChild(box);
 }
 
+function buildWoodland() {
+  const kTreesPerMeter = 0.02;
+  const kForestSize = 700;
+  const kNumTrees = kForestSize * kForestSize * kTreesPerMeter;
+  const forest = document.createElement('a-entity');
+  const geometry = new AFRAME.THREE.Group();
+  const treeTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x33ff55 });
+  for (let i = 0; i < kNumTrees; ++i) {
+    const h = Math.random() * 10 + 5;
+    const tree = new AFRAME.THREE.ConeGeometry(
+      /*r=*/0.5 + Math.random(),
+      /*h=*/h,
+      /*radial=*/4,
+      /*vertical=*/1,
+      /*open-ended=*/true).
+      translate(
+        (Math.random() - 0.5) * kForestSize,
+        h / 2,
+        (Math.random() - 0.5) * kForestSize);
+    const greenTree = new AFRAME.THREE.Mesh(tree, treeTex);
+    geometry.add(greenTree);
+  }
+  forest.object3D = geometry;
+  document.querySelector('a-scene').appendChild(forest);
+}
+
+function buildScene() {
+  // <a-entity obj-model="obj: url(obj/city.obj); mtl: url(obj/city.mtl)" rotation="0 180 0"></a-entity>
+  buildWoodland();
+}
+
 function makeBalloon(player: AFRAME.Entity) {
   const baloon = document.createElement('a-sphere') as AFRAME.Entity;
   baloon.setAttribute('color', 'purple');
@@ -28,21 +61,10 @@ function makeBalloon(player: AFRAME.Entity) {
   baloon.setAttribute('position', '0 11 0');
   player.appendChild(baloon);
 
-  const basket = document.createElement('a-cylinder') as AFRAME.Entity;
-  basket.setAttribute('color', 'burlywood');
-  basket.setAttribute('radius', '0.75');
-  basket.setAttribute('height', '1.0');
-  basket.setAttribute('position', '0 0.5 0');
-  basket.setAttribute('material', 'side', 'double');
-  basket.setAttribute('open-ended', 'true');
+  const basket = document.createElement('a-entity') as AFRAME.Entity;
+  basket.setAttribute('obj-model', "obj: url(obj/basket-pipe.obj);");
+  basket.setAttribute('material', 'color: #222; vertexColors: none');
   player.appendChild(basket);
-
-  const floor = document.createElement('a-cylinder') as AFRAME.Entity;
-  floor.setAttribute('color', 'burlywood');
-  floor.setAttribute('radius', '0.75');
-  floor.setAttribute('height', '0.02');
-  floor.setAttribute('position', '0 -0.01 0');
-  player.appendChild(floor);
 
   const c = document.createElement('a-cylinder');
   c.setAttribute('height', '0.8');
@@ -53,58 +75,6 @@ function makeBalloon(player: AFRAME.Entity) {
   player.appendChild(c);
 }
 
-function addClip(player: AFRAME.Entity, track: Track, gameTime: GameTime,
-  theta: number, sampleIndex: number) {
-  const container = document.createElement('a-entity');
-  const x = 0.7 * Math.sin(theta);
-  const z = -0.7 * Math.cos(theta);
-  container.setAttribute('position', `${x} 1 ${z}`);
-  container.setAttribute('rotation', `0 ${-180 / Math.PI * theta} 0`)
-  // {
-  //   const o = document.createElement('a-box');
-  //   o.setAttribute('width', '0.2');
-  //   o.setAttribute('height', '0.15');
-  //   o.setAttribute('depth', '0.05');
-  //   o.setAttribute('position', '0 0.30, 0');
-  //   o.setAttribute('shader', 'flat');
-  //   o.classList.add('clickable');
-  //   container.appendChild(o);
-  // }
-  {
-    const o = document.createElement('a-entity');
-    o.setAttribute('obj-model',
-      'obj: url(obj/trapezoid-full.obj); mtl: url(obj/trapezoid-full.mtl');
-    o.setAttribute('shader', 'flat');
-    o.setAttribute('rotation', '0 0 0')
-    o.classList.add('clickable');
-    container.appendChild(o);
-  }
-  {
-    const o = document.createElement('a-entity');
-    o.setAttribute('obj-model',
-      'obj: url(obj/trapezoid-full.obj); mtl: url(obj/trapezoid-full.mtl');
-    o.setAttribute('shader', 'flat');
-    o.setAttribute('rotation', '0 0 180')
-    o.classList.add('clickable');
-    o.addEventListener('mouseenter', () => {
-      Debug.set(`Enter ${Math.random().toFixed(5)}`);
-    });
-    container.appendChild(o);
-  }
-  {
-    const o = document.createElement('a-image');
-    o.setAttribute('height', '0.2');
-    o.setAttribute('width', '0.2');
-    o.setAttribute('src', track.getImage(sampleIndex));
-    o.setAttribute('transparent', 'true');
-    o.setAttribute('opacity', '0.5');
-    o.setAttribute('shader', 'flat');
-    container.appendChild(o);
-  }
-
-  player.appendChild(container);
-  return container;
-}
 
 const kStickLength = 0.25;
 function addStick(container: AFRAME.Entity) {
@@ -134,52 +104,49 @@ function addStick(container: AFRAME.Entity) {
 var leftStick: AFRAME.Entity = null;
 var rightStick: AFRAME.Entity = null;
 var collisionHandler: CollisionHandler = null;
+var robot: Robot = null;
+var tickers: Ticker[] = [];
 
 AFRAME.registerComponent("go", {
   init: async function () {
     const scene = document.querySelector('a-scene');
+    buildScene();
     player = document.querySelector('#player') as AFRAME.Entity;
     makeBalloon(player);
     const assets = document.querySelector('a-assets');
     const gameTime = await GameTime.make(115);
     await gameTime.start();
+    tickers.push(gameTime);
     const samplePack = await SamplePack.load('funk', gameTime, assets)
     Debug.init(document.querySelector('a-camera'));
     collisionHandler = new CollisionHandler();
+    tickers.push(collisionHandler);
 
     leftStick = addStick(document.querySelector('#leftHand'));
     rightStick = addStick(document.querySelector('#rightHand'));
+    const assetLibrary = new AssetLibrary(document.querySelector('a-assets'));
 
-    const keyCodes = ['Digit1', 'Digit2', 'Digit3', 'Digit4',
-      'KeyQ', 'KeyW', 'KeyE', 'KeyR',
-      'KeyA', 'KeyS', 'KeyD', 'KeyF',
-      'KeyZ', 'KeyX', 'KeyC', 'KeyV'];
     let theta = 0;
-    let keyIndex = 0;
     for (const track of samplePack.tracks) {
+      const sampleEntity = new SampleEntity(
+        track, collisionHandler, leftStick, rightStick, gameTime, assetLibrary);
       for (let i = 0; i < track.numSamples(); ++i) {
-        const clip = addClip(player, track, gameTime, theta, i);
-        collisionHandler.addPair(clip, leftStick, 0.1, () => {
-          track.stop();
-          track.getSample(i).playQuantized();
-        });
-        collisionHandler.addPair(clip, rightStick, 0.1, () => {
-          track.stop();
-          track.getSample(i).playQuantized();
-        });
-        body.addEventListener('keydown',
-          ((ki: string, track: Track, sample: Sample) => {
-            return (ev: KeyboardEvent) => {
-              if (ev.code === ki) {
-                track.stop();
-                sample.playQuantized();
-              }
-            }
-          })(keyCodes[keyIndex], track, track.getSample(i)));
+        const container = document.createElement('a-entity');
+        const x = 0.7 * Math.sin(theta);
+        const z = -0.7 * Math.cos(theta);
+        container.setAttribute('position', `${x} 1.2 ${z}`);
+        container.setAttribute('rotation', `0 ${-180 / Math.PI * theta} 0`);
+        sampleEntity.addSample(container, i);
+        player.appendChild(container);
         theta += Math.PI * 2 / 16;
-        ++keyIndex;
       }
     }
+    robot = new Robot(document.querySelector('#camera'),
+      document.querySelector('#leftHand'),
+      document.querySelector('#rightHand'),
+      document.querySelector('#robot'),
+      gameTime);
+    tickers.push(robot);
   },
   tick: function (timeMs, timeDeltaMs) {
     const p = (timeMs / 1000 / 60 / 3) % 1; // percentage of three minutes
@@ -187,9 +154,10 @@ AFRAME.registerComponent("go", {
     const h = Math.sin(Math.PI * p) * 100;  // 100m maximum height
     const r = 0.5 * (1 - Math.cos(Math.PI * p)) * 2000;  // glide 2km
 
-    player.setAttribute('position', `0, ${h}, ${-r}`);
-    if (collisionHandler) {
-      collisionHandler.tick(timeMs, timeDeltaMs);
+    const playerPos = player.object3D.position;
+    playerPos.set(0, h, -r);
+    for (const ticker of tickers) {
+      ticker.tick(timeMs, timeDeltaMs);
     }
   }
 });
@@ -199,16 +167,18 @@ body.innerHTML = `
 <a-scene go="1" 
   fog="type: linear; color: #112; near: 2; far: 300"
   background="black" transparent="false" cursor="rayOrigin: mouse" stats>
-<a-entity obj-model="obj: url(obj/city.obj); mtl: url(obj/city.mtl)" rotation="0 180 0"></a-entity>
 <a-assets>
 </a-assets>
 
 <a-sky color="#112" radius=3000></a-sky>
 <a-entity light="type: ambient; color: #222"></a-entity>
 <a-entity light="type:directional; color: #777" position="1800 1000 1200"></a-entity>
+
 <a-entity id='player'>
+  <a-entity id='robot' position = "-2 0 -2" rotation = "0 180 0"></a-entity>
   <a-sphere position="180 100 120" radius=20 color=#fff shader=flat></a-sphere>
-  <a-camera position="0 1.6 0">
+
+  <a-camera id="camera" position="0 1.6 0">
     <a-entity light="type:point; intensity: 0.75; distance: 4; decay: 2" position="0 0.1 -0.1">
   </a-camera>
   <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 5;" line="color: #44d"
