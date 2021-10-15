@@ -9,7 +9,6 @@ export interface Chunk {
 
 export class BuildingChunk implements Chunk {
   render(container: AFRAME.Entity): void {
-    console.log('Render building.');
     const geometry = new AFRAME.THREE.Group();
     const streetTex = new AFRAME.THREE.MeshStandardMaterial({
       color: Math.trunc(Math.random() * 256 * 256 * 256)
@@ -40,7 +39,6 @@ export class BuildingChunk implements Chunk {
 
 export class StreetChunk implements Chunk {
   render(container: AFRAME.Entity): void {
-    console.log('Render street.');
     const geometry = new AFRAME.THREE.Group();
     const streetTex = new AFRAME.THREE.MeshStandardMaterial({
       color: Math.trunc(Math.random() * 256 * 256 * 256)
@@ -69,7 +67,6 @@ export class WoodlandChunk implements Chunk {
   }
 
   render(container: AFRAME.Entity): void {
-    console.log('Render woodland.');
     const geometry = new AFRAME.THREE.Group();
     const floorTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x443311 });
     const floor = new AFRAME.THREE.PlaneGeometry(500, 10)
@@ -116,7 +113,6 @@ export class MountainChunk implements Chunk {
   }
 
   render(container: AFRAME.Entity): void {
-    console.log('Render mountain.');
     const geometry = new AFRAME.THREE.Group();
     const hillTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x4422cc });
 

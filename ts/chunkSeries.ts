@@ -44,7 +44,6 @@ export class ChunkSeries {
       }
     }
     for (const c of chunksToDelete) {
-      console.log('Removing chunk...');
       c.chunk.remove();
       this.chunks.delete(c);
     }

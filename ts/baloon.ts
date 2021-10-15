@@ -10,6 +10,7 @@ import { Robot } from "./robot";
 import { SampleEntity } from "./sampleEntity";
 import { SamplePack } from "./samplePack";
 import { Ticker } from "./ticker";
+import { ToneEntity } from "./toneEntity";
 
 var player = null;
 
@@ -90,6 +91,17 @@ function chunkFactoryFactory(gameTime: GameTime) {
   }
 }
 
+function addTones(player: AFRAME.Entity, theta: number) {
+  const container = document.createElement('a-entity');
+  const x = 0.7 * Math.sin(theta);
+  const z = -0.7 * Math.cos(theta);
+  container.setAttribute('position', `${x} 1.2 ${z}`);
+  container.setAttribute('rotation', `0 ${-180 / Math.PI * theta} 0`);
+  new ToneEntity(container, collisionHandler, leftStick, rightStick);
+  player.appendChild(container);
+}
+
+
 AFRAME.registerComponent("go", {
   init: async function () {
     const scene = document.querySelector('a-scene');
@@ -105,9 +117,11 @@ AFRAME.registerComponent("go", {
     Debug.init(document.querySelector('a-camera'));
     collisionHandler = new CollisionHandler();
     tickers.push(collisionHandler);
-
     leftStick = addStick(document.querySelector('#leftHand'));
     rightStick = addStick(document.querySelector('#rightHand'));
+
+    addTones(player, -Math.PI / 2);
+
     const assetLibrary = new AssetLibrary(document.querySelector('a-assets'));
 
     let theta = 0;
