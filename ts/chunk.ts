@@ -1,4 +1,5 @@
 import * as AFRAME from "aframe";
+import { GameTime, TimeSummary } from "./gameTime";
 
 export interface Chunk {
   // adds geometry into `container`.  The geometry should
@@ -53,6 +54,20 @@ export class StreetChunk implements Chunk {
 }
 
 export class WoodlandChunk implements Chunk {
+  private treeTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x33ff55 });
+  private neonTex = new AFRAME.THREE.MeshBasicMaterial({ color: 0xff33aa });
+
+  private lights: any[] = [];
+
+  constructor(gameTime: GameTime) {
+    gameTime.addBeatCallback((ts: TimeSummary) => {
+      const transparent: boolean = (ts.beatInt % 2 === 0);
+      for (const l of this.lights) {
+        l.material.transparent = transparent;
+      }
+    });
+  }
+
   render(container: AFRAME.Entity): void {
     console.log('Render woodland.');
     const geometry = new AFRAME.THREE.Group();
@@ -62,8 +77,6 @@ export class WoodlandChunk implements Chunk {
     const brownFloor = new AFRAME.THREE.Mesh(floor, floorTex);
     geometry.add(brownFloor);
 
-    const treeTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x33ff55 });
-    const neonTex = new AFRAME.THREE.MeshBasicMaterial({ color: 0xff33aa });
     for (let x = -200; x <= 200; x += 15 + Math.random() * 20) {
       const h = Math.random() * 10 + 5;
       const theta = 2 * Math.PI * Math.random();
@@ -71,18 +84,18 @@ export class WoodlandChunk implements Chunk {
       const z = (Math.random() - 0.5) * 10;
       {
         const tree = new AFRAME.THREE.ConeGeometry(
-          r, h, 4, 1, /*open-ended=*/true)
+          r, h, 3, 1, /*open-ended=*/true)
           .rotateY(theta)
           .translate(x, h / 2, z);
-        const greenTree = new AFRAME.THREE.Mesh(tree, treeTex);
+        const greenTree = new AFRAME.THREE.Mesh(tree, this.treeTex);
         geometry.add(greenTree);
       }
       {
         const tree = new AFRAME.THREE.ConeGeometry(
-          r * 0.9, h - 1, 4, 1, /*open-ended=*/true)
+          r * 0.9, h - 1, 3, 1, /*open-ended=*/true)
           .rotateY(theta + Math.PI / 4)
           .translate(x, h / 2, z);
-        const greenTree = new AFRAME.THREE.Mesh(tree, neonTex);
+        const greenTree = new AFRAME.THREE.Mesh(tree, this.neonTex);
         geometry.add(greenTree);
       }
     }

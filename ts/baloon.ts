@@ -70,20 +70,22 @@ var chunkSeries: ChunkSeries;
 var totalElapsed = 0;
 var numTicks = 0;
 
-function chunkFactory(i: number): Chunk {
-  if (i > -30) {
-    if (i % 7 === 0) {
-      return new MountainChunk();
+function chunkFactoryFactory(gameTime: GameTime) {
+  return (i: number): Chunk => {
+    if (i > -30) {
+      if (i % 7 === 0) {
+        return new MountainChunk();
+      } else {
+        return new StreetChunk();
+      }
+    } else if (i > -50) {
+      return new WoodlandChunk(gameTime);
     } else {
-      return new StreetChunk();
-    }
-  } else if (i > -50) {
-    return new WoodlandChunk();
-  } else {
-    if (i % 5 === 0) {
-      return new StreetChunk();
-    } else {
-      return new BuildingChunk();
+      if (i % 5 === 0) {
+        return new StreetChunk();
+      } else {
+        return new BuildingChunk();
+      }
     }
   }
 }
@@ -91,12 +93,13 @@ function chunkFactory(i: number): Chunk {
 AFRAME.registerComponent("go", {
   init: async function () {
     const scene = document.querySelector('a-scene');
-    chunkSeries = new ChunkSeries(chunkFactory, 300, scene);
     player = document.querySelector('#player') as AFRAME.Entity;
     makeBalloon(player);
     const assets = document.querySelector('a-assets');
     const gameTime = await GameTime.make(115);
     await gameTime.start();
+    chunkSeries = new ChunkSeries(
+      chunkFactoryFactory(gameTime), 300, scene);
     tickers.push(gameTime);
     const samplePack = await SamplePack.load('funk', gameTime, assets)
     Debug.init(document.querySelector('a-camera'));
