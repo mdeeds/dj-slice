@@ -261,8 +261,12 @@ class BuildingChunk {
     render(container) {
         console.log('Render building.');
         const geometry = new AFRAME.THREE.Group();
-        const streetTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x222222 });
-        const buildingTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0xffffff });
+        const streetTex = new AFRAME.THREE.MeshStandardMaterial({
+            color: Math.trunc(Math.random() * 256 * 256 * 256)
+        });
+        const buildingTex = new AFRAME.THREE.MeshStandardMaterial({
+            color: 0xffffff
+        });
         const street = new AFRAME.THREE.PlaneGeometry(500, 10)
             .rotateX(-Math.PI / 2);
         const blackStreet = new AFRAME.THREE.Mesh(street, streetTex);
@@ -285,7 +289,9 @@ class StreetChunk {
     render(container) {
         console.log('Render street.');
         const geometry = new AFRAME.THREE.Group();
-        const streetTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x222222 });
+        const streetTex = new AFRAME.THREE.MeshStandardMaterial({
+            color: Math.trunc(Math.random() * 256 * 256 * 256)
+        });
         const street = new AFRAME.THREE.PlaneGeometry(500, 10)
             .rotateX(-Math.PI / 2);
         const blackStreet = new AFRAME.THREE.Mesh(street, streetTex);
