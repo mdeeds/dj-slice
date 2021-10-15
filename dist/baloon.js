@@ -166,17 +166,14 @@ AFRAME.registerComponent("go", {
             const assetLibrary = new assetLibrary_1.AssetLibrary(document.querySelector('a-assets'));
             let theta = 0;
             for (const track of samplePack.tracks) {
-                const sampleEntity = new sampleEntity_1.SampleEntity(track, collisionHandler, leftStick, rightStick, gameTime, assetLibrary);
-                for (let i = 0; i < track.numSamples(); ++i) {
-                    const container = document.createElement('a-entity');
-                    const x = 0.7 * Math.sin(theta);
-                    const z = -0.7 * Math.cos(theta);
-                    container.setAttribute('position', `${x} 1.2 ${z}`);
-                    container.setAttribute('rotation', `0 ${-180 / Math.PI * theta} 0`);
-                    sampleEntity.addSample(container, i);
-                    player.appendChild(container);
-                    theta += Math.PI * 2 / 16;
-                }
+                const container = document.createElement('a-entity');
+                const x = 0.7 * Math.sin(theta);
+                const z = -0.7 * Math.cos(theta);
+                container.setAttribute('position', `${x} 1.2 ${z}`);
+                container.setAttribute('rotation', `0 ${-180 / Math.PI * theta} 0`);
+                const sampleEntity = new sampleEntity_1.SampleEntity(track, container, collisionHandler, leftStick, rightStick, gameTime, assetLibrary);
+                player.appendChild(container);
+                theta += Math.PI * 2 / 12;
             }
             robot = new robot_1.Robot(document.querySelector('#camera'), document.querySelector('#leftHand'), document.querySelector('#rightHand'), document.querySelector('#robot'), gameTime);
             tickers.push(robot);
@@ -670,6 +667,27 @@ exports.GameTime = GameTime;
 
 /***/ }),
 
+/***/ 892:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ModelUtil = void 0;
+class ModelUtil {
+    static makeGlowingModel(name) {
+        const result = document.createElement('a-entity');
+        result.setAttribute('obj-model', `obj: url(obj/${name}.obj); ` +
+            `mtl: url(obj/${name}.mtl`);
+        result.setAttribute('shader', 'flat');
+        return result;
+    }
+}
+exports.ModelUtil = ModelUtil;
+//# sourceMappingURL=modelUtil.js.map
+
+/***/ }),
+
 /***/ 607:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -891,19 +909,20 @@ exports.Sample = Sample;
 /***/ }),
 
 /***/ 480:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SampleEntity = void 0;
+const modelUtil_1 = __webpack_require__(892);
 class SampleEntity {
-    constructor(track, collisionHandler, leftStick, rightStick, gameTime, assets) {
+    constructor(track, container, collisionHandler, leftStick, rightStick, gameTime, assets) {
         this.track = track;
+        this.container = container;
         this.collisionHandler = collisionHandler;
         this.leftStick = leftStick;
         this.rightStick = rightStick;
-        this.gameTime = gameTime;
         this.assets = assets;
         this.images = [];
         this.lights = [];
@@ -922,6 +941,7 @@ class SampleEntity {
             }
         };
         gameTime.addBeatCallback(this.beatCallback);
+        this.addSample(container, 0);
     }
     addSample(container, sampleIndex) {
         this.addClip(container, this.track, sampleIndex);
@@ -968,15 +988,6 @@ class SampleEntity {
         });
     }
     addClip(container, track, sampleIndex) {
-        // {
-        //   const o = document.createElement('a-entity');
-        //   o.setAttribute('obj-model',
-        //     'obj: url(obj/trapezoid-full.obj); mtl: url(obj/trapezoid-full.mtl');
-        //   o.setAttribute('shader', 'flat');
-        //   o.setAttribute('rotation', '0 0 0')
-        //   o.classList.add('clickable');
-        //   container.appendChild(o);
-        // }
         const imageContainer = document.createElement('a-entity');
         container.appendChild(imageContainer);
         {
@@ -1000,6 +1011,15 @@ class SampleEntity {
             o.setAttribute('shader', 'flat');
             this.images[sampleIndex] = o;
             imageContainer.appendChild(o);
+        }
+        {
+            const topZoid = modelUtil_1.ModelUtil.makeGlowingModel('trapezoid');
+            imageContainer.appendChild(topZoid);
+            const bottomZoid = modelUtil_1.ModelUtil.makeGlowingModel('trapezoid');
+            bottomZoid.setAttribute('rotation', '0 0 180');
+            imageContainer.appendChild(bottomZoid);
+            // const hex = ModelUtil.makeGlowingModel('triggers');
+            // imageContainer.appendChild(hex);
         }
         {
             const o = document.createElement('a-sphere');
