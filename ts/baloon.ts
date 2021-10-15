@@ -1,58 +1,17 @@
 import * as AFRAME from "aframe";
-import { AssetLibrary } from "./assetLibrary";
 
+import { AssetLibrary } from "./assetLibrary";
+import { Chunk, MountainChunk, WoodlandChunk, StreetChunk, BuildingChunk } from "./chunk";
+import { ChunkSeries } from "./chunkSeries";
 import { CollisionHandler } from "./collisionHandler";
 import { Debug } from "./debug";
 import { GameTime } from "./gameTime";
 import { Robot } from "./robot";
-import { Sample } from "./sample";
 import { SampleEntity } from "./sampleEntity";
 import { SamplePack } from "./samplePack";
 import { Ticker } from "./ticker";
-import { Track } from "./track";
 
 var player = null;
-
-function addBuilding(x: number, z: number, scene: AFRAME.Entity) {
-  const box = document.createElement('a-box') as AFRAME.Entity;
-  box.setAttribute('width', 15);
-  box.setAttribute('depth', 15);
-  const h = Math.random() * 50 + 20;
-  box.setAttribute('height', h);
-  box.setAttribute('position', `${x} ${h / 2} ${z}`)
-  scene.appendChild(box);
-}
-
-function buildWoodland() {
-  const kTreesPerMeter = 0.02;
-  const kForestSize = 700;
-  const kNumTrees = kForestSize * kForestSize * kTreesPerMeter;
-  const forest = document.createElement('a-entity');
-  const geometry = new AFRAME.THREE.Group();
-  const treeTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x33ff55 });
-  for (let i = 0; i < kNumTrees; ++i) {
-    const h = Math.random() * 10 + 5;
-    const tree = new AFRAME.THREE.ConeGeometry(
-      /*r=*/0.5 + Math.random(),
-      /*h=*/h,
-      /*radial=*/4,
-      /*vertical=*/1,
-      /*open-ended=*/true).
-      translate(
-        (Math.random() - 0.5) * kForestSize,
-        h / 2,
-        (Math.random() - 0.5) * kForestSize);
-    const greenTree = new AFRAME.THREE.Mesh(tree, treeTex);
-    geometry.add(greenTree);
-  }
-  forest.object3D = geometry;
-  document.querySelector('a-scene').appendChild(forest);
-}
-
-function buildScene() {
-  // <a-entity obj-model="obj: url(obj/city.obj); mtl: url(obj/city.mtl)" rotation="0 180 0"></a-entity>
-  buildWoodland();
-}
 
 function makeBalloon(player: AFRAME.Entity) {
   const baloon = document.createElement('a-sphere') as AFRAME.Entity;
@@ -106,11 +65,33 @@ var rightStick: AFRAME.Entity = null;
 var collisionHandler: CollisionHandler = null;
 var robot: Robot = null;
 var tickers: Ticker[] = [];
+var chunkSeries: ChunkSeries;
+
+var totalElapsed = 0;
+var numTicks = 0;
+
+function chunkFactory(i: number): Chunk {
+  if (i > -30) {
+    if (i % 7 === 0) {
+      return new MountainChunk();
+    } else {
+      return new StreetChunk();
+    }
+  } else if (i > -50) {
+    return new WoodlandChunk();
+  } else {
+    if (i % 5 === 0) {
+      return new StreetChunk();
+    } else {
+      return new BuildingChunk();
+    }
+  }
+}
 
 AFRAME.registerComponent("go", {
   init: async function () {
     const scene = document.querySelector('a-scene');
-    buildScene();
+    chunkSeries = new ChunkSeries(chunkFactory, 300, scene);
     player = document.querySelector('#player') as AFRAME.Entity;
     makeBalloon(player);
     const assets = document.querySelector('a-assets');
@@ -156,8 +137,17 @@ AFRAME.registerComponent("go", {
 
     const playerPos = player.object3D.position;
     playerPos.set(0, h, -r);
+    chunkSeries.setPosition(-r);
     for (const ticker of tickers) {
       ticker.tick(timeMs, timeDeltaMs);
+    }
+    totalElapsed += timeDeltaMs;
+    numTicks++;
+    if (numTicks >= 10) {
+      const fps = numTicks * 1000 / totalElapsed;
+      Debug.set(`${fps.toFixed(1)} fps`);
+      totalElapsed = 0;
+      numTicks = 0;
     }
   }
 });
@@ -165,14 +155,14 @@ AFRAME.registerComponent("go", {
 const body = document.getElementsByTagName('body')[0];
 body.innerHTML = `
 <a-scene go="1" 
-  fog="type: linear; color: #112; near: 2; far: 300"
+  fog="type: linear; color: #112; near: 20; far: 300"
   background="black" transparent="false" cursor="rayOrigin: mouse" stats>
-<a-assets>
-</a-assets>
+  <a-assets>
+  </a-assets>
 
 <a-sky color="#112" radius=3000></a-sky>
 <a-entity light="type: ambient; color: #222"></a-entity>
-<a-entity light="type:directional; color: #777" position="1800 1000 1200"></a-entity>
+<a-entity light="type:directional; color: #777" position="1800 5000 1200"></a-entity>
 
 <a-entity id='player'>
   <a-entity id='robot' position = "-2 0 -2" rotation = "0 180 0"></a-entity>
