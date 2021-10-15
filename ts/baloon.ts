@@ -109,18 +109,16 @@ AFRAME.registerComponent("go", {
 
     let theta = 0;
     for (const track of samplePack.tracks) {
+      const container = document.createElement('a-entity');
+      const x = 0.7 * Math.sin(theta);
+      const z = -0.7 * Math.cos(theta);
+      container.setAttribute('position', `${x} 1.2 ${z}`);
+      container.setAttribute('rotation', `0 ${-180 / Math.PI * theta} 0`);
       const sampleEntity = new SampleEntity(
-        track, collisionHandler, leftStick, rightStick, gameTime, assetLibrary);
-      for (let i = 0; i < track.numSamples(); ++i) {
-        const container = document.createElement('a-entity');
-        const x = 0.7 * Math.sin(theta);
-        const z = -0.7 * Math.cos(theta);
-        container.setAttribute('position', `${x} 1.2 ${z}`);
-        container.setAttribute('rotation', `0 ${-180 / Math.PI * theta} 0`);
-        sampleEntity.addSample(container, i);
-        player.appendChild(container);
-        theta += Math.PI * 2 / 16;
-      }
+        track, container, collisionHandler, leftStick, rightStick,
+        gameTime, assetLibrary);
+      player.appendChild(container);
+      theta += Math.PI * 2 / 12;
     }
     robot = new Robot(document.querySelector('#camera'),
       document.querySelector('#leftHand'),

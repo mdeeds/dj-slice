@@ -3,6 +3,7 @@ import { AssetLibrary } from "./assetLibrary";
 import { CollisionDirection, CollisionHandler } from "./collisionHandler";
 import { Debug } from "./debug";
 import { AudioCallback, GameTime, TimeSummary } from "./gameTime";
+import { ModelUtil } from "./modelUtil";
 
 import { Track } from "./track";
 
@@ -14,12 +15,14 @@ export class SampleEntity {
 
   constructor(
     private track: Track,
+    private container: AFRAME.Entity,
     private collisionHandler: CollisionHandler,
     private leftStick: AFRAME.Entity,
     private rightStick: AFRAME.Entity,
-    private gameTime: GameTime,
+    gameTime: GameTime,
     private assets: AssetLibrary) {
     gameTime.addBeatCallback(this.beatCallback);
+    this.addSample(container, 0);
   }
 
   private beatCallback: AudioCallback =
@@ -35,7 +38,7 @@ export class SampleEntity {
       }
     };
 
-  public addSample(container: AFRAME.Entity, sampleIndex: number) {
+  private addSample(container: AFRAME.Entity, sampleIndex: number) {
     this.addClip(container, this.track, sampleIndex);
     this.addHandlers(container, this.collisionHandler,
       this.leftStick, this.rightStick, sampleIndex);
@@ -88,15 +91,6 @@ export class SampleEntity {
   }
 
   private addClip(container: AFRAME.Entity, track: Track, sampleIndex: number) {
-    // {
-    //   const o = document.createElement('a-entity');
-    //   o.setAttribute('obj-model',
-    //     'obj: url(obj/trapezoid-full.obj); mtl: url(obj/trapezoid-full.mtl');
-    //   o.setAttribute('shader', 'flat');
-    //   o.setAttribute('rotation', '0 0 0')
-    //   o.classList.add('clickable');
-    //   container.appendChild(o);
-    // }
     const imageContainer = document.createElement('a-entity');
     container.appendChild(imageContainer);
     {
@@ -122,6 +116,15 @@ export class SampleEntity {
       o.setAttribute('shader', 'flat');
       this.images[sampleIndex] = o;
       imageContainer.appendChild(o);
+    }
+    {
+      const topZoid = ModelUtil.makeGlowingModel('trapezoid');
+      imageContainer.appendChild(topZoid);
+      const bottomZoid = ModelUtil.makeGlowingModel('trapezoid');
+      bottomZoid.setAttribute('rotation', '0 0 180');
+      imageContainer.appendChild(bottomZoid);
+      // const hex = ModelUtil.makeGlowingModel('triggers');
+      // imageContainer.appendChild(hex);
     }
     {
       const o = document.createElement('a-sphere');
