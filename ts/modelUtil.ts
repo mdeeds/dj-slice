@@ -6,7 +6,7 @@ export class ModelUtil {
     result.setAttribute('obj-model',
       `obj: url(obj/${name}.obj); `);
     // `mtl: url(obj/${name}.mtl`)
-    // result.setAttribute('shader', 'flat');
+    result.setAttribute('material', 'shader: flat');
     return result
   }
 }

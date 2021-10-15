@@ -1,4 +1,5 @@
 import * as AFRAME from "aframe";
+import { toNamespacedPath } from "path";
 import { AssetLibrary } from "./assetLibrary";
 import { CollisionDirection, CollisionHandler } from "./collisionHandler";
 import { Debug } from "./debug";
@@ -102,7 +103,6 @@ export class SampleEntity {
       o.setAttribute('transparent', 'true');
       o.setAttribute('shader', 'flat');
       o.setAttribute('position', '0 0 -0.01');
-      this.images[sampleIndex] = o;
       imageContainer.appendChild(o);
     }
     {
@@ -114,18 +114,19 @@ export class SampleEntity {
       o.setAttribute('transparent', 'true');
       o.setAttribute('opacity', '0.5');
       o.setAttribute('shader', 'flat');
-      this.images[sampleIndex] = o;
       imageContainer.appendChild(o);
     }
     {
       const topZoid = ModelUtil.makeGlowingModel('trapezoid');
       imageContainer.appendChild(topZoid);
-      const bottomZoid = ModelUtil.makeGlowingModel('trapezoid');
-      bottomZoid.setAttribute('rotation', '0 0 180');
-      imageContainer.appendChild(bottomZoid);
+
+      // const bottomZoid = ModelUtil.makeGlowingModel('trapezoid');
+      // bottomZoid.setAttribute('rotation', '0 0 180');
+      // imageContainer.appendChild(bottomZoid);
       // const hex = ModelUtil.makeGlowingModel('triggers');
       // imageContainer.appendChild(hex);
     }
+    this.images[sampleIndex] = imageContainer;
     {
       const o = document.createElement('a-sphere');
       // o.setAttribute('segments-radial', '6');
