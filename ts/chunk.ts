@@ -10,8 +10,12 @@ export class BuildingChunk implements Chunk {
   render(container: AFRAME.Entity): void {
     console.log('Render building.');
     const geometry = new AFRAME.THREE.Group();
-    const streetTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x222222 });
-    const buildingTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0xffffff });
+    const streetTex = new AFRAME.THREE.MeshStandardMaterial({
+      color: Math.trunc(Math.random() * 256 * 256 * 256)
+    });
+    const buildingTex = new AFRAME.THREE.MeshStandardMaterial({
+      color: 0xffffff
+    });
 
     const street = new AFRAME.THREE.PlaneGeometry(500, 10)
       .rotateX(-Math.PI / 2);
@@ -37,7 +41,9 @@ export class StreetChunk implements Chunk {
   render(container: AFRAME.Entity): void {
     console.log('Render street.');
     const geometry = new AFRAME.THREE.Group();
-    const streetTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x222222 });
+    const streetTex = new AFRAME.THREE.MeshStandardMaterial({
+      color: Math.trunc(Math.random() * 256 * 256 * 256)
+    });
     const street = new AFRAME.THREE.PlaneGeometry(500, 10)
       .rotateX(-Math.PI / 2);
     const blackStreet = new AFRAME.THREE.Mesh(street, streetTex);
@@ -57,20 +63,28 @@ export class WoodlandChunk implements Chunk {
     geometry.add(brownFloor);
 
     const treeTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x33ff55 });
-    for (let x = -500; x <= 500; x += 5 + Math.random() * 15) {
+    const neonTex = new AFRAME.THREE.MeshBasicMaterial({ color: 0xff33aa });
+    for (let x = -200; x <= 200; x += 15 + Math.random() * 20) {
       const h = Math.random() * 10 + 5;
-      const tree = new AFRAME.THREE.ConeGeometry(
-        /*r=*/0.5 + Math.random(),
-        /*h=*/h,
-        /*radial=*/4,
-        /*vertical=*/1,
-        /*open-ended=*/true).
-        translate(
-          x,
-          h / 2,
-          (Math.random() - 0.5) * 10);
-      const greenTree = new AFRAME.THREE.Mesh(tree, treeTex);
-      geometry.add(greenTree);
+      const theta = 2 * Math.PI * Math.random();
+      const r = 0.5 + Math.random();
+      const z = (Math.random() - 0.5) * 10;
+      {
+        const tree = new AFRAME.THREE.ConeGeometry(
+          r, h, 4, 1, /*open-ended=*/true)
+          .rotateY(theta)
+          .translate(x, h / 2, z);
+        const greenTree = new AFRAME.THREE.Mesh(tree, treeTex);
+        geometry.add(greenTree);
+      }
+      {
+        const tree = new AFRAME.THREE.ConeGeometry(
+          r * 0.9, h - 1, 4, 1, /*open-ended=*/true)
+          .rotateY(theta + Math.PI / 4)
+          .translate(x, h / 2, z);
+        const greenTree = new AFRAME.THREE.Mesh(tree, neonTex);
+        geometry.add(greenTree);
+      }
     }
     container.object3D = geometry;
   }
