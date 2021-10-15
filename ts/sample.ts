@@ -14,7 +14,6 @@ export class Sample {
     this.buffer = await this.getData();
   }
 
-  private static numDecoded = 0;
   async getData(): Promise<AudioBuffer> {
     const request = new XMLHttpRequest();
     request.open('GET', this.url, true);
@@ -23,7 +22,6 @@ export class Sample {
       request.onload = () => {
         const audioData = request.response;
         Common.audioContext().decodeAudioData(audioData, function (buffer) {
-          Debug.set(`Decoded ${++(Sample.numDecoded)}`)
           resolve(buffer);
         }, function (err) {
           Debug.set(`Failed to decode ${this.url}`);
