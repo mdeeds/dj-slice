@@ -66,6 +66,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const AFRAME = __importStar(__webpack_require__(449));
 const assetLibrary_1 = __webpack_require__(673);
+const chunk_1 = __webpack_require__(457);
+const chunkSeries_1 = __webpack_require__(308);
 const collisionHandler_1 = __webpack_require__(44);
 const debug_1 = __webpack_require__(756);
 const gameTime_1 = __webpack_require__(669);
@@ -73,94 +75,6 @@ const robot_1 = __webpack_require__(607);
 const sampleEntity_1 = __webpack_require__(480);
 const samplePack_1 = __webpack_require__(780);
 var player = null;
-function addBuilding(x, z, scene) {
-    const box = document.createElement('a-box');
-    box.setAttribute('width', 15);
-    box.setAttribute('depth', 15);
-    const h = Math.random() * 50 + 20;
-    box.setAttribute('height', h);
-    box.setAttribute('position', `${x} ${h / 2} ${z}`);
-    scene.appendChild(box);
-}
-// Building the scene out of entities at least doubles the rendering cost.
-function buildEntityWoodland() {
-    const kTreesPerMeter = 0.01;
-    const kForestSize = 700;
-    const kNumTrees = kForestSize * kForestSize * kTreesPerMeter;
-    const forest = document.createElement('a-entity');
-    for (let i = 0; i < kNumTrees; ++i) {
-        const h = Math.random() * 10 + 5;
-        const tree = document.createElement('a-cone');
-        tree.setAttribute('radius', 0.5 + Math.random());
-        tree.setAttribute('height', h);
-        tree.setAttribute('segments-radial', 4);
-        tree.setAttribute('segments-height', 1);
-        tree.setAttribute('open-ended', 'true');
-        tree.setAttribute('color', '#3f5');
-        tree.setAttribute('position', `${(Math.random() - 0.5) * kForestSize} ${h / 2} ${(Math.random() - 0.5) * kForestSize}`);
-        forest.appendChild(tree);
-    }
-    document.querySelector('a-scene').appendChild(forest);
-}
-function buildWoodland() {
-    const kTreesPerMeter = 0.002;
-    const kForestSize = 700;
-    const kNumTrees = kForestSize * kForestSize * kTreesPerMeter;
-    const forest = document.createElement('a-entity');
-    const geometry = new AFRAME.THREE.Group();
-    const treeTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x33ff55 });
-    for (let i = 0; i < kNumTrees; ++i) {
-        const h = Math.random() * 10 + 5;
-        const tree = new AFRAME.THREE.ConeGeometry(
-        /*r=*/ 0.5 + Math.random(), 
-        /*h=*/ h, 
-        /*radial=*/ 4, 
-        /*vertical=*/ 1, 
-        /*open-ended=*/ true).
-            translate((Math.random() - 0.5) * kForestSize, h / 2, (Math.random() - 0.5) * kForestSize);
-        const greenTree = new AFRAME.THREE.Mesh(tree, treeTex);
-        geometry.add(greenTree);
-    }
-    forest.object3D = geometry;
-    document.querySelector('a-scene').appendChild(forest);
-}
-function buildValley() {
-    const kValleySize = 800;
-    const valley = document.createElement('a-entity');
-    const geometry = new AFRAME.THREE.Group();
-    const hillTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x4422cc });
-    const floor = new AFRAME.THREE.BoxGeometry(2000, 2000)
-        .rotateX(-Math.PI / 2);
-    const blueFloor = new AFRAME.THREE.Mesh(floor, hillTex);
-    geometry.add(blueFloor);
-    for (let z = -kValleySize / 2; z < kValleySize / 2; z += 30 + Math.random() * 70) {
-        {
-            const w = Math.random() * 300 + 200;
-            const hill = new AFRAME.THREE.BoxGeometry(10, w, w)
-                .rotateX(-Math.PI / 4 + (Math.random() - 0.5) * 0.1)
-                .rotateZ(-Math.PI / 4 + Math.random() * 0.2)
-                .translate(10 + Math.random() * 10, 0, z);
-            const blueHill = new AFRAME.THREE.Mesh(hill, hillTex);
-            geometry.add(blueHill);
-        }
-        {
-            const w = Math.random() * 50 + 100;
-            const hill = new AFRAME.THREE.BoxGeometry(10, w, w)
-                .rotateX(-Math.PI / 4 + (Math.random() - 0.5) * 0.1)
-                .rotateZ(Math.PI / 4 - Math.random() * 0.2)
-                .translate(-10 - Math.random() * 10, 0, z);
-            const blueHill = new AFRAME.THREE.Mesh(hill, hillTex);
-            geometry.add(blueHill);
-        }
-    }
-    valley.object3D = geometry;
-    document.querySelector('a-scene').appendChild(valley);
-}
-function buildScene() {
-    // <a-entity obj-model="obj: url(obj/city.obj); mtl: url(obj/city.mtl)" rotation="0 180 0"></a-entity>
-    // buildWoodland();
-    buildValley();
-}
 function makeBalloon(player) {
     const baloon = document.createElement('a-sphere');
     baloon.setAttribute('color', 'purple');
@@ -208,13 +122,35 @@ var rightStick = null;
 var collisionHandler = null;
 var robot = null;
 var tickers = [];
+var chunkSeries;
 var totalElapsed = 0;
 var numTicks = 0;
+function chunkFactory(i) {
+    if (i > -30) {
+        if (i % 7 === 0) {
+            return new chunk_1.MountainChunk();
+        }
+        else {
+            return new chunk_1.StreetChunk();
+        }
+    }
+    else if (i > -50) {
+        return new chunk_1.WoodlandChunk();
+    }
+    else {
+        if (i % 5 === 0) {
+            return new chunk_1.StreetChunk();
+        }
+        else {
+            return new chunk_1.BuildingChunk();
+        }
+    }
+}
 AFRAME.registerComponent("go", {
     init: function () {
         return __awaiter(this, void 0, void 0, function* () {
             const scene = document.querySelector('a-scene');
-            buildScene();
+            chunkSeries = new chunkSeries_1.ChunkSeries(chunkFactory, 300, scene);
             player = document.querySelector('#player');
             makeBalloon(player);
             const assets = document.querySelector('a-assets');
@@ -252,6 +188,7 @@ AFRAME.registerComponent("go", {
         const r = 0.5 * (1 - Math.cos(Math.PI * p)) * 2000; // glide 2km
         const playerPos = player.object3D.position;
         playerPos.set(0, h, -r);
+        chunkSeries.setPosition(-r);
         for (const ticker of tickers) {
             ticker.tick(timeMs, timeDeltaMs);
         }
@@ -268,10 +205,10 @@ AFRAME.registerComponent("go", {
 const body = document.getElementsByTagName('body')[0];
 body.innerHTML = `
 <a-scene go="1" 
-  fog="type: linear; color: #112; near: 2; far: 300"
+  fog="type: linear; color: #112; near: 20; far: 300"
   background="black" transparent="false" cursor="rayOrigin: mouse" stats>
-<a-assets>
-</a-assets>
+  <a-assets>
+  </a-assets>
 
 <a-sky color="#112" radius=3000></a-sky>
 <a-entity light="type: ambient; color: #222"></a-entity>
@@ -293,6 +230,192 @@ body.innerHTML = `
 </a-scene>
 `;
 //# sourceMappingURL=baloon.js.map
+
+/***/ }),
+
+/***/ 457:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MountainChunk = exports.WoodlandChunk = exports.StreetChunk = exports.BuildingChunk = void 0;
+const AFRAME = __importStar(__webpack_require__(449));
+class BuildingChunk {
+    render(container) {
+        console.log('Render building.');
+        const geometry = new AFRAME.THREE.Group();
+        const streetTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x222222 });
+        const buildingTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0xffffff });
+        const street = new AFRAME.THREE.PlaneGeometry(500, 10)
+            .rotateX(-Math.PI / 2);
+        const blackStreet = new AFRAME.THREE.Mesh(street, streetTex);
+        geometry.add(blackStreet);
+        for (let x = -200; x <= 200; x += 40) {
+            if (Math.abs(x) < 100) {
+                continue;
+            }
+            const h = Math.random() * 50 + 30;
+            const building = new AFRAME.THREE.BoxGeometry(30, h, 9)
+                .translate(x, h / 2, 0);
+            const whiteBuilding = new AFRAME.THREE.Mesh(building, buildingTex);
+            geometry.add(whiteBuilding);
+        }
+        container.object3D = geometry;
+    }
+}
+exports.BuildingChunk = BuildingChunk;
+class StreetChunk {
+    render(container) {
+        console.log('Render street.');
+        const geometry = new AFRAME.THREE.Group();
+        const streetTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x222222 });
+        const street = new AFRAME.THREE.PlaneGeometry(500, 10)
+            .rotateX(-Math.PI / 2);
+        const blackStreet = new AFRAME.THREE.Mesh(street, streetTex);
+        geometry.add(blackStreet);
+        container.object3D = geometry;
+    }
+}
+exports.StreetChunk = StreetChunk;
+class WoodlandChunk {
+    render(container) {
+        console.log('Render woodland.');
+        const geometry = new AFRAME.THREE.Group();
+        const floorTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x443311 });
+        const floor = new AFRAME.THREE.PlaneGeometry(500, 10)
+            .rotateX(-Math.PI / 2);
+        const brownFloor = new AFRAME.THREE.Mesh(floor, floorTex);
+        geometry.add(brownFloor);
+        const treeTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x33ff55 });
+        for (let x = -500; x <= 500; x += 5 + Math.random() * 15) {
+            const h = Math.random() * 10 + 5;
+            const tree = new AFRAME.THREE.ConeGeometry(
+            /*r=*/ 0.5 + Math.random(), 
+            /*h=*/ h, 
+            /*radial=*/ 4, 
+            /*vertical=*/ 1, 
+            /*open-ended=*/ true).
+                translate(x, h / 2, (Math.random() - 0.5) * 10);
+            const greenTree = new AFRAME.THREE.Mesh(tree, treeTex);
+            geometry.add(greenTree);
+        }
+        container.object3D = geometry;
+    }
+}
+exports.WoodlandChunk = WoodlandChunk;
+class MountainChunk {
+    constructor() { }
+    mountain(hillTex, sign) {
+        const w = Math.random() * 100 + 100;
+        const hill = new AFRAME.THREE.BoxGeometry(10, w, w)
+            .rotateX(Math.PI / 4 + (Math.random() - 0.5) * 0.1)
+            .rotateZ(-sign * (Math.PI / 4 + Math.random() * 0.2))
+            .translate(sign * (10 + Math.random() * 10), 0, 0);
+        const blueHill = new AFRAME.THREE.Mesh(hill, hillTex);
+        return blueHill;
+    }
+    render(container) {
+        console.log('Render mountain.');
+        const geometry = new AFRAME.THREE.Group();
+        const hillTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x4422cc });
+        const floor = new AFRAME.THREE.PlaneGeometry(500, 10)
+            .rotateX(-Math.PI / 2);
+        const blueFloor = new AFRAME.THREE.Mesh(floor, hillTex);
+        geometry.add(blueFloor);
+        geometry.add(this.mountain(hillTex, 1));
+        geometry.add(this.mountain(hillTex, -1));
+        container.object3D = geometry;
+    }
+}
+exports.MountainChunk = MountainChunk;
+//# sourceMappingURL=chunk.js.map
+
+/***/ }),
+
+/***/ 308:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ChunkSeries = void 0;
+class ChunkInSlot {
+    constructor(i, chunk) {
+        this.i = i;
+        this.chunk = chunk;
+    }
+}
+class ChunkSeries {
+    constructor(factory, radius, scene) {
+        this.factory = factory;
+        this.radius = radius;
+        this.scene = scene;
+        this.chunks = new Set();
+        this.minIndex = 0;
+        this.maxIndex = 0;
+        this.previousPosition = -1;
+        this.pushChunk(0);
+        this.setPosition(0);
+    }
+    pushChunk(i) {
+        const entity = document.createElement('a-entity');
+        entity.setAttribute('position', `0 0 ${i * 10}`);
+        const chunk = this.factory(i);
+        chunk.render(entity);
+        this.scene.appendChild(entity);
+        this.chunks.add(new ChunkInSlot(i, entity));
+    }
+    setPosition(z) {
+        const i = Math.round(z / 10);
+        if (i === this.previousPosition) {
+            return;
+        }
+        this.previousPosition = i;
+        const firstIndex = Math.round((z - this.radius) / 10);
+        const lastIndex = Math.round((z + this.radius) / 10);
+        const chunksToDelete = [];
+        for (const c of this.chunks) {
+            if (c.i < firstIndex || c.i > lastIndex) {
+                chunksToDelete.push(c);
+            }
+        }
+        for (const c of chunksToDelete) {
+            console.log('Removing chunk...');
+            c.chunk.remove();
+            this.chunks.delete(c);
+        }
+        while (this.minIndex > firstIndex) {
+            --this.minIndex;
+            this.pushChunk(this.minIndex);
+        }
+        while (this.maxIndex < lastIndex) {
+            ++this.maxIndex;
+            this.pushChunk(this.maxIndex);
+        }
+    }
+}
+exports.ChunkSeries = ChunkSeries;
+//# sourceMappingURL=chunkSeries.js.map
 
 /***/ }),
 
