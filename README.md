@@ -19,6 +19,7 @@ npm install -D fft-js
 npm install -D webpack
 npm install -D html-webpack-plugin
 npm install -D aframe
+npm install -D tone
 ```
 
 
