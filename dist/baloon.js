@@ -1200,26 +1200,46 @@ const Tone = __importStar(__webpack_require__(784));
 class ToneEntity {
     constructor(container, collisionHandler, leftStick, rightStick) {
         this.container = container;
+        this.collisionHandler = collisionHandler;
+        this.leftStick = leftStick;
+        this.rightStick = rightStick;
         this.synth = new Tone.Synth().toDestination();
         const notes = ['F4', 'G4', 'A4', 'Bb4', 'C5', 'D5', 'E5', 'F5'];
+        this.layoutDiamond(notes);
+    }
+    makeKey(n) {
+        const hitHandler = (direction) => {
+            this.synth.triggerAttackRelease(n, "8n");
+        };
+        const o = document.createElement('a-sphere');
+        o.setAttribute('radius', '0.05');
+        o.setAttribute('segments-width', '8');
+        o.setAttribute('segments-height', '2');
+        o.setAttribute('metalness', '0.5');
+        o.setAttribute('roughness', '0.3');
+        o.setAttribute('rotation', '30 0 0');
+        this.collisionHandler.addPair(o, this.leftStick, 0.05, hitHandler);
+        this.collisionHandler.addPair(o, this.rightStick, 0.05, hitHandler);
+        this.container.appendChild(o);
+        return o;
+    }
+    layoutHorizontal(notes) {
         const kStride = 0.12;
         let x = -kStride * (notes.length - 1) / 2;
         for (const n of notes) {
-            const o = document.createElement('a-sphere');
-            o.setAttribute('radius', '0.05');
-            o.setAttribute('segments-width', '8');
-            o.setAttribute('segments-height', '2');
-            o.setAttribute('metalness', '0.5');
-            o.setAttribute('roughness', '0.3');
-            o.setAttribute('position', `${x} 0 0`);
-            const hitHandler = (direction) => {
-                this.synth.triggerAttackRelease(n, "8n");
-            };
-            collisionHandler.addPair(o, leftStick, 0.05, hitHandler);
-            collisionHandler.addPair(o, rightStick, 0.05, hitHandler);
-            container.appendChild(o);
+            this.makeKey(n).setAttribute('position', `${x} 0 0`);
             x += kStride;
         }
+    }
+    layoutDiamond(notes) {
+        this.makeKey(notes[0]).setAttribute('position', `0 0.3 0`);
+        this.makeKey(notes[1]).setAttribute('position', `-0.1 0.2 0`);
+        this.makeKey(notes[2]).setAttribute('position', `0.1 0.2 0`);
+        this.makeKey(notes[3]).setAttribute('position', `-0.2 0.1 0`);
+        this.makeKey(notes[4]).setAttribute('position', `0 0.1 0`);
+        this.makeKey(notes[5]).setAttribute('position', `0.2 0.1 0`);
+        this.makeKey(notes[6]).setAttribute('position', `0.1 0.0 0`);
+        this.makeKey(notes[7]).setAttribute('position', `-0.1 0.0 0`);
     }
 }
 exports.ToneEntity = ToneEntity;

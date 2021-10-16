@@ -129,7 +129,6 @@ export class OrchardChunk implements Chunk {
   }
 }
 
-
 export class MountainChunk implements Chunk {
   constructor() { }
   private mountain(hillTex: any, sign: number): any {
