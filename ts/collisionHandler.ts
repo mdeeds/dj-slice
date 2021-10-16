@@ -9,7 +9,8 @@ class CollisionPair implements Ticker {
     private a: AFRAME.Entity,
     private b: AFRAME.Entity,
     private r: number,
-    private f: CollisionCallback) {
+    private f: CollisionCallback,
+    private g: CollisionCallback) {
   }
   private aPos = new AFRAME.THREE.Vector3();
   private bPos = new AFRAME.THREE.Vector3();
@@ -23,7 +24,10 @@ class CollisionPair implements Ticker {
         this.isColliding = true;
         this.f(this.aPos.y < 0 ? 'down' : 'up');
       }
-    } else {
+    } else if (this.isColliding) {
+      if (!!this.g) {
+        this.g(this.aPos.y < 0 ? 'up' : 'down');
+      }
       this.isColliding = false;
     }
   }
@@ -33,8 +37,9 @@ export class CollisionHandler implements Ticker {
   private pairs: CollisionPair[] = [];
   constructor() { }
 
-  addPair(a: AFRAME.Entity, b: AFRAME.Entity, r: number, f: CollisionCallback) {
-    this.pairs.push(new CollisionPair(a, b, r, f));
+  addPair(a: AFRAME.Entity, b: AFRAME.Entity, r: number,
+    f: CollisionCallback, g: CollisionCallback = null) {
+    this.pairs.push(new CollisionPair(a, b, r, f, g));
   }
 
   tick(timeMs: number, timeDeltaMs: number) {

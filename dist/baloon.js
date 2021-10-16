@@ -520,11 +520,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CollisionHandler = void 0;
 const AFRAME = __importStar(__webpack_require__(449));
 class CollisionPair {
-    constructor(a, b, r, f) {
+    constructor(a, b, r, f, g) {
         this.a = a;
         this.b = b;
         this.r = r;
         this.f = f;
+        this.g = g;
         this.aPos = new AFRAME.THREE.Vector3();
         this.bPos = new AFRAME.THREE.Vector3();
         this.isColliding = false;
@@ -539,7 +540,10 @@ class CollisionPair {
                 this.f(this.aPos.y < 0 ? 'down' : 'up');
             }
         }
-        else {
+        else if (this.isColliding) {
+            if (!!this.g) {
+                this.g(this.aPos.y < 0 ? 'up' : 'down');
+            }
             this.isColliding = false;
         }
     }
@@ -548,8 +552,8 @@ class CollisionHandler {
     constructor() {
         this.pairs = [];
     }
-    addPair(a, b, r, f) {
-        this.pairs.push(new CollisionPair(a, b, r, f));
+    addPair(a, b, r, f, g = null) {
+        this.pairs.push(new CollisionPair(a, b, r, f, g));
     }
     tick(timeMs, timeDeltaMs) {
         for (const p of this.pairs) {
@@ -1203,23 +1207,27 @@ class ToneEntity {
         this.collisionHandler = collisionHandler;
         this.leftStick = leftStick;
         this.rightStick = rightStick;
-        this.synth = new Tone.Synth().toDestination();
-        const notes = ['F4', 'G4', 'A4', 'Bb4', 'C5', 'D5', 'E5', 'F5'];
+        const dist = new Tone.Distortion(0.02).toDestination();
+        this.synth = new Tone.PolySynth(Tone.AMSynth).connect(dist);
+        const notes = ['F3', 'G3', 'A3', 'Bb3', 'C4', 'D4', 'E4', 'F4'];
         this.layoutDiamond(notes);
     }
-    makeKey(n) {
+    makeKey(n, r = 0.05) {
         const hitHandler = (direction) => {
-            this.synth.triggerAttackRelease(n, "8n");
+            this.synth.triggerAttack(n);
+        };
+        const releaseHandler = (direction) => {
+            this.synth.triggerRelease(n);
         };
         const o = document.createElement('a-sphere');
-        o.setAttribute('radius', '0.05');
+        o.setAttribute('radius', `${r}`);
         o.setAttribute('segments-width', '8');
         o.setAttribute('segments-height', '2');
         o.setAttribute('metalness', '0.5');
         o.setAttribute('roughness', '0.3');
         o.setAttribute('rotation', '30 0 0');
-        this.collisionHandler.addPair(o, this.leftStick, 0.05, hitHandler);
-        this.collisionHandler.addPair(o, this.rightStick, 0.05, hitHandler);
+        this.collisionHandler.addPair(o, this.leftStick, 0.05, hitHandler, releaseHandler);
+        this.collisionHandler.addPair(o, this.rightStick, 0.05, hitHandler, releaseHandler);
         this.container.appendChild(o);
         return o;
     }
@@ -1235,11 +1243,11 @@ class ToneEntity {
         this.makeKey(notes[0]).setAttribute('position', `0 0.3 0`);
         this.makeKey(notes[1]).setAttribute('position', `-0.1 0.2 0`);
         this.makeKey(notes[2]).setAttribute('position', `0.1 0.2 0`);
-        this.makeKey(notes[3]).setAttribute('position', `-0.2 0.1 0`);
+        this.makeKey(notes[3], 0.04).setAttribute('position', `-0.2 0.1 0`);
         this.makeKey(notes[4]).setAttribute('position', `0 0.1 0`);
         this.makeKey(notes[5]).setAttribute('position', `0.2 0.1 0`);
-        this.makeKey(notes[6]).setAttribute('position', `0.1 0.0 0`);
-        this.makeKey(notes[7]).setAttribute('position', `-0.1 0.0 0`);
+        this.makeKey(notes[6], 0.04).setAttribute('position', `-0.1 0.0 0`);
+        this.makeKey(notes[7]).setAttribute('position', `0.1 0.0 0`);
     }
 }
 exports.ToneEntity = ToneEntity;

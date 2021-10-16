@@ -3,29 +3,55 @@ import * as Tone from "tone";
 import { CollisionCallback, CollisionDirection, CollisionHandler } from "./collisionHandler";
 
 export class ToneEntity {
-  private synth: Tone.Synth;
+  private synth: Tone.PolySynth;
   constructor(private container: AFRAME.Entity,
     private collisionHandler: CollisionHandler,
     private leftStick: AFRAME.Entity, private rightStick: AFRAME.Entity) {
-    this.synth = new Tone.Synth().toDestination();
+    const dist = new Tone.Distortion(0.02).toDestination();
+    this.synth = new Tone.PolySynth().connect(dist);
+    this.synth.set({
+      "volume": 0,
+      "detune": 0,
+      "portamento": 0,
+      "oscillator": {
+        "phase": 0,
+        "type": "fatsawtooth",
+        "count": 3,
+        "spread": 20
+      },
+      "envelope": {
+        "attack": 0.04,
+        "attackCurve": "linear",
+        "decay": 0.3,
+        "decayCurve": "linear",
+        "release": 0.5,
+        "releaseCurve": "linear",
+        "sustain": 0.2
+      },
+    });
 
-    const notes = ['F4', 'G4', 'A4', 'Bb4', 'C5', 'D5', 'E5', 'F5'];
+    const notes = ['F3', 'G3', 'A3', 'Bb3', 'C4', 'D4', 'E4', 'F4'];
     this.layoutDiamond(notes);
   }
 
-  makeKey(n: string): AFRAME.Entity {
+  makeKey(n: string, r = 0.05): AFRAME.Entity {
     const hitHandler = (direction: CollisionDirection) => {
-      this.synth.triggerAttackRelease(n, "8n");
+      this.synth.triggerAttack(n);
+    };
+    const releaseHandler = (direction: CollisionDirection) => {
+      this.synth.triggerRelease(n);
     };
     const o = document.createElement('a-sphere');
-    o.setAttribute('radius', '0.05');
+    o.setAttribute('radius', `${r}`);
     o.setAttribute('segments-width', '8');
     o.setAttribute('segments-height', '2');
     o.setAttribute('metalness', '0.5');
     o.setAttribute('roughness', '0.3');
     o.setAttribute('rotation', '30 0 0')
-    this.collisionHandler.addPair(o, this.leftStick, 0.05, hitHandler);
-    this.collisionHandler.addPair(o, this.rightStick, 0.05, hitHandler);
+    this.collisionHandler.addPair(o, this.leftStick, 0.05,
+      hitHandler, releaseHandler);
+    this.collisionHandler.addPair(o, this.rightStick, 0.05,
+      hitHandler, releaseHandler);
     this.container.appendChild(o);
     return o;
   }
@@ -45,12 +71,12 @@ export class ToneEntity {
     this.makeKey(notes[1]).setAttribute('position', `-0.1 0.2 0`);
     this.makeKey(notes[2]).setAttribute('position', `0.1 0.2 0`);
 
-    this.makeKey(notes[3]).setAttribute('position', `-0.2 0.1 0`);
+    this.makeKey(notes[3], 0.04).setAttribute('position', `-0.2 0.1 0`);
     this.makeKey(notes[4]).setAttribute('position', `0 0.1 0`);
     this.makeKey(notes[5]).setAttribute('position', `0.2 0.1 0`);
 
-    this.makeKey(notes[6]).setAttribute('position', `0.1 0.0 0`);
-    this.makeKey(notes[7]).setAttribute('position', `-0.1 0.0 0`);
+    this.makeKey(notes[6], 0.04).setAttribute('position', `-0.1 0.0 0`);
+    this.makeKey(notes[7]).setAttribute('position', `0.1 0.0 0`);
   }
 
 }
