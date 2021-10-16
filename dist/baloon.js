@@ -182,7 +182,7 @@ AFRAME.registerComponent("go", {
                 const container = document.createElement('a-entity');
                 const x = 0.7 * Math.sin(theta);
                 const z = -0.7 * Math.cos(theta);
-                container.setAttribute('position', `${x} 1.2 ${z}`);
+                container.setAttribute('position', `${x} 1.3 ${z}`);
                 container.setAttribute('rotation', `0 ${-180 / Math.PI * theta} 0`);
                 const sampleEntity = new sampleEntity_1.SampleEntity(track, container, collisionHandler, leftStick, rightStick, gameTime, assetLibrary);
                 player.appendChild(container);
@@ -330,10 +330,10 @@ class WoodlandChunk {
             .rotateX(-Math.PI / 2);
         const brownFloor = new AFRAME.THREE.Mesh(floor, floorTex);
         geometry.add(brownFloor);
-        for (let x = -200; x <= 200; x += 15 + Math.random() * 20) {
+        for (let x = -200; x <= 200; x += 35 + Math.random() * 20) {
             const h = Math.random() * 10 + 5;
             const theta = 2 * Math.PI * Math.random();
-            const r = 0.5 + Math.random();
+            const r = 0.5 + 2 * Math.random();
             const z = (Math.random() - 0.5) * 10;
             {
                 const tree = new AFRAME.THREE.ConeGeometry(r, h, 3, 1, /*open-ended=*/ true)
@@ -1158,17 +1158,21 @@ class ToneEntity {
         this.container = container;
         this.synth = new Tone.Synth().toDestination();
         const notes = ['F4', 'G4', 'A4', 'Bb4', 'C5', 'D5', 'E5', 'F5'];
-        const kStride = 0.2;
+        const kStride = 0.12;
         let x = -kStride * (notes.length - 1) / 2;
         for (const n of notes) {
             const o = document.createElement('a-sphere');
-            o.setAttribute('radius', '0.06');
+            o.setAttribute('radius', '0.05');
+            o.setAttribute('segments-width', '8');
+            o.setAttribute('segments-height', '2');
+            o.setAttribute('metalness', '0.5');
+            o.setAttribute('roughness', '0.3');
             o.setAttribute('position', `${x} 0 0`);
             const hitHandler = (direction) => {
                 this.synth.triggerAttackRelease(n, "8n");
             };
-            collisionHandler.addPair(o, leftStick, 0.06, hitHandler);
-            collisionHandler.addPair(o, rightStick, 0.06, hitHandler);
+            collisionHandler.addPair(o, leftStick, 0.05, hitHandler);
+            collisionHandler.addPair(o, rightStick, 0.05, hitHandler);
             container.appendChild(o);
             x += kStride;
         }

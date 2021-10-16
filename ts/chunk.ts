@@ -74,10 +74,10 @@ export class WoodlandChunk implements Chunk {
     const brownFloor = new AFRAME.THREE.Mesh(floor, floorTex);
     geometry.add(brownFloor);
 
-    for (let x = -200; x <= 200; x += 15 + Math.random() * 20) {
+    for (let x = -200; x <= 200; x += 35 + Math.random() * 20) {
       const h = Math.random() * 10 + 5;
       const theta = 2 * Math.PI * Math.random();
-      const r = 0.5 + Math.random();
+      const r = 0.5 + 2 * Math.random();
       const z = (Math.random() - 0.5) * 10;
       {
         const tree = new AFRAME.THREE.ConeGeometry(

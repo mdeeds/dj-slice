@@ -129,7 +129,7 @@ AFRAME.registerComponent("go", {
       const container = document.createElement('a-entity');
       const x = 0.7 * Math.sin(theta);
       const z = -0.7 * Math.cos(theta);
-      container.setAttribute('position', `${x} 1.2 ${z}`);
+      container.setAttribute('position', `${x} 1.3 ${z}`);
       container.setAttribute('rotation', `0 ${-180 / Math.PI * theta} 0`);
       const sampleEntity = new SampleEntity(
         track, container, collisionHandler, leftStick, rightStick,
