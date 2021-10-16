@@ -128,7 +128,10 @@ var totalElapsed = 0;
 var numTicks = 0;
 function chunkFactoryFactory(gameTime) {
     return (i) => {
-        if (i > -30) {
+        if (i > -10) {
+            return new chunk_1.OrchardChunk();
+        }
+        else if (i > -30) {
             if (i % 7 === 0) {
                 return new chunk_1.MountainChunk();
             }
@@ -137,7 +140,7 @@ function chunkFactoryFactory(gameTime) {
             }
         }
         else if (i > -50) {
-            return new chunk_1.WoodlandChunk(gameTime);
+            return new chunk_1.WoodlandChunk();
         }
         else {
             if (i % 5 === 0) {
@@ -188,8 +191,18 @@ AFRAME.registerComponent("go", {
                 player.appendChild(container);
                 theta += Math.PI * 2 / 12;
             }
-            robot = new robot_1.Robot(document.querySelector('#camera'), document.querySelector('#leftHand'), document.querySelector('#rightHand'), document.querySelector('#robot'), gameTime);
+            const camera = document.querySelector('#camera');
+            robot = new robot_1.Robot(camera, document.querySelector('#leftHand'), document.querySelector('#rightHand'), document.querySelector('#robot'), gameTime);
             tickers.push(robot);
+            camera.object3D.layers.set(3);
+            gameTime.addBeatCallback((ts) => {
+                if (ts.beatInt % 2 === 0) {
+                    camera.object3D.layers.set(3);
+                }
+                else {
+                    camera.object3D.layers.set(1);
+                }
+            });
         });
     },
     tick: function (timeMs, timeDeltaMs) {
@@ -268,7 +281,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.MountainChunk = exports.WoodlandChunk = exports.StreetChunk = exports.BuildingChunk = void 0;
+exports.MountainChunk = exports.OrchardChunk = exports.WoodlandChunk = exports.StreetChunk = exports.BuildingChunk = void 0;
 const AFRAME = __importStar(__webpack_require__(449));
 class BuildingChunk {
     render(container) {
@@ -312,16 +325,9 @@ class StreetChunk {
 }
 exports.StreetChunk = StreetChunk;
 class WoodlandChunk {
-    constructor(gameTime) {
+    constructor() {
         this.treeTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x33ff55 });
         this.neonTex = new AFRAME.THREE.MeshBasicMaterial({ color: 0xff33aa });
-        this.lights = [];
-        gameTime.addBeatCallback((ts) => {
-            const transparent = (ts.beatInt % 2 === 0);
-            for (const l of this.lights) {
-                l.material.transparent = transparent;
-            }
-        });
     }
     render(container) {
         const geometry = new AFRAME.THREE.Group();
@@ -346,14 +352,52 @@ class WoodlandChunk {
                 const tree = new AFRAME.THREE.ConeGeometry(r * 0.9, h - 1, 3, 1, /*open-ended=*/ true)
                     .rotateY(theta + Math.PI / 4)
                     .translate(x, h / 2, z);
-                const greenTree = new AFRAME.THREE.Mesh(tree, this.neonTex);
-                geometry.add(greenTree);
+                const neonTree = new AFRAME.THREE.Mesh(tree, this.neonTex);
+                neonTree.layers.set(2);
+                geometry.add(neonTree);
             }
         }
         container.object3D = geometry;
     }
 }
 exports.WoodlandChunk = WoodlandChunk;
+class OrchardChunk {
+    constructor() {
+        this.treeTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x33ff55 });
+        this.neonTex = new AFRAME.THREE.MeshBasicMaterial({ color: 0xff33aa });
+    }
+    render(container) {
+        const geometry = new AFRAME.THREE.Group();
+        const floorTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x443311 });
+        const floor = new AFRAME.THREE.PlaneGeometry(500, 10)
+            .rotateX(-Math.PI / 2);
+        const brownFloor = new AFRAME.THREE.Mesh(floor, floorTex);
+        geometry.add(brownFloor);
+        for (let x = -200; x <= 200; x += 35 + Math.random() * 20) {
+            const h = Math.random() * 2 + 3;
+            const theta = 2 * Math.PI * Math.random();
+            const r = 3 + 2 * Math.random();
+            const z = (Math.random() - 0.5) * 10;
+            {
+                const tree = new AFRAME.THREE.BoxGeometry(r, r, r)
+                    .rotateY(theta)
+                    .translate(x, h, z);
+                const greenTree = new AFRAME.THREE.Mesh(tree, this.treeTex);
+                geometry.add(greenTree);
+            }
+            {
+                const tree = new AFRAME.THREE.BoxGeometry(0.1, h, 0.1)
+                    .rotateY(theta + Math.PI / 4)
+                    .translate(x, h / 2, z);
+                const neonTree = new AFRAME.THREE.Mesh(tree, this.neonTex);
+                // neonTree.layers.set(1);
+                geometry.add(neonTree);
+            }
+        }
+        container.object3D = geometry;
+    }
+}
+exports.OrchardChunk = OrchardChunk;
 class MountainChunk {
     constructor() { }
     mountain(hillTex, sign) {

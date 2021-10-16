@@ -1,11 +1,11 @@
 import * as AFRAME from "aframe";
 
 import { AssetLibrary } from "./assetLibrary";
-import { Chunk, MountainChunk, WoodlandChunk, StreetChunk, BuildingChunk } from "./chunk";
+import { Chunk, MountainChunk, WoodlandChunk, StreetChunk, BuildingChunk, OrchardChunk } from "./chunk";
 import { ChunkSeries } from "./chunkSeries";
 import { CollisionHandler } from "./collisionHandler";
 import { Debug } from "./debug";
-import { GameTime } from "./gameTime";
+import { GameTime, TimeSummary } from "./gameTime";
 import { Robot } from "./robot";
 import { SampleEntity } from "./sampleEntity";
 import { SamplePack } from "./samplePack";
@@ -73,14 +73,16 @@ var numTicks = 0;
 
 function chunkFactoryFactory(gameTime: GameTime) {
   return (i: number): Chunk => {
-    if (i > -30) {
+    if (i > -10) {
+      return new OrchardChunk();
+    } else if (i > -30) {
       if (i % 7 === 0) {
         return new MountainChunk();
       } else {
         return new StreetChunk();
       }
     } else if (i > -50) {
-      return new WoodlandChunk(gameTime);
+      return new WoodlandChunk();
     } else {
       if (i % 5 === 0) {
         return new StreetChunk();
@@ -137,12 +139,22 @@ AFRAME.registerComponent("go", {
       player.appendChild(container);
       theta += Math.PI * 2 / 12;
     }
-    robot = new Robot(document.querySelector('#camera'),
+    const camera = document.querySelector('#camera');
+    robot = new Robot(camera,
       document.querySelector('#leftHand'),
       document.querySelector('#rightHand'),
       document.querySelector('#robot'),
       gameTime);
     tickers.push(robot);
+
+    camera.object3D.layers.set(3);
+    gameTime.addBeatCallback((ts: TimeSummary) => {
+      if (ts.beatInt % 2 === 0) {
+        camera.object3D.layers.set(3);
+      } else {
+        camera.object3D.layers.set(1);
+      }
+    })
   },
   tick: function (timeMs, timeDeltaMs) {
     const p = (timeMs / 1000 / 60 / 3) % 1; // percentage of three minutes
