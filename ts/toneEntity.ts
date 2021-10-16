@@ -9,7 +9,7 @@ export class ToneEntity {
     leftStick: AFRAME.Entity, rightStick: AFRAME.Entity) {
     this.synth = new Tone.Synth().toDestination();
 
-    const notes = ['F4', 'G4', 'A4', 'Bb4', 'C4', 'D4', 'E4', 'F4'];
+    const notes = ['F4', 'G4', 'A4', 'Bb4', 'C5', 'D5', 'E5', 'F5'];
     const kStride = 0.2;
     let x = -kStride * (notes.length - 1) / 2;
     for (const n of notes) {
