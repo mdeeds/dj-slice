@@ -1,34 +1,15 @@
 import * as AFRAME from "aframe";
 import * as Tone from "tone";
-import { CollisionCallback, CollisionDirection, CollisionHandler } from "./collisionHandler";
+import { CollisionDirection, CollisionHandler } from "./collisionHandler";
+import { Positron, PositronConfig } from "./positron";
 
 export class ToneEntity {
-  private synth: Tone.PolySynth;
+  private synth: Positron;
   constructor(private container: AFRAME.Entity,
     private collisionHandler: CollisionHandler,
     private leftStick: AFRAME.Entity, private rightStick: AFRAME.Entity) {
-    const dist = new Tone.Distortion(0.02).toDestination();
-    this.synth = new Tone.PolySynth().connect(dist);
-    this.synth.set({
-      "volume": 0,
-      "detune": 0,
-      "portamento": 0,
-      "oscillator": {
-        "phase": 0,
-        "type": "fatsawtooth",
-        "count": 3,
-        "spread": 20
-      },
-      "envelope": {
-        "attack": 0.04,
-        "attackCurve": "linear",
-        "decay": 0.3,
-        "decayCurve": "linear",
-        "release": 0.5,
-        "releaseCurve": "linear",
-        "sustain": 0.2
-      },
-    });
+
+    this.synth = new Positron(PositronConfig.patchSoftBass);
 
     const notes = ['F3', 'G3', 'A3', 'Bb3', 'C4', 'D4', 'E4', 'F4'];
     this.layoutDiamond(notes);
@@ -36,10 +17,10 @@ export class ToneEntity {
 
   makeKey(n: string, r = 0.05): AFRAME.Entity {
     const hitHandler = (direction: CollisionDirection) => {
-      this.synth.triggerAttack(n);
+      this.synth.triggerAttack(n, Tone.now());
     };
     const releaseHandler = (direction: CollisionDirection) => {
-      this.synth.triggerRelease(n);
+      this.synth.triggerRelease(n, Tone.now());
     };
     const o = document.createElement('a-sphere');
     o.setAttribute('radius', `${r}`);
@@ -78,5 +59,4 @@ export class ToneEntity {
     this.makeKey(notes[6], 0.04).setAttribute('position', `-0.1 0.0 0`);
     this.makeKey(notes[7]).setAttribute('position', `0.1 0.0 0`);
   }
-
 }

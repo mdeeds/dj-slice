@@ -768,6 +768,207 @@ exports.ModelUtil = ModelUtil;
 
 /***/ }),
 
+/***/ 544:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Positron = exports.PositronConfig = void 0;
+const Tone = __importStar(__webpack_require__(784));
+class PositronConfig {
+    static fromString(config) {
+        const result = new PositronConfig();
+        Object.assign(result, JSON.parse(config));
+        result.env.context = Tone.getContext();
+        result.freqEnv.context = Tone.getContext();
+        result.filterEnv.context = Tone.getContext();
+        return result;
+    }
+}
+exports.PositronConfig = PositronConfig;
+PositronConfig.patch808 = {
+    env: {
+        attack: 0.01, decay: 0.4, sustain: 0, release: 0.3,
+        attackCurve: "exponential", releaseCurve: "exponential", decayCurve: "exponential",
+        context: Tone.getContext(),
+    },
+    freqEnv: {
+        attack: 0.01, decay: 0.2, sustain: 0, release: 0.2, baseFrequency: 'a1', octaves: 1.5,
+        attackCurve: "exponential", releaseCurve: "exponential", decayCurve: "exponential",
+        context: Tone.getContext(), exponent: 2,
+    },
+    filterEnv: {
+        attack: 0.01, decay: 0.2, sustain: 0, release: 0.2, baseFrequency: 'a1', octaves: 1.5,
+        attackCurve: "exponential", releaseCurve: "exponential", decayCurve: "exponential",
+        context: Tone.getContext(), exponent: 2,
+    },
+    osc1: "square",
+    osc2: "sine",
+    osc2Detune: 0.5,
+    filter: "bandpass",
+    filterScale: 1.0,
+    noise: 0.2,
+    distortion: 2.0,
+};
+PositronConfig.patchSaw = {
+    env: {
+        attack: 0.1, decay: 0.1, sustain: 0.5, release: 0.5,
+        attackCurve: "exponential", releaseCurve: "exponential", decayCurve: "exponential",
+        context: Tone.getContext(),
+    },
+    freqEnv: {
+        attack: 0, decay: 0, sustain: 0, release: 0, baseFrequency: 'a1', octaves: 0,
+        attackCurve: "exponential", releaseCurve: "exponential", decayCurve: "exponential",
+        context: Tone.getContext(), exponent: 2,
+    },
+    filterEnv: {
+        attack: 0, decay: 0, sustain: 0, release: 0, baseFrequency: 'a1', octaves: 0,
+        attackCurve: "exponential", releaseCurve: "exponential", decayCurve: "exponential",
+        context: Tone.getContext(), exponent: 2,
+    },
+    osc1: "sawtooth",
+    osc2: "sawtooth",
+    osc2Detune: 1.0,
+    filter: "lowpass",
+    filterScale: 32,
+    noise: 0,
+    distortion: 0,
+};
+PositronConfig.patchSoftBass = PositronConfig.fromString(`
+  {
+    "env": {
+      "attack": 0.01,
+      "decay": 0.2,
+      "sustain": 0.1,
+      "release": 0.1,
+      "attackCurve": "exponential",
+      "releaseCurve": "exponential",
+      "decayCurve": "exponential",
+      "context": {}
+    },
+    "freqEnv": {
+      "attack": 0,
+      "decay": 0,
+      "sustain": 0,
+      "release": 0,
+      "baseFrequency": "a1",
+      "octaves": 0,
+      "attackCurve": "exponential",
+      "releaseCurve": "exponential",
+      "decayCurve": "exponential",
+      "context": {},
+      "exponent": 2
+    },
+    "filterEnv": {
+      "attack": 0.05,
+      "decay": 0.1,
+      "sustain": 0,
+      "release": 0.02,
+      "baseFrequency": "a1",
+      "octaves": 0,
+      "attackCurve": "exponential",
+      "releaseCurve": "exponential",
+      "decayCurve": "exponential",
+      "context": {},
+      "exponent": 2
+    },
+    "osc1": "sawtooth",
+    "osc2": "sine",
+    "osc2Detune": 0.5,
+    "filter": "lowpass",
+    "filterScale": 5,
+    "noise": 0.3,
+    "distortion": 3
+  }
+  `);
+class Positron {
+    constructor(config) {
+        Tone.start();
+        this.env = new Tone.Envelope(config.env);
+        this.freqEnv = new Tone.FrequencyEnvelope(config.freqEnv);
+        this.filterEnv = new Tone.FrequencyEnvelope(config.filterEnv);
+        this.filterScale = new Tone.Scale(0, config.filterScale);
+        this.osc1 = new Tone.Oscillator(220, config.osc1).start();
+        this.harmonic = new Tone.Scale(0, config.osc2Detune);
+        this.osc2 = new Tone.Oscillator(1000, config.osc2).start();
+        const noise = new Tone.Noise("white").start();
+        this.filter = new Tone.Filter(0, config.filter);
+        const gainNode = new Tone.Gain(0);
+        this.noiseGain = new Tone.Gain(config.noise);
+        this.dist = new Tone.Distortion(config.distortion);
+        this.freqEnv.connect(this.osc1.frequency);
+        this.freqEnv.connect(this.harmonic);
+        this.harmonic.connect(this.osc2.frequency);
+        this.filterEnv.connect(this.filterScale);
+        this.filterScale.connect(this.filter.frequency);
+        this.env.connect(gainNode.gain);
+        noise.connect(this.noiseGain);
+        this.noiseGain.connect(this.filter);
+        this.osc1.connect(this.filter);
+        this.osc2.connect(this.filter);
+        this.filter.connect(gainNode);
+        gainNode.connect(this.dist);
+        gainNode.toDestination();
+    }
+    setConfig(config) {
+        this.env.set(config.env);
+        this.freqEnv.set(config.freqEnv);
+        this.filterEnv.set(config.filterEnv);
+        this.filterScale.max = config.filterScale;
+        this.osc1.type = config.osc1;
+        this.harmonic.max = config.osc2Detune;
+        this.osc2.type = config.osc2;
+        this.filter.type = config.filter;
+        this.noiseGain.gain.setValueAtTime(config.noise, Tone.now());
+        this.dist.distortion = config.distortion;
+    }
+    triggerAttackRelease(note, duration, time) {
+        this.freqEnv.baseFrequency = note;
+        this.filterEnv.baseFrequency = note;
+        this.env.triggerAttackRelease(duration, time);
+        this.freqEnv.triggerAttackRelease(duration, time);
+        this.filterEnv.triggerAttackRelease(duration, time);
+    }
+    triggerAttack(note, time) {
+        this.freqEnv.baseFrequency = note;
+        this.filterEnv.baseFrequency = note;
+        this.env.triggerAttack(time);
+        this.freqEnv.triggerAttack(time);
+        this.filterEnv.triggerAttack(time);
+    }
+    triggerRelease(note, time) {
+        this.freqEnv.baseFrequency = note;
+        this.filterEnv.baseFrequency = note;
+        this.env.triggerRelease(time);
+        this.freqEnv.triggerRelease(time);
+        this.filterEnv.triggerRelease(time);
+    }
+}
+exports.Positron = Positron;
+//# sourceMappingURL=positron.js.map
+
+/***/ }),
+
 /***/ 607:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -1201,23 +1402,23 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ToneEntity = void 0;
 const Tone = __importStar(__webpack_require__(784));
+const positron_1 = __webpack_require__(544);
 class ToneEntity {
     constructor(container, collisionHandler, leftStick, rightStick) {
         this.container = container;
         this.collisionHandler = collisionHandler;
         this.leftStick = leftStick;
         this.rightStick = rightStick;
-        const dist = new Tone.Distortion(0.02).toDestination();
-        this.synth = new Tone.PolySynth(Tone.AMSynth).connect(dist);
+        this.synth = new positron_1.Positron(positron_1.PositronConfig.patchSoftBass);
         const notes = ['F3', 'G3', 'A3', 'Bb3', 'C4', 'D4', 'E4', 'F4'];
         this.layoutDiamond(notes);
     }
     makeKey(n, r = 0.05) {
         const hitHandler = (direction) => {
-            this.synth.triggerAttack(n);
+            this.synth.triggerAttack(n, Tone.now());
         };
         const releaseHandler = (direction) => {
-            this.synth.triggerRelease(n);
+            this.synth.triggerRelease(n, Tone.now());
         };
         const o = document.createElement('a-sphere');
         o.setAttribute('radius', `${r}`);
