@@ -76,6 +76,7 @@ const sampleEntity_1 = __webpack_require__(480);
 const samplePack_1 = __webpack_require__(780);
 const toneEntity_1 = __webpack_require__(188);
 var player = null;
+var world = null;
 function makeBalloon(player) {
     const baloon = document.createElement('a-sphere');
     baloon.setAttribute('color', 'purple');
@@ -167,13 +168,13 @@ function addTones(player, theta) {
 AFRAME.registerComponent("go", {
     init: function () {
         return __awaiter(this, void 0, void 0, function* () {
-            const scene = document.querySelector('a-scene');
+            world = document.querySelector('#world');
             player = document.querySelector('#player');
             makeBalloon(player);
             const assets = document.querySelector('a-assets');
             const gameTime = yield gameTime_1.GameTime.make(115);
             yield gameTime.start();
-            chunkSeries = new chunkSeries_1.ChunkSeries(chunkFactoryFactory(gameTime), 300, scene);
+            chunkSeries = new chunkSeries_1.ChunkSeries(chunkFactoryFactory(gameTime), 300, world);
             tickers.push(gameTime);
             const samplePack = yield samplePack_1.SamplePack.load('funk', gameTime, assets);
             debug_1.Debug.init(document.querySelector('a-camera'));
@@ -212,8 +213,9 @@ AFRAME.registerComponent("go", {
         const p = (timeMs / 1000 / 60 / 3) % 1; // percentage of three minutes
         const h = Math.sin(Math.PI * p) * 100; // 100m maximum height
         const r = 0.5 * (1 - Math.cos(Math.PI * p)) * 2000; // glide 2km
-        const playerPos = player.object3D.position;
-        playerPos.set(0, h, -r);
+        if (world) {
+            world.object3D.position.set(0, -h, r);
+        }
         chunkSeries.setPosition(-r);
         for (const ticker of tickers) {
             ticker.tick(timeMs, timeDeltaMs);
@@ -239,7 +241,8 @@ body.innerHTML = `
 <a-sky color="#112" radius=3000></a-sky>
 <a-entity light="type: ambient; color: #222"></a-entity>
 <a-entity light="type:directional; color: #777" position="1800 5000 1200"></a-entity>
-
+<a-entity id='world'>
+</a-entity>
 <a-entity id='player'>
   <a-entity id='robot' position = "-2 0 -2" rotation = "0 180 0"></a-entity>
   <a-sphere position="180 100 120" radius=20 color=#fff shader=flat></a-sphere>

@@ -13,6 +13,7 @@ import { Ticker } from "./ticker";
 import { ToneEntity } from "./toneEntity";
 
 var player = null;
+var world = null;
 
 function makeBalloon(player: AFRAME.Entity) {
   const baloon = document.createElement('a-sphere') as AFRAME.Entity;
@@ -109,14 +110,14 @@ function addTones(player: AFRAME.Entity, theta: number) {
 
 AFRAME.registerComponent("go", {
   init: async function () {
-    const scene = document.querySelector('a-scene');
+    world = document.querySelector('#world');
     player = document.querySelector('#player') as AFRAME.Entity;
     makeBalloon(player);
     const assets = document.querySelector('a-assets');
     const gameTime = await GameTime.make(115);
     await gameTime.start();
     chunkSeries = new ChunkSeries(
-      chunkFactoryFactory(gameTime), 300, scene);
+      chunkFactoryFactory(gameTime), 300, world);
     tickers.push(gameTime);
     const samplePack = await SamplePack.load('funk', gameTime, assets)
     Debug.init(document.querySelector('a-camera'));
@@ -164,9 +165,9 @@ AFRAME.registerComponent("go", {
 
     const h = Math.sin(Math.PI * p) * 100;  // 100m maximum height
     const r = 0.5 * (1 - Math.cos(Math.PI * p)) * 2000;  // glide 2km
-
-    const playerPos = player.object3D.position;
-    playerPos.set(0, h, -r);
+    if (world) {
+      world.object3D.position.set(0, -h, r);
+    }
     chunkSeries.setPosition(-r);
     for (const ticker of tickers) {
       ticker.tick(timeMs, timeDeltaMs);
@@ -193,7 +194,8 @@ body.innerHTML = `
 <a-sky color="#112" radius=3000></a-sky>
 <a-entity light="type: ambient; color: #222"></a-entity>
 <a-entity light="type:directional; color: #777" position="1800 5000 1200"></a-entity>
-
+<a-entity id='world'>
+</a-entity>
 <a-entity id='player'>
   <a-entity id='robot' position = "-2 0 -2" rotation = "0 180 0"></a-entity>
   <a-sphere position="180 100 120" radius=20 color=#fff shader=flat></a-sphere>
