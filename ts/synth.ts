@@ -6,9 +6,9 @@ let positronPtr = {
   pos: new Positron(PositronConfig.patchSaw)
 };
 
-function load(config: string) {
+function load() {
   try {
-    positronPtr.pos = new Positron(PositronConfig.fromString(config));
+    positronPtr.pos.setConfig(PositronConfig.fromString(ta.value));
   } catch (e) {
     console.log(e);
   }
@@ -19,7 +19,7 @@ const body = document.getElementsByTagName('body')[0];
   const div = document.createElement('div');
   div.innerText = "Click!";
   div.addEventListener('click', (ev: MouseEvent) => {
-    load(ta.value);
+    load();
     const now = Tone.now();
     positronPtr.pos.triggerAttackRelease('a1', '8n', now);
     positronPtr.pos.triggerAttackRelease('e1', '8n', now + 0.25);
@@ -34,12 +34,12 @@ const body = document.getElementsByTagName('body')[0];
     const div = document.createElement('div');
     div.innerText = n;
     div.addEventListener('pointerdown', (ev: MouseEvent) => {
-      load(ta.value);
+      load();
       const now = Tone.now();
       positronPtr.pos.triggerAttack(n, now);
     });
     div.addEventListener('pointerup', (ev: MouseEvent) => {
-      load(ta.value);
+      load();
       const now = Tone.now();
       positronPtr.pos.triggerRelease(n, now);
     });
