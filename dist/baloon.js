@@ -96,6 +96,9 @@ function makeBalloon(player) {
 }
 const kStickLength = 0.25;
 function addStick(container) {
+    const stick = document.createElement('a-entity');
+    stick.setAttribute('rotation', '45 0 0');
+    container.appendChild(stick);
     {
         const o = document.createElement('a-box');
         o.setAttribute('height', '0.01');
@@ -104,7 +107,7 @@ function addStick(container) {
         o.setAttribute('position', `0 0 ${-kStickLength / 2}`);
         o.setAttribute('color', '#422');
         o.setAttribute('shader', 'flat');
-        container.appendChild(o);
+        stick.appendChild(o);
     }
     {
         const o = document.createElement('a-box');
@@ -114,7 +117,7 @@ function addStick(container) {
         o.setAttribute('position', `0 0 ${-kStickLength}`);
         o.setAttribute('color', '#f09');
         o.setAttribute('shader', 'flat');
-        container.appendChild(o);
+        stick.appendChild(o);
         return o;
     }
 }
