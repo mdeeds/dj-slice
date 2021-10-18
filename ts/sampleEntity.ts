@@ -43,8 +43,8 @@ export class SampleEntity {
         const newBeatMod = ts.beatInt % 8;
         if (newBeatMod != this.lastBeatMod) {
           this.lastBeatMod = newBeatMod;
-          const m = Math.trunc(newBeatMod / 4);
-          const n = newBeatMod % 4;
+          const m = Math.trunc(newBeatMod / 4) + 1;
+          const n = newBeatMod % 4 + 1;
           const url = `img/dial/dial_${m}_${n}.png`;
           this.dial.setAttribute('src', `#${this.assets.getId(url)}`);
         }

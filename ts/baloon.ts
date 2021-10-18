@@ -117,8 +117,8 @@ function makeRing(gametime: GameTime) {
   for (let i = 7; i >= 0; --i) {
     const theta = i * (thetaLength / 8) + thetaStart;
     const r = document.createElement('a-ring');
-    r.setAttribute('radius-inner', '1.9');
-    r.setAttribute('radius-outer', '2.0');
+    r.setAttribute('radius-inner', '1.7');
+    r.setAttribute('radius-outer', '1.8');
     r.setAttribute('position', '0 0 -2');
     r.setAttribute('color', 'green');
     r.setAttribute('shader', 'flat');
