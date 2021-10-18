@@ -96,17 +96,18 @@ function makeBalloon(player) {
     player.appendChild(c);
 }
 const kStickLength = 0.25;
-function addStick(container) {
+function addStick(container, gameTime) {
     const stick = document.createElement('a-entity');
     stick.setAttribute('rotation', '45 0 0');
+    makeRing(stick, gameTime);
     container.appendChild(stick);
     {
         const o = document.createElement('a-box');
-        o.setAttribute('height', '0.01');
-        o.setAttribute('width', '0.01');
+        o.setAttribute('height', '0.005');
+        o.setAttribute('width', '0.005');
         o.setAttribute('depth', kStickLength);
         o.setAttribute('position', `0 0 ${-kStickLength / 2}`);
-        o.setAttribute('color', '#422');
+        o.setAttribute('color', '#223');
         o.setAttribute('shader', 'flat');
         stick.appendChild(o);
     }
@@ -156,17 +157,16 @@ function chunkFactoryFactory(gameTime) {
         }
     };
 }
-function addTones(player, theta) {
+function addTones(player, theta, gameTime) {
     const container = document.createElement('a-entity');
     const x = 0.7 * Math.sin(theta);
     const z = -0.7 * Math.cos(theta);
     container.setAttribute('position', `${x} 1.2 ${z}`);
     container.setAttribute('rotation', `0 ${-180 / Math.PI * theta} 0`);
-    new toneEntity_1.ToneEntity(container, collisionHandler, leftStick, rightStick);
+    new toneEntity_1.ToneEntity(container, collisionHandler, leftStick, rightStick, gameTime);
     player.appendChild(container);
 }
-function makeRing(gametime) {
-    const camera = document.querySelector('a-camera');
+function makeRing(container, gametime) {
     const rings = [];
     const thetaStart = 300;
     const thetaLength = 300;
@@ -174,15 +174,15 @@ function makeRing(gametime) {
     for (let i = 7; i >= 0; --i) {
         const theta = i * (thetaLength / 8) + thetaStart;
         const r = document.createElement('a-ring');
-        r.setAttribute('radius-inner', '1.6');
-        r.setAttribute('radius-outer', '1.7');
-        r.setAttribute('position', '0 0 -2');
+        r.setAttribute('radius-inner', '0.015');
+        r.setAttribute('radius-outer', '0.016');
+        r.setAttribute('position', '0 0.05 -0.1');
         r.setAttribute('color', 'green');
         r.setAttribute('shader', 'flat');
         r.setAttribute('theta-start', theta + epsilon);
         r.setAttribute('theta-length', thetaLength / 8 - 2 * epsilon);
         rings.push(r);
-        camera.appendChild(r);
+        container.appendChild(r);
     }
     gametime.addBeatCallback((ts) => {
         const beatNumber = ts.beatInt % rings.length;
@@ -212,9 +212,9 @@ AFRAME.registerComponent("go", {
             debug_1.Debug.init(document.querySelector('a-camera'));
             collisionHandler = new collisionHandler_1.CollisionHandler();
             tickers.push(collisionHandler);
-            leftStick = addStick(document.querySelector('#leftHand'));
-            rightStick = addStick(document.querySelector('#rightHand'));
-            addTones(player, -Math.PI / 2);
+            leftStick = addStick(document.querySelector('#leftHand'), gameTime);
+            rightStick = addStick(document.querySelector('#rightHand'), gameTime);
+            addTones(player, -Math.PI / 2, gameTime);
             const assetLibrary = new assetLibrary_1.AssetLibrary(document.querySelector('a-assets'));
             let theta = 0;
             for (const track of samplePack.tracks) {
@@ -239,7 +239,6 @@ AFRAME.registerComponent("go", {
                     camera.object3D.layers.set(1);
                 }
             });
-            makeRing(gameTime);
         });
     },
     tick: function (timeMs, timeDeltaMs) {
@@ -755,7 +754,12 @@ class GameTime {
     }
     roundQuantizeAudioTime(audioTimeS) {
         const secondsPerBeat = 4 * 60 / this.bpm;
-        const beat = Math.round(audioTimeS / secondsPerBeat);
+        const beat = Math.round((audioTimeS - this.audioCtxZero) / secondsPerBeat);
+        return beat * secondsPerBeat;
+    }
+    nextQuantizeAudioTime(audioTimeS) {
+        const secondsPerBeat = 4 * 60 / this.bpm;
+        const beat = Math.ceil((audioTimeS - this.audioCtxZero) / secondsPerBeat);
         return beat * secondsPerBeat;
     }
     timeSummaryNow(lookaheadS) {
@@ -1457,21 +1461,22 @@ exports.ToneEntity = void 0;
 const Tone = __importStar(__webpack_require__(784));
 const positron_1 = __webpack_require__(544);
 class ToneEntity {
-    constructor(container, collisionHandler, leftStick, rightStick) {
+    constructor(container, collisionHandler, leftStick, rightStick, gameTime) {
         this.container = container;
         this.collisionHandler = collisionHandler;
         this.leftStick = leftStick;
         this.rightStick = rightStick;
+        this.gameTime = gameTime;
         this.synth = new positron_1.Positron(positron_1.PositronConfig.patchSoftBass);
         const notes = ['F3', 'G3', 'A3', 'Bb3', 'C4', 'D4', 'E4', 'F4'];
         this.layoutDiamond(notes);
     }
     makeKey(n, r = 0.05) {
         const hitHandler = (direction) => {
-            this.synth.triggerAttack(n, Tone.now());
+            this.synth.triggerAttack(n, this.gameTime.nextQuantizeAudioTime(Tone.now()));
         };
         const releaseHandler = (direction) => {
-            this.synth.triggerRelease(n, Tone.now());
+            this.synth.triggerRelease(n, this.gameTime.nextQuantizeAudioTime(Tone.now()));
         };
         const o = document.createElement('a-sphere');
         o.setAttribute('radius', `${r}`);
