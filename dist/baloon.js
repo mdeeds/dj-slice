@@ -99,7 +99,7 @@ const kStickLength = 0.25;
 function addStick(container, gameTime) {
     const stick = document.createElement('a-entity');
     stick.setAttribute('rotation', '45 0 0');
-    makeRing(stick, gameTime);
+    addRing(stick, gameTime);
     container.appendChild(stick);
     {
         const o = document.createElement('a-box');
@@ -166,7 +166,7 @@ function addTones(player, theta, gameTime) {
     new toneEntity_1.ToneEntity(container, collisionHandler, leftStick, rightStick, gameTime);
     player.appendChild(container);
 }
-function makeRing(container, gametime) {
+function addRing(container, gametime) {
     const rings = [];
     const thetaStart = 300;
     const thetaLength = 300;
@@ -174,9 +174,10 @@ function makeRing(container, gametime) {
     for (let i = 7; i >= 0; --i) {
         const theta = i * (thetaLength / 8) + thetaStart;
         const r = document.createElement('a-ring');
-        r.setAttribute('radius-inner', '0.015');
+        r.setAttribute('radius-inner', '0.014');
         r.setAttribute('radius-outer', '0.016');
         r.setAttribute('position', '0 0.05 -0.1');
+        r.setAttribute('rotation', '-90 0 0');
         r.setAttribute('color', 'green');
         r.setAttribute('shader', 'flat');
         r.setAttribute('theta-start', theta + epsilon);
@@ -758,7 +759,7 @@ class GameTime {
         return beat * secondsPerBeat;
     }
     nextQuantizeAudioTime(audioTimeS) {
-        const secondsPerBeat = 4 * 60 / this.bpm;
+        const secondsPerBeat = 60 / this.bpm / 2;
         const beat = Math.ceil((audioTimeS - this.audioCtxZero) / secondsPerBeat);
         return beat * secondsPerBeat;
     }
