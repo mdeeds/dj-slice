@@ -107,6 +107,38 @@ function addTones(player: AFRAME.Entity, theta: number) {
   player.appendChild(container);
 }
 
+function makeRing(gametime: GameTime) {
+  const camera = document.querySelector('a-camera');
+
+  const rings = [];
+  const thetaStart = 300;
+  const thetaLength = 300;
+  const epsilon = 1;
+  for (let i = 7; i >= 0; --i) {
+    const theta = i * (thetaLength / 8) + thetaStart;
+    const r = document.createElement('a-ring');
+    r.setAttribute('radius-inner', '1.9');
+    r.setAttribute('radius-outer', '2.0');
+    r.setAttribute('position', '0 0 -2');
+    r.setAttribute('color', 'green');
+    r.setAttribute('shader', 'flat');
+    r.setAttribute('theta-start', theta + epsilon);
+    r.setAttribute('theta-length', thetaLength / 8 - 2 * epsilon);
+    rings.push(r);
+    camera.appendChild(r);
+  }
+
+  gametime.addBeatCallback((ts: TimeSummary) => {
+    const beatNumber = ts.beatInt % rings.length;
+    for (let i = 0; i < rings.length; ++i) {
+      if (i <= beatNumber) {
+        rings[i].setAttribute('visible', 'true');
+      } else {
+        rings[i].setAttribute('visible', 'false');
+      }
+    }
+  });
+};
 
 AFRAME.registerComponent("go", {
   init: async function () {
@@ -158,7 +190,9 @@ AFRAME.registerComponent("go", {
       } else {
         camera.object3D.layers.set(1);
       }
-    })
+    });
+
+    makeRing(gameTime);
   },
   tick: function (timeMs, timeDeltaMs) {
     const p = (timeMs / 1000 / 60 / 3) % 1; // percentage of three minutes

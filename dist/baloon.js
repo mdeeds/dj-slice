@@ -165,6 +165,38 @@ function addTones(player, theta) {
     new toneEntity_1.ToneEntity(container, collisionHandler, leftStick, rightStick);
     player.appendChild(container);
 }
+function makeRing(gametime) {
+    const camera = document.querySelector('a-camera');
+    const rings = [];
+    const thetaStart = 300;
+    const thetaLength = 300;
+    const epsilon = 1;
+    for (let i = 7; i >= 0; --i) {
+        const theta = i * (thetaLength / 8) + thetaStart;
+        const r = document.createElement('a-ring');
+        r.setAttribute('radius-inner', '1.9');
+        r.setAttribute('radius-outer', '2.0');
+        r.setAttribute('position', '0 0 -2');
+        r.setAttribute('color', 'green');
+        r.setAttribute('shader', 'flat');
+        r.setAttribute('theta-start', theta + epsilon);
+        r.setAttribute('theta-length', thetaLength / 8 - 2 * epsilon);
+        rings.push(r);
+        camera.appendChild(r);
+    }
+    gametime.addBeatCallback((ts) => {
+        const beatNumber = ts.beatInt % rings.length;
+        for (let i = 0; i < rings.length; ++i) {
+            if (i <= beatNumber) {
+                rings[i].setAttribute('visible', 'true');
+            }
+            else {
+                rings[i].setAttribute('visible', 'false');
+            }
+        }
+    });
+}
+;
 AFRAME.registerComponent("go", {
     init: function () {
         return __awaiter(this, void 0, void 0, function* () {
@@ -207,6 +239,7 @@ AFRAME.registerComponent("go", {
                     camera.object3D.layers.set(1);
                 }
             });
+            makeRing(gameTime);
         });
     },
     tick: function (timeMs, timeDeltaMs) {
@@ -1215,6 +1248,7 @@ class SampleEntity {
         this.lights = [];
         this.nextLoopStart = 0;
         this.selectedSampleIndex = -1;
+        this.lastBeatMod = -1;
         this.beatCallback = (ts) => {
             if (ts.beatInt > this.nextLoopStart) {
                 this.nextLoopStart += 8;
@@ -1224,6 +1258,16 @@ class SampleEntity {
                 if (this.selectedSampleIndex >= 0) {
                     this.track.stop();
                     this.track.getSample(this.selectedSampleIndex).playAt(ts.audioTimeS);
+                }
+            }
+            if (this.selectedSampleIndex >= 0) {
+                const newBeatMod = ts.beatInt % 8;
+                if (newBeatMod != this.lastBeatMod) {
+                    this.lastBeatMod = newBeatMod;
+                    const m = Math.trunc(newBeatMod / 4);
+                    const n = newBeatMod % 4;
+                    const url = `img/dial/dial_${m}_${n}.png`;
+                    this.dial.setAttribute('src', `#${this.assets.getId(url)}`);
                 }
             }
         };
@@ -1278,14 +1322,14 @@ class SampleEntity {
         const imageContainer = document.createElement('a-entity');
         container.appendChild(imageContainer);
         {
-            const o = document.createElement('a-image');
-            o.setAttribute('height', '0.2');
-            o.setAttribute('width', '0.2');
-            o.setAttribute('src', `#${this.assets.getId('img/dial/dial_off.png')}`);
-            o.setAttribute('transparent', 'true');
-            o.setAttribute('shader', 'flat');
-            o.setAttribute('position', '0 0 -0.01');
-            imageContainer.appendChild(o);
+            this.dial = document.createElement('a-image');
+            this.dial.setAttribute('height', '0.2');
+            this.dial.setAttribute('width', '0.2');
+            this.dial.setAttribute('src', `#${this.assets.getId('img/dial/dial_off.png')}`);
+            this.dial.setAttribute('transparent', 'true');
+            this.dial.setAttribute('shader', 'flat');
+            this.dial.setAttribute('position', '0 0 -0.01');
+            imageContainer.appendChild(this.dial);
         }
         {
             const o = document.createElement('a-image');
