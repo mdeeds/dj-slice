@@ -48,6 +48,9 @@ export class SampleEntity {
           const url = `img/dial/dial_${m}_${n}.png`;
           this.dial.setAttribute('src', `#${this.assets.getId(url)}`);
         }
+      } else {
+        this.dial.setAttribute('src',
+          `#${this.assets.getId('img/dial/dial_off.png')}`);
       }
     };
 
