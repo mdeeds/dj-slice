@@ -1,11 +1,11 @@
 import * as AFRAME from "aframe";
 
 import { AssetLibrary } from "./assetLibrary";
-import { Chunk, MountainChunk, WoodlandChunk, StreetChunk, BuildingChunk } from "./chunk";
+import { Chunk, MountainChunk, WoodlandChunk, StreetChunk, BuildingChunk, OrchardChunk } from "./chunk";
 import { ChunkSeries } from "./chunkSeries";
 import { CollisionHandler } from "./collisionHandler";
 import { Debug } from "./debug";
-import { GameTime } from "./gameTime";
+import { GameTime, TimeSummary } from "./gameTime";
 import { Robot } from "./robot";
 import { SampleEntity } from "./sampleEntity";
 import { SamplePack } from "./samplePack";
@@ -13,6 +13,7 @@ import { Ticker } from "./ticker";
 import { ToneEntity } from "./toneEntity";
 
 var player = null;
+var world = null;
 
 function makeBalloon(player: AFRAME.Entity) {
   const baloon = document.createElement('a-sphere') as AFRAME.Entity;
@@ -37,16 +38,20 @@ function makeBalloon(player: AFRAME.Entity) {
 
 
 const kStickLength = 0.25;
-function addStick(container: AFRAME.Entity) {
+function addStick(container: AFRAME.Entity, gameTime: GameTime) {
+  const stick = document.createElement('a-entity');
+  stick.setAttribute('rotation', '45 0 0');
+  addRing(stick, gameTime);
+  container.appendChild(stick);
   {
     const o = document.createElement('a-box');
-    o.setAttribute('height', '0.01');
-    o.setAttribute('width', '0.01');
+    o.setAttribute('height', '0.005');
+    o.setAttribute('width', '0.005');
     o.setAttribute('depth', kStickLength);
     o.setAttribute('position', `0 0 ${-kStickLength / 2}`);
-    o.setAttribute('color', '#422');
+    o.setAttribute('color', '#223');
     o.setAttribute('shader', 'flat');
-    container.appendChild(o);
+    stick.appendChild(o);
   }
   {
     const o = document.createElement('a-box');
@@ -56,7 +61,7 @@ function addStick(container: AFRAME.Entity) {
     o.setAttribute('position', `0 0 ${-kStickLength}`);
     o.setAttribute('color', '#f09');
     o.setAttribute('shader', 'flat');
-    container.appendChild(o);
+    stick.appendChild(o);
     return o;
   }
 }
@@ -73,14 +78,16 @@ var numTicks = 0;
 
 function chunkFactoryFactory(gameTime: GameTime) {
   return (i: number): Chunk => {
-    if (i > -30) {
+    if (i > -10) {
+      return new OrchardChunk();
+    } else if (i > -30) {
       if (i % 7 === 0) {
         return new MountainChunk();
       } else {
         return new StreetChunk();
       }
     } else if (i > -50) {
-      return new WoodlandChunk(gameTime);
+      return new WoodlandChunk();
     } else {
       if (i % 5 === 0) {
         return new StreetChunk();
@@ -91,36 +98,67 @@ function chunkFactoryFactory(gameTime: GameTime) {
   }
 }
 
-function addTones(player: AFRAME.Entity, theta: number) {
+function addTones(player: AFRAME.Entity, theta: number, gameTime: GameTime) {
   const container = document.createElement('a-entity');
   const x = 0.7 * Math.sin(theta);
   const z = -0.7 * Math.cos(theta);
   container.setAttribute('position', `${x} 1.2 ${z}`);
   container.setAttribute('rotation', `0 ${-180 / Math.PI * theta} 0`);
-  new ToneEntity(container, collisionHandler, leftStick, rightStick);
+  new ToneEntity(container, collisionHandler, leftStick, rightStick, gameTime);
   player.appendChild(container);
 }
 
+function addRing(container: AFRAME.Entity, gametime: GameTime) {
+  const rings = [];
+  const thetaStart = 300;
+  const thetaLength = 300;
+  const epsilon = 1;
+  for (let i = 7; i >= 0; --i) {
+    const theta = i * (thetaLength / 8) + thetaStart;
+    const r = document.createElement('a-ring');
+    r.setAttribute('radius-inner', '0.014');
+    r.setAttribute('radius-outer', '0.016');
+    r.setAttribute('position', '0 0.05 -0.1');
+    r.setAttribute('rotation', '-90 0 0');
+    r.setAttribute('color', 'green');
+    r.setAttribute('shader', 'flat');
+    r.setAttribute('theta-start', theta + epsilon);
+    r.setAttribute('theta-length', thetaLength / 8 - 2 * epsilon);
+    rings.push(r);
+    container.appendChild(r);
+  }
+
+  gametime.addBeatCallback((ts: TimeSummary) => {
+    const beatNumber = ts.beatInt % rings.length;
+    for (let i = 0; i < rings.length; ++i) {
+      if (i <= beatNumber) {
+        rings[i].setAttribute('visible', 'true');
+      } else {
+        rings[i].setAttribute('visible', 'false');
+      }
+    }
+  });
+};
 
 AFRAME.registerComponent("go", {
   init: async function () {
-    const scene = document.querySelector('a-scene');
+    world = document.querySelector('#world');
     player = document.querySelector('#player') as AFRAME.Entity;
     makeBalloon(player);
     const assets = document.querySelector('a-assets');
     const gameTime = await GameTime.make(115);
     await gameTime.start();
     chunkSeries = new ChunkSeries(
-      chunkFactoryFactory(gameTime), 300, scene);
+      chunkFactoryFactory(gameTime), 300, world);
     tickers.push(gameTime);
     const samplePack = await SamplePack.load('funk', gameTime, assets)
     Debug.init(document.querySelector('a-camera'));
     collisionHandler = new CollisionHandler();
     tickers.push(collisionHandler);
-    leftStick = addStick(document.querySelector('#leftHand'));
-    rightStick = addStick(document.querySelector('#rightHand'));
+    leftStick = addStick(document.querySelector('#leftHand'), gameTime);
+    rightStick = addStick(document.querySelector('#rightHand'), gameTime);
 
-    addTones(player, -Math.PI / 2);
+    addTones(player, -Math.PI / 2, gameTime);
 
     const assetLibrary = new AssetLibrary(document.querySelector('a-assets'));
 
@@ -129,7 +167,7 @@ AFRAME.registerComponent("go", {
       const container = document.createElement('a-entity');
       const x = 0.7 * Math.sin(theta);
       const z = -0.7 * Math.cos(theta);
-      container.setAttribute('position', `${x} 1.2 ${z}`);
+      container.setAttribute('position', `${x} 1.3 ${z}`);
       container.setAttribute('rotation', `0 ${-180 / Math.PI * theta} 0`);
       const sampleEntity = new SampleEntity(
         track, container, collisionHandler, leftStick, rightStick,
@@ -137,21 +175,31 @@ AFRAME.registerComponent("go", {
       player.appendChild(container);
       theta += Math.PI * 2 / 12;
     }
-    robot = new Robot(document.querySelector('#camera'),
+    const camera = document.querySelector('#camera');
+    robot = new Robot(camera,
       document.querySelector('#leftHand'),
       document.querySelector('#rightHand'),
       document.querySelector('#robot'),
       gameTime);
     tickers.push(robot);
+
+    camera.object3D.layers.set(3);
+    gameTime.addBeatCallback((ts: TimeSummary) => {
+      if (ts.beatInt % 2 === 0) {
+        camera.object3D.layers.set(3);
+      } else {
+        camera.object3D.layers.set(1);
+      }
+    });
   },
   tick: function (timeMs, timeDeltaMs) {
     const p = (timeMs / 1000 / 60 / 3) % 1; // percentage of three minutes
 
     const h = Math.sin(Math.PI * p) * 100;  // 100m maximum height
     const r = 0.5 * (1 - Math.cos(Math.PI * p)) * 2000;  // glide 2km
-
-    const playerPos = player.object3D.position;
-    playerPos.set(0, h, -r);
+    if (world) {
+      world.object3D.position.set(0, -h, r);
+    }
     chunkSeries.setPosition(-r);
     for (const ticker of tickers) {
       ticker.tick(timeMs, timeDeltaMs);
@@ -178,7 +226,8 @@ body.innerHTML = `
 <a-sky color="#112" radius=3000></a-sky>
 <a-entity light="type: ambient; color: #222"></a-entity>
 <a-entity light="type:directional; color: #777" position="1800 5000 1200"></a-entity>
-
+<a-entity id='world'>
+</a-entity>
 <a-entity id='player'>
   <a-entity id='robot' position = "-2 0 -2" rotation = "0 180 0"></a-entity>
   <a-sphere position="180 100 120" radius=20 color=#fff shader=flat></a-sphere>

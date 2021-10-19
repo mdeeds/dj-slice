@@ -1,0 +1,11 @@
+.knob {
+  margin: 3px;
+  padding: 3px;
+  border-radius: 9px;
+  box-shadow: 4px 4px 4px;
+  background-color: lightgray;
+}
+
+.looping {
+  background-color: lightgreen;
+}

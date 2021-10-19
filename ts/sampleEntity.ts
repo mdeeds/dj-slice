@@ -13,6 +13,7 @@ export class SampleEntity {
   private lights: AFRAME.Entity[] = [];
   private nextLoopStart = 0;
   private selectedSampleIndex = -1;
+  private dial: AFRAME.Entity;
 
   constructor(
     private track: Track,
@@ -26,6 +27,7 @@ export class SampleEntity {
     this.addSample(container, 0);
   }
 
+  private lastBeatMod = -1;
   private beatCallback: AudioCallback =
     (ts: TimeSummary) => {
       if (ts.beatInt > this.nextLoopStart) {
@@ -36,6 +38,19 @@ export class SampleEntity {
           this.track.stop();
           this.track.getSample(this.selectedSampleIndex).playAt(ts.audioTimeS);
         }
+      }
+      if (this.selectedSampleIndex >= 0) {
+        const newBeatMod = ts.beatInt % 8;
+        if (newBeatMod != this.lastBeatMod) {
+          this.lastBeatMod = newBeatMod;
+          const m = Math.trunc(newBeatMod / 4) + 1;
+          const n = newBeatMod % 4 + 1;
+          const url = `img/dial/dial_${m}_${n}.png`;
+          this.dial.setAttribute('src', `#${this.assets.getId(url)}`);
+        }
+      } else {
+        this.dial.setAttribute('src',
+          `#${this.assets.getId('img/dial/dial_off.png')}`);
       }
     };
 
@@ -95,15 +110,15 @@ export class SampleEntity {
     const imageContainer = document.createElement('a-entity');
     container.appendChild(imageContainer);
     {
-      const o = document.createElement('a-image');
-      o.setAttribute('height', '0.2');
-      o.setAttribute('width', '0.2');
-      o.setAttribute('src',
+      this.dial = document.createElement('a-image');
+      this.dial.setAttribute('height', '0.2');
+      this.dial.setAttribute('width', '0.2');
+      this.dial.setAttribute('src',
         `#${this.assets.getId('img/dial/dial_off.png')}`);
-      o.setAttribute('transparent', 'true');
-      o.setAttribute('shader', 'flat');
-      o.setAttribute('position', '0 0 -0.01');
-      imageContainer.appendChild(o);
+      this.dial.setAttribute('transparent', 'true');
+      this.dial.setAttribute('shader', 'flat');
+      this.dial.setAttribute('position', '0 0 -0.01');
+      imageContainer.appendChild(this.dial);
     }
     {
       const o = document.createElement('a-image');

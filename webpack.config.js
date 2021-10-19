@@ -6,6 +6,7 @@ module.exports = {
     open: "./src/open.js",
     loops: "./src/loops.js",
     baloon: "./src/baloon.js",
+    synth: "./src/synth.js",
   },
   output: {
     path: __dirname + "/dist",
@@ -58,6 +59,12 @@ module.exports = {
       filename: 'baloon.html',
       template: 'src/baloon.html',
       chunks: ['baloon']
+    }),
+    new HtmlWebPackPlugin({
+      name: "synth",
+      filename: 'synth.html',
+      template: 'src/loops.html',
+      chunks: ['synth']
     }),
   ],
   module: {  // If I remove this, webpack fails. \(~n~)/

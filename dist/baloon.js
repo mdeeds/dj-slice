@@ -76,6 +76,7 @@ const sampleEntity_1 = __webpack_require__(480);
 const samplePack_1 = __webpack_require__(780);
 const toneEntity_1 = __webpack_require__(188);
 var player = null;
+var world = null;
 function makeBalloon(player) {
     const baloon = document.createElement('a-sphere');
     baloon.setAttribute('color', 'purple');
@@ -95,16 +96,20 @@ function makeBalloon(player) {
     player.appendChild(c);
 }
 const kStickLength = 0.25;
-function addStick(container) {
+function addStick(container, gameTime) {
+    const stick = document.createElement('a-entity');
+    stick.setAttribute('rotation', '45 0 0');
+    addRing(stick, gameTime);
+    container.appendChild(stick);
     {
         const o = document.createElement('a-box');
-        o.setAttribute('height', '0.01');
-        o.setAttribute('width', '0.01');
+        o.setAttribute('height', '0.005');
+        o.setAttribute('width', '0.005');
         o.setAttribute('depth', kStickLength);
         o.setAttribute('position', `0 0 ${-kStickLength / 2}`);
-        o.setAttribute('color', '#422');
+        o.setAttribute('color', '#223');
         o.setAttribute('shader', 'flat');
-        container.appendChild(o);
+        stick.appendChild(o);
     }
     {
         const o = document.createElement('a-box');
@@ -114,7 +119,7 @@ function addStick(container) {
         o.setAttribute('position', `0 0 ${-kStickLength}`);
         o.setAttribute('color', '#f09');
         o.setAttribute('shader', 'flat');
-        container.appendChild(o);
+        stick.appendChild(o);
         return o;
     }
 }
@@ -128,7 +133,10 @@ var totalElapsed = 0;
 var numTicks = 0;
 function chunkFactoryFactory(gameTime) {
     return (i) => {
-        if (i > -30) {
+        if (i > -10) {
+            return new chunk_1.OrchardChunk();
+        }
+        else if (i > -30) {
             if (i % 7 === 0) {
                 return new chunk_1.MountainChunk();
             }
@@ -137,7 +145,7 @@ function chunkFactoryFactory(gameTime) {
             }
         }
         else if (i > -50) {
-            return new chunk_1.WoodlandChunk(gameTime);
+            return new chunk_1.WoodlandChunk();
         }
         else {
             if (i % 5 === 0) {
@@ -149,55 +157,98 @@ function chunkFactoryFactory(gameTime) {
         }
     };
 }
-function addTones(player, theta) {
+function addTones(player, theta, gameTime) {
     const container = document.createElement('a-entity');
     const x = 0.7 * Math.sin(theta);
     const z = -0.7 * Math.cos(theta);
     container.setAttribute('position', `${x} 1.2 ${z}`);
     container.setAttribute('rotation', `0 ${-180 / Math.PI * theta} 0`);
-    new toneEntity_1.ToneEntity(container, collisionHandler, leftStick, rightStick);
+    new toneEntity_1.ToneEntity(container, collisionHandler, leftStick, rightStick, gameTime);
     player.appendChild(container);
 }
+function addRing(container, gametime) {
+    const rings = [];
+    const thetaStart = 300;
+    const thetaLength = 300;
+    const epsilon = 1;
+    for (let i = 7; i >= 0; --i) {
+        const theta = i * (thetaLength / 8) + thetaStart;
+        const r = document.createElement('a-ring');
+        r.setAttribute('radius-inner', '0.014');
+        r.setAttribute('radius-outer', '0.016');
+        r.setAttribute('position', '0 0.05 -0.1');
+        r.setAttribute('rotation', '-90 0 0');
+        r.setAttribute('color', 'green');
+        r.setAttribute('shader', 'flat');
+        r.setAttribute('theta-start', theta + epsilon);
+        r.setAttribute('theta-length', thetaLength / 8 - 2 * epsilon);
+        rings.push(r);
+        container.appendChild(r);
+    }
+    gametime.addBeatCallback((ts) => {
+        const beatNumber = ts.beatInt % rings.length;
+        for (let i = 0; i < rings.length; ++i) {
+            if (i <= beatNumber) {
+                rings[i].setAttribute('visible', 'true');
+            }
+            else {
+                rings[i].setAttribute('visible', 'false');
+            }
+        }
+    });
+}
+;
 AFRAME.registerComponent("go", {
     init: function () {
         return __awaiter(this, void 0, void 0, function* () {
-            const scene = document.querySelector('a-scene');
+            world = document.querySelector('#world');
             player = document.querySelector('#player');
             makeBalloon(player);
             const assets = document.querySelector('a-assets');
             const gameTime = yield gameTime_1.GameTime.make(115);
             yield gameTime.start();
-            chunkSeries = new chunkSeries_1.ChunkSeries(chunkFactoryFactory(gameTime), 300, scene);
+            chunkSeries = new chunkSeries_1.ChunkSeries(chunkFactoryFactory(gameTime), 300, world);
             tickers.push(gameTime);
             const samplePack = yield samplePack_1.SamplePack.load('funk', gameTime, assets);
             debug_1.Debug.init(document.querySelector('a-camera'));
             collisionHandler = new collisionHandler_1.CollisionHandler();
             tickers.push(collisionHandler);
-            leftStick = addStick(document.querySelector('#leftHand'));
-            rightStick = addStick(document.querySelector('#rightHand'));
-            addTones(player, -Math.PI / 2);
+            leftStick = addStick(document.querySelector('#leftHand'), gameTime);
+            rightStick = addStick(document.querySelector('#rightHand'), gameTime);
+            addTones(player, -Math.PI / 2, gameTime);
             const assetLibrary = new assetLibrary_1.AssetLibrary(document.querySelector('a-assets'));
             let theta = 0;
             for (const track of samplePack.tracks) {
                 const container = document.createElement('a-entity');
                 const x = 0.7 * Math.sin(theta);
                 const z = -0.7 * Math.cos(theta);
-                container.setAttribute('position', `${x} 1.2 ${z}`);
+                container.setAttribute('position', `${x} 1.3 ${z}`);
                 container.setAttribute('rotation', `0 ${-180 / Math.PI * theta} 0`);
                 const sampleEntity = new sampleEntity_1.SampleEntity(track, container, collisionHandler, leftStick, rightStick, gameTime, assetLibrary);
                 player.appendChild(container);
                 theta += Math.PI * 2 / 12;
             }
-            robot = new robot_1.Robot(document.querySelector('#camera'), document.querySelector('#leftHand'), document.querySelector('#rightHand'), document.querySelector('#robot'), gameTime);
+            const camera = document.querySelector('#camera');
+            robot = new robot_1.Robot(camera, document.querySelector('#leftHand'), document.querySelector('#rightHand'), document.querySelector('#robot'), gameTime);
             tickers.push(robot);
+            camera.object3D.layers.set(3);
+            gameTime.addBeatCallback((ts) => {
+                if (ts.beatInt % 2 === 0) {
+                    camera.object3D.layers.set(3);
+                }
+                else {
+                    camera.object3D.layers.set(1);
+                }
+            });
         });
     },
     tick: function (timeMs, timeDeltaMs) {
         const p = (timeMs / 1000 / 60 / 3) % 1; // percentage of three minutes
         const h = Math.sin(Math.PI * p) * 100; // 100m maximum height
         const r = 0.5 * (1 - Math.cos(Math.PI * p)) * 2000; // glide 2km
-        const playerPos = player.object3D.position;
-        playerPos.set(0, h, -r);
+        if (world) {
+            world.object3D.position.set(0, -h, r);
+        }
         chunkSeries.setPosition(-r);
         for (const ticker of tickers) {
             ticker.tick(timeMs, timeDeltaMs);
@@ -223,7 +274,8 @@ body.innerHTML = `
 <a-sky color="#112" radius=3000></a-sky>
 <a-entity light="type: ambient; color: #222"></a-entity>
 <a-entity light="type:directional; color: #777" position="1800 5000 1200"></a-entity>
-
+<a-entity id='world'>
+</a-entity>
 <a-entity id='player'>
   <a-entity id='robot' position = "-2 0 -2" rotation = "0 180 0"></a-entity>
   <a-sphere position="180 100 120" radius=20 color=#fff shader=flat></a-sphere>
@@ -268,7 +320,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.MountainChunk = exports.WoodlandChunk = exports.StreetChunk = exports.BuildingChunk = void 0;
+exports.MountainChunk = exports.OrchardChunk = exports.WoodlandChunk = exports.StreetChunk = exports.BuildingChunk = void 0;
 const AFRAME = __importStar(__webpack_require__(449));
 class BuildingChunk {
     render(container) {
@@ -312,16 +364,9 @@ class StreetChunk {
 }
 exports.StreetChunk = StreetChunk;
 class WoodlandChunk {
-    constructor(gameTime) {
+    constructor() {
         this.treeTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x33ff55 });
         this.neonTex = new AFRAME.THREE.MeshBasicMaterial({ color: 0xff33aa });
-        this.lights = [];
-        gameTime.addBeatCallback((ts) => {
-            const transparent = (ts.beatInt % 2 === 0);
-            for (const l of this.lights) {
-                l.material.transparent = transparent;
-            }
-        });
     }
     render(container) {
         const geometry = new AFRAME.THREE.Group();
@@ -330,10 +375,10 @@ class WoodlandChunk {
             .rotateX(-Math.PI / 2);
         const brownFloor = new AFRAME.THREE.Mesh(floor, floorTex);
         geometry.add(brownFloor);
-        for (let x = -200; x <= 200; x += 15 + Math.random() * 20) {
+        for (let x = -200; x <= 200; x += 35 + Math.random() * 20) {
             const h = Math.random() * 10 + 5;
             const theta = 2 * Math.PI * Math.random();
-            const r = 0.5 + Math.random();
+            const r = 0.5 + 2 * Math.random();
             const z = (Math.random() - 0.5) * 10;
             {
                 const tree = new AFRAME.THREE.ConeGeometry(r, h, 3, 1, /*open-ended=*/ true)
@@ -346,14 +391,52 @@ class WoodlandChunk {
                 const tree = new AFRAME.THREE.ConeGeometry(r * 0.9, h - 1, 3, 1, /*open-ended=*/ true)
                     .rotateY(theta + Math.PI / 4)
                     .translate(x, h / 2, z);
-                const greenTree = new AFRAME.THREE.Mesh(tree, this.neonTex);
-                geometry.add(greenTree);
+                const neonTree = new AFRAME.THREE.Mesh(tree, this.neonTex);
+                neonTree.layers.set(2);
+                geometry.add(neonTree);
             }
         }
         container.object3D = geometry;
     }
 }
 exports.WoodlandChunk = WoodlandChunk;
+class OrchardChunk {
+    constructor() {
+        this.treeTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x33ff55 });
+        this.neonTex = new AFRAME.THREE.MeshBasicMaterial({ color: 0xff33aa });
+    }
+    render(container) {
+        const geometry = new AFRAME.THREE.Group();
+        const floorTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x443311 });
+        const floor = new AFRAME.THREE.PlaneGeometry(500, 10)
+            .rotateX(-Math.PI / 2);
+        const brownFloor = new AFRAME.THREE.Mesh(floor, floorTex);
+        geometry.add(brownFloor);
+        for (let x = -200; x <= 200; x += 35 + Math.random() * 20) {
+            const h = Math.random() * 2 + 3;
+            const theta = 2 * Math.PI * Math.random();
+            const r = 3 + 2 * Math.random();
+            const z = (Math.random() - 0.5) * 10;
+            {
+                const tree = new AFRAME.THREE.BoxGeometry(r, r, r)
+                    .rotateY(theta)
+                    .translate(x, h, z);
+                const greenTree = new AFRAME.THREE.Mesh(tree, this.treeTex);
+                geometry.add(greenTree);
+            }
+            {
+                const tree = new AFRAME.THREE.BoxGeometry(0.1, h, 0.1)
+                    .rotateY(theta + Math.PI / 4)
+                    .translate(x, h / 2, z);
+                const neonTree = new AFRAME.THREE.Mesh(tree, this.neonTex);
+                // neonTree.layers.set(1);
+                geometry.add(neonTree);
+            }
+        }
+        container.object3D = geometry;
+    }
+}
+exports.OrchardChunk = OrchardChunk;
 class MountainChunk {
     constructor() { }
     mountain(hillTex, sign) {
@@ -476,11 +559,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CollisionHandler = void 0;
 const AFRAME = __importStar(__webpack_require__(449));
 class CollisionPair {
-    constructor(a, b, r, f) {
+    constructor(a, b, r, f, g) {
         this.a = a;
         this.b = b;
         this.r = r;
         this.f = f;
+        this.g = g;
         this.aPos = new AFRAME.THREE.Vector3();
         this.bPos = new AFRAME.THREE.Vector3();
         this.isColliding = false;
@@ -495,7 +579,10 @@ class CollisionPair {
                 this.f(this.aPos.y < 0 ? 'down' : 'up');
             }
         }
-        else {
+        else if (this.isColliding) {
+            if (!!this.g) {
+                this.g(this.aPos.y < 0 ? 'up' : 'down');
+            }
             this.isColliding = false;
         }
     }
@@ -504,8 +591,8 @@ class CollisionHandler {
     constructor() {
         this.pairs = [];
     }
-    addPair(a, b, r, f) {
-        this.pairs.push(new CollisionPair(a, b, r, f));
+    addPair(a, b, r, f, g = null) {
+        this.pairs.push(new CollisionPair(a, b, r, f, g));
     }
     tick(timeMs, timeDeltaMs) {
         for (const p of this.pairs) {
@@ -666,10 +753,15 @@ class GameTime {
     getAudioTimeForGameTime(gameMs) {
         return this.audioCtxZero + gameMs / 1000;
     }
-    roundQuantizeAudioTime(audioTimeS) {
+    roundQuantizeAudioTime1n(audioTimeS) {
         const secondsPerBeat = 4 * 60 / this.bpm;
-        const beat = Math.round(audioTimeS / secondsPerBeat);
+        const beat = Math.round((audioTimeS - this.audioCtxZero) / secondsPerBeat);
         return beat * secondsPerBeat;
+    }
+    nextQuantizeAudioTime8n(audioTimeS) {
+        const secondsPerBeat = 60 / this.bpm / 2;
+        const beat = Math.ceil((audioTimeS - this.audioCtxZero) / secondsPerBeat);
+        return beat * secondsPerBeat + this.audioCtxZero;
     }
     timeSummaryNow(lookaheadS) {
         const audioTimeNowS = common_1.Common.audioContext().currentTime;
@@ -717,6 +809,254 @@ class ModelUtil {
 }
 exports.ModelUtil = ModelUtil;
 //# sourceMappingURL=modelUtil.js.map
+
+/***/ }),
+
+/***/ 544:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Positron = exports.PositronConfig = void 0;
+const Tone = __importStar(__webpack_require__(784));
+class PositronConfig {
+    static fromString(config) {
+        const result = new PositronConfig();
+        Object.assign(result, JSON.parse(config));
+        result.env.context = Tone.getContext();
+        result.freqEnv.context = Tone.getContext();
+        result.filterEnv.context = Tone.getContext();
+        return result;
+    }
+}
+exports.PositronConfig = PositronConfig;
+PositronConfig.patch808 = {
+    env: {
+        attack: 0.01, decay: 0.4, sustain: 0, release: 0.3,
+        attackCurve: "exponential", releaseCurve: "exponential", decayCurve: "exponential",
+        context: Tone.getContext(),
+    },
+    freqEnv: {
+        attack: 0.01, decay: 0.2, sustain: 0, release: 0.2, baseFrequency: 'a1', octaves: 1.5,
+        attackCurve: "exponential", releaseCurve: "exponential", decayCurve: "exponential",
+        context: Tone.getContext(), exponent: 2,
+    },
+    filterEnv: {
+        attack: 0.01, decay: 0.2, sustain: 0, release: 0.2, baseFrequency: 'a1', octaves: 1.5,
+        attackCurve: "exponential", releaseCurve: "exponential", decayCurve: "exponential",
+        context: Tone.getContext(), exponent: 2,
+    },
+    osc1: "square",
+    osc2: "sine",
+    osc2Detune: 0.5,
+    filter: "bandpass",
+    filterScale: 1.0,
+    noise: 0.2,
+    distortion: 2.0,
+};
+PositronConfig.patchSaw = {
+    env: {
+        attack: 0.1, decay: 0.1, sustain: 0.5, release: 0.5,
+        attackCurve: "exponential", releaseCurve: "exponential", decayCurve: "exponential",
+        context: Tone.getContext(),
+    },
+    freqEnv: {
+        attack: 0, decay: 0, sustain: 0, release: 0, baseFrequency: 'a1', octaves: 0,
+        attackCurve: "exponential", releaseCurve: "exponential", decayCurve: "exponential",
+        context: Tone.getContext(), exponent: 2,
+    },
+    filterEnv: {
+        attack: 0, decay: 0, sustain: 0, release: 0, baseFrequency: 'a1', octaves: 0,
+        attackCurve: "exponential", releaseCurve: "exponential", decayCurve: "exponential",
+        context: Tone.getContext(), exponent: 2,
+    },
+    osc1: "sawtooth",
+    osc2: "sawtooth",
+    osc2Detune: 1.0,
+    filter: "lowpass",
+    filterScale: 32,
+    noise: 0,
+    distortion: 0,
+};
+PositronConfig.patchSoftBass = PositronConfig.fromString(`
+  {
+    "env": {
+      "attack": 0.01,
+      "decay": 0.2,
+      "sustain": 0.1,
+      "release": 0.1,
+      "attackCurve": "exponential",
+      "releaseCurve": "exponential",
+      "decayCurve": "exponential",
+      "context": {}
+    },
+    "freqEnv": {
+      "attack": 0,
+      "decay": 0,
+      "sustain": 0,
+      "release": 0,
+      "baseFrequency": "a1",
+      "octaves": 0,
+      "attackCurve": "exponential",
+      "releaseCurve": "exponential",
+      "decayCurve": "exponential",
+      "context": {},
+      "exponent": 2
+    },
+    "filterEnv": {
+      "attack": 0.05,
+      "decay": 0.1,
+      "sustain": 0,
+      "release": 0.02,
+      "baseFrequency": "a1",
+      "octaves": 0,
+      "attackCurve": "exponential",
+      "releaseCurve": "exponential",
+      "decayCurve": "exponential",
+      "context": {},
+      "exponent": 2
+    },
+    "osc1": "sawtooth",
+    "osc2": "sine",
+    "osc2Detune": 0.5,
+    "filter": "lowpass",
+    "filterScale": 5,
+    "noise": 0.3,
+    "distortion": 3
+  }
+  `);
+PositronConfig.patchSynthLead = PositronConfig.fromString(`
+  {
+    "env": {
+      "attack": 0.07,
+      "decay": 1.0000000000000007,
+      "sustain": 0.8000000000000003,
+      "release": 1.640000000000001,
+      "attackCurve": "exponential",
+      "releaseCurve": "exponential",
+      "decayCurve": "exponential",
+      "context": {}
+    },
+    "freqEnv": {
+      "attack": 0,
+      "decay": 0,
+      "sustain": 0,
+      "release": 0,
+      "baseFrequency": "a1",
+      "octaves": 0,
+      "attackCurve": "exponential",
+      "releaseCurve": "exponential",
+      "decayCurve": "exponential",
+      "context": {},
+      "exponent": 2
+    },
+    "filterEnv": {
+      "attack": 0.6300000000000003,
+      "decay": 1.270000000000001,
+      "sustain": 0.26,
+      "release": 0,
+      "baseFrequency": "a1",
+      "octaves": 0,
+      "attackCurve": "exponential",
+      "releaseCurve": "exponential",
+      "decayCurve": "exponential",
+      "context": {},
+      "exponent": 2
+    },
+    "osc1": "sawtooth",
+    "osc2": "sine",
+    "osc2Detune": 2,
+    "filter": "bandpass",
+    "filterScale": 2.0599999999999987,
+    "noise": 0,
+    "distortion": 0
+  }
+  `);
+class Positron {
+    constructor(config) {
+        Tone.start();
+        this.env = new Tone.Envelope(config.env);
+        this.freqEnv = new Tone.FrequencyEnvelope(config.freqEnv);
+        this.filterEnv = new Tone.FrequencyEnvelope(config.filterEnv);
+        this.filterScale = new Tone.Scale(0, config.filterScale);
+        this.osc1 = new Tone.Oscillator(220, config.osc1).start();
+        this.harmonic = new Tone.Scale(0, config.osc2Detune);
+        this.osc2 = new Tone.Oscillator(1000, config.osc2).start();
+        const noise = new Tone.Noise("white").start();
+        this.filter = new Tone.Filter(0, config.filter);
+        const gainNode = new Tone.Gain(0);
+        this.noiseGain = new Tone.Gain(config.noise);
+        this.dist = new Tone.Distortion(config.distortion);
+        this.freqEnv.connect(this.osc1.frequency);
+        this.freqEnv.connect(this.harmonic);
+        this.harmonic.connect(this.osc2.frequency);
+        this.filterEnv.connect(this.filterScale);
+        this.filterScale.connect(this.filter.frequency);
+        this.env.connect(gainNode.gain);
+        noise.connect(this.noiseGain);
+        this.noiseGain.connect(this.filter);
+        this.osc1.connect(this.filter);
+        this.osc2.connect(this.filter);
+        this.filter.connect(gainNode);
+        gainNode.connect(this.dist);
+        gainNode.toDestination();
+    }
+    setConfig(config) {
+        this.env.set(config.env);
+        this.freqEnv.set(config.freqEnv);
+        this.filterEnv.set(config.filterEnv);
+        this.filterScale.max = config.filterScale;
+        this.osc1.type = config.osc1;
+        this.harmonic.max = config.osc2Detune;
+        this.osc2.type = config.osc2;
+        this.filter.type = config.filter;
+        this.noiseGain.gain.setValueAtTime(config.noise, Tone.now());
+        this.dist.distortion = config.distortion;
+    }
+    triggerAttackRelease(note, duration, time) {
+        this.freqEnv.baseFrequency = note;
+        this.filterEnv.baseFrequency = note;
+        this.env.triggerAttackRelease(duration, time);
+        this.freqEnv.triggerAttackRelease(duration, time);
+        this.filterEnv.triggerAttackRelease(duration, time);
+    }
+    triggerAttack(note, time) {
+        this.freqEnv.baseFrequency = note;
+        this.filterEnv.baseFrequency = note;
+        this.env.triggerAttack(time);
+        this.freqEnv.triggerAttack(time);
+        this.filterEnv.triggerAttack(time);
+    }
+    triggerRelease(note, time) {
+        this.freqEnv.baseFrequency = note;
+        this.filterEnv.baseFrequency = note;
+        this.env.triggerRelease(time);
+        this.freqEnv.triggerRelease(time);
+        this.filterEnv.triggerRelease(time);
+    }
+}
+exports.Positron = Positron;
+//# sourceMappingURL=positron.js.map
 
 /***/ }),
 
@@ -911,7 +1251,7 @@ class Sample {
     stop() {
         if (this.previousNode) {
             const quantizedAudioTimeS = this.gameTime.
-                roundQuantizeAudioTime(common_1.Common.audioContext().currentTime);
+                roundQuantizeAudioTime1n(common_1.Common.audioContext().currentTime);
             this.previousNode.stop(quantizedAudioTimeS);
             this.previousNode = null;
         }
@@ -960,6 +1300,7 @@ class SampleEntity {
         this.lights = [];
         this.nextLoopStart = 0;
         this.selectedSampleIndex = -1;
+        this.lastBeatMod = -1;
         this.beatCallback = (ts) => {
             if (ts.beatInt > this.nextLoopStart) {
                 this.nextLoopStart += 8;
@@ -970,6 +1311,19 @@ class SampleEntity {
                     this.track.stop();
                     this.track.getSample(this.selectedSampleIndex).playAt(ts.audioTimeS);
                 }
+            }
+            if (this.selectedSampleIndex >= 0) {
+                const newBeatMod = ts.beatInt % 8;
+                if (newBeatMod != this.lastBeatMod) {
+                    this.lastBeatMod = newBeatMod;
+                    const m = Math.trunc(newBeatMod / 4) + 1;
+                    const n = newBeatMod % 4 + 1;
+                    const url = `img/dial/dial_${m}_${n}.png`;
+                    this.dial.setAttribute('src', `#${this.assets.getId(url)}`);
+                }
+            }
+            else {
+                this.dial.setAttribute('src', `#${this.assets.getId('img/dial/dial_off.png')}`);
             }
         };
         gameTime.addBeatCallback(this.beatCallback);
@@ -1023,14 +1377,14 @@ class SampleEntity {
         const imageContainer = document.createElement('a-entity');
         container.appendChild(imageContainer);
         {
-            const o = document.createElement('a-image');
-            o.setAttribute('height', '0.2');
-            o.setAttribute('width', '0.2');
-            o.setAttribute('src', `#${this.assets.getId('img/dial/dial_off.png')}`);
-            o.setAttribute('transparent', 'true');
-            o.setAttribute('shader', 'flat');
-            o.setAttribute('position', '0 0 -0.01');
-            imageContainer.appendChild(o);
+            this.dial = document.createElement('a-image');
+            this.dial.setAttribute('height', '0.2');
+            this.dial.setAttribute('width', '0.2');
+            this.dial.setAttribute('src', `#${this.assets.getId('img/dial/dial_off.png')}`);
+            this.dial.setAttribute('transparent', 'true');
+            this.dial.setAttribute('shader', 'flat');
+            this.dial.setAttribute('position', '0 0 -0.01');
+            imageContainer.appendChild(this.dial);
         }
         {
             const o = document.createElement('a-image');
@@ -1153,25 +1507,70 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ToneEntity = void 0;
 const Tone = __importStar(__webpack_require__(784));
+const positron_1 = __webpack_require__(544);
 class ToneEntity {
-    constructor(container, collisionHandler, leftStick, rightStick) {
+    constructor(container, collisionHandler, leftStick, rightStick, gameTime) {
         this.container = container;
-        this.synth = new Tone.Synth().toDestination();
-        const notes = ['F4', 'G4', 'A4', 'Bb4', 'C4', 'D4', 'E4', 'F4'];
-        const kStride = 0.2;
+        this.collisionHandler = collisionHandler;
+        this.leftStick = leftStick;
+        this.rightStick = rightStick;
+        this.gameTime = gameTime;
+        this.voices = [];
+        this.currentVoice = 0;
+        this.voiceMap = new Map();
+        for (let i = 0; i < 6; ++i) {
+            this.voices.push(new positron_1.Positron(positron_1.PositronConfig.patchSoftBass));
+        }
+        const notes = ['F3', 'G3', 'A3', 'Bb3', 'C4', 'D4', 'E4', 'F4'];
+        this.layoutDiamond(notes);
+    }
+    getSynth(n) {
+        let voiceNumber = this.currentVoice;
+        if (this.voiceMap.has(n)) {
+            voiceNumber = this.voiceMap.get(n);
+        }
+        else {
+            this.voiceMap.set(n, voiceNumber);
+            this.currentVoice = (this.currentVoice + 1) % this.voices.length;
+        }
+        return this.voices[voiceNumber];
+    }
+    makeKey(n, r = 0.05) {
+        const hitHandler = (direction) => {
+            this.getSynth(n).triggerAttack(n, this.gameTime.nextQuantizeAudioTime8n(Tone.now()));
+        };
+        const releaseHandler = (direction) => {
+            this.getSynth(n).triggerRelease(n, this.gameTime.nextQuantizeAudioTime8n(Tone.now()));
+        };
+        const o = document.createElement('a-sphere');
+        o.setAttribute('radius', `${r} `);
+        o.setAttribute('segments-width', '8');
+        o.setAttribute('segments-height', '2');
+        o.setAttribute('metalness', '0.5');
+        o.setAttribute('roughness', '0.3');
+        o.setAttribute('rotation', '30 0 0');
+        this.collisionHandler.addPair(o, this.leftStick, 0.05, hitHandler, releaseHandler);
+        this.collisionHandler.addPair(o, this.rightStick, 0.05, hitHandler, releaseHandler);
+        this.container.appendChild(o);
+        return o;
+    }
+    layoutHorizontal(notes) {
+        const kStride = 0.12;
         let x = -kStride * (notes.length - 1) / 2;
         for (const n of notes) {
-            const o = document.createElement('a-sphere');
-            o.setAttribute('radius', '0.06');
-            o.setAttribute('position', `${x} 0 0`);
-            const hitHandler = (direction) => {
-                this.synth.triggerAttackRelease(n, "8n");
-            };
-            collisionHandler.addPair(o, leftStick, 0.06, hitHandler);
-            collisionHandler.addPair(o, rightStick, 0.06, hitHandler);
-            container.appendChild(o);
+            this.makeKey(n).setAttribute('position', `${x} 0 0`);
             x += kStride;
         }
+    }
+    layoutDiamond(notes) {
+        this.makeKey(notes[0]).setAttribute('position', `0 0.3 0`);
+        this.makeKey(notes[1]).setAttribute('position', `- 0.1 0.2 0`);
+        this.makeKey(notes[2]).setAttribute('position', `0.1 0.2 0`);
+        this.makeKey(notes[3], 0.04).setAttribute('position', `- 0.2 0.1 0`);
+        this.makeKey(notes[4]).setAttribute('position', `0 0.1 0`);
+        this.makeKey(notes[5]).setAttribute('position', `0.2 0.1 0`);
+        this.makeKey(notes[6], 0.04).setAttribute('position', `- 0.1 0.0 0`);
+        this.makeKey(notes[7]).setAttribute('position', `0.1 0.0 0`);
     }
 }
 exports.ToneEntity = ToneEntity;
