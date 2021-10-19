@@ -38,7 +38,7 @@ export class Sample {
   stop() {
     if (this.previousNode) {
       const quantizedAudioTimeS = this.gameTime.
-        roundQuantizeAudioTime(Common.audioContext().currentTime);
+        roundQuantizeAudioTime1n(Common.audioContext().currentTime);
       this.previousNode.stop(quantizedAudioTimeS);
       this.previousNode = null;
     }

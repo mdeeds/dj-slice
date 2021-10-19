@@ -38,17 +38,18 @@ function makeBalloon(player: AFRAME.Entity) {
 
 
 const kStickLength = 0.25;
-function addStick(container: AFRAME.Entity) {
+function addStick(container: AFRAME.Entity, gameTime: GameTime) {
   const stick = document.createElement('a-entity');
   stick.setAttribute('rotation', '45 0 0');
+  addRing(stick, gameTime);
   container.appendChild(stick);
   {
     const o = document.createElement('a-box');
-    o.setAttribute('height', '0.01');
-    o.setAttribute('width', '0.01');
+    o.setAttribute('height', '0.005');
+    o.setAttribute('width', '0.005');
     o.setAttribute('depth', kStickLength);
     o.setAttribute('position', `0 0 ${-kStickLength / 2}`);
-    o.setAttribute('color', '#422');
+    o.setAttribute('color', '#223');
     o.setAttribute('shader', 'flat');
     stick.appendChild(o);
   }
@@ -97,19 +98,17 @@ function chunkFactoryFactory(gameTime: GameTime) {
   }
 }
 
-function addTones(player: AFRAME.Entity, theta: number) {
+function addTones(player: AFRAME.Entity, theta: number, gameTime: GameTime) {
   const container = document.createElement('a-entity');
   const x = 0.7 * Math.sin(theta);
   const z = -0.7 * Math.cos(theta);
   container.setAttribute('position', `${x} 1.2 ${z}`);
   container.setAttribute('rotation', `0 ${-180 / Math.PI * theta} 0`);
-  new ToneEntity(container, collisionHandler, leftStick, rightStick);
+  new ToneEntity(container, collisionHandler, leftStick, rightStick, gameTime);
   player.appendChild(container);
 }
 
-function makeRing(gametime: GameTime) {
-  const camera = document.querySelector('a-camera');
-
+function addRing(container: AFRAME.Entity, gametime: GameTime) {
   const rings = [];
   const thetaStart = 300;
   const thetaLength = 300;
@@ -117,15 +116,16 @@ function makeRing(gametime: GameTime) {
   for (let i = 7; i >= 0; --i) {
     const theta = i * (thetaLength / 8) + thetaStart;
     const r = document.createElement('a-ring');
-    r.setAttribute('radius-inner', '1.6');
-    r.setAttribute('radius-outer', '1.7');
-    r.setAttribute('position', '0 0 -2');
+    r.setAttribute('radius-inner', '0.014');
+    r.setAttribute('radius-outer', '0.016');
+    r.setAttribute('position', '0 0.05 -0.1');
+    r.setAttribute('rotation', '-90 0 0');
     r.setAttribute('color', 'green');
     r.setAttribute('shader', 'flat');
     r.setAttribute('theta-start', theta + epsilon);
     r.setAttribute('theta-length', thetaLength / 8 - 2 * epsilon);
     rings.push(r);
-    camera.appendChild(r);
+    container.appendChild(r);
   }
 
   gametime.addBeatCallback((ts: TimeSummary) => {
@@ -155,10 +155,10 @@ AFRAME.registerComponent("go", {
     Debug.init(document.querySelector('a-camera'));
     collisionHandler = new CollisionHandler();
     tickers.push(collisionHandler);
-    leftStick = addStick(document.querySelector('#leftHand'));
-    rightStick = addStick(document.querySelector('#rightHand'));
+    leftStick = addStick(document.querySelector('#leftHand'), gameTime);
+    rightStick = addStick(document.querySelector('#rightHand'), gameTime);
 
-    addTones(player, -Math.PI / 2);
+    addTones(player, -Math.PI / 2, gameTime);
 
     const assetLibrary = new AssetLibrary(document.querySelector('a-assets'));
 
@@ -191,8 +191,6 @@ AFRAME.registerComponent("go", {
         camera.object3D.layers.set(1);
       }
     });
-
-    makeRing(gameTime);
   },
   tick: function (timeMs, timeDeltaMs) {
     const p = (timeMs / 1000 / 60 / 3) % 1; // percentage of three minutes

@@ -110,6 +110,54 @@ export class PositronConfig {
   }
   `);
 
+  static patchSynthLead = PositronConfig.fromString(`
+  {
+    "env": {
+      "attack": 0.07,
+      "decay": 1.0000000000000007,
+      "sustain": 0.8000000000000003,
+      "release": 1.640000000000001,
+      "attackCurve": "exponential",
+      "releaseCurve": "exponential",
+      "decayCurve": "exponential",
+      "context": {}
+    },
+    "freqEnv": {
+      "attack": 0,
+      "decay": 0,
+      "sustain": 0,
+      "release": 0,
+      "baseFrequency": "a1",
+      "octaves": 0,
+      "attackCurve": "exponential",
+      "releaseCurve": "exponential",
+      "decayCurve": "exponential",
+      "context": {},
+      "exponent": 2
+    },
+    "filterEnv": {
+      "attack": 0.6300000000000003,
+      "decay": 1.270000000000001,
+      "sustain": 0.26,
+      "release": 0,
+      "baseFrequency": "a1",
+      "octaves": 0,
+      "attackCurve": "exponential",
+      "releaseCurve": "exponential",
+      "decayCurve": "exponential",
+      "context": {},
+      "exponent": 2
+    },
+    "osc1": "sawtooth",
+    "osc2": "sine",
+    "osc2Detune": 2,
+    "filter": "bandpass",
+    "filterScale": 2.0599999999999987,
+    "noise": 0,
+    "distortion": 0
+  }
+  `);
+
   static fromString(config: string) {
     const result = new PositronConfig();
     Object.assign(result, JSON.parse(config));

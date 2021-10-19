@@ -63,11 +63,20 @@ export class GameTime {
     return this.audioCtxZero + gameMs / 1000;
   }
 
-  roundQuantizeAudioTime(audioTimeS: number) {
+  roundQuantizeAudioTime1n(audioTimeS: number) {
     const secondsPerBeat = 4 * 60 / this.bpm;
-    const beat = Math.round(audioTimeS / secondsPerBeat);
+    const beat = Math.round(
+      (audioTimeS - this.audioCtxZero) / secondsPerBeat);
     return beat * secondsPerBeat;
   }
+
+  nextQuantizeAudioTime8n(audioTimeS: number) {
+    const secondsPerBeat = 60 / this.bpm / 2;
+    const beat = Math.ceil(
+      (audioTimeS - this.audioCtxZero) / secondsPerBeat);
+    return beat * secondsPerBeat + this.audioCtxZero;
+  }
+
 
   timeSummaryNow(lookaheadS: number) {
     const audioTimeNowS = Common.audioContext().currentTime;

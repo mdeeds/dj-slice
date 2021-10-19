@@ -1,29 +1,48 @@
 import * as AFRAME from "aframe";
 import * as Tone from "tone";
 import { CollisionDirection, CollisionHandler } from "./collisionHandler";
+import { GameTime } from "./gameTime";
 import { Positron, PositronConfig } from "./positron";
 
 export class ToneEntity {
-  private synth: Positron;
+  private voices: Positron[] = [];
+  private currentVoice = 0;
+  private voiceMap = new Map<string, number>();
   constructor(private container: AFRAME.Entity,
     private collisionHandler: CollisionHandler,
-    private leftStick: AFRAME.Entity, private rightStick: AFRAME.Entity) {
+    private leftStick: AFRAME.Entity, private rightStick: AFRAME.Entity,
+    private gameTime: GameTime) {
 
-    this.synth = new Positron(PositronConfig.patchSoftBass);
+    for (let i = 0; i < 6; ++i) {
+      this.voices.push(new Positron(PositronConfig.patchSoftBass));
+    }
 
     const notes = ['F3', 'G3', 'A3', 'Bb3', 'C4', 'D4', 'E4', 'F4'];
     this.layoutDiamond(notes);
   }
 
+  private getSynth(n: string): Positron {
+    let voiceNumber = this.currentVoice;
+    if (this.voiceMap.has(n)) {
+      voiceNumber = this.voiceMap.get(n);
+    } else {
+      this.voiceMap.set(n, voiceNumber);
+      this.currentVoice = (this.currentVoice + 1) % this.voices.length;
+    }
+    return this.voices[voiceNumber];
+  }
+
   makeKey(n: string, r = 0.05): AFRAME.Entity {
     const hitHandler = (direction: CollisionDirection) => {
-      this.synth.triggerAttack(n, Tone.now());
+      this.getSynth(n).triggerAttack(n,
+        this.gameTime.nextQuantizeAudioTime8n(Tone.now()));
     };
     const releaseHandler = (direction: CollisionDirection) => {
-      this.synth.triggerRelease(n, Tone.now());
+      this.getSynth(n).triggerRelease(n,
+        this.gameTime.nextQuantizeAudioTime8n(Tone.now()));
     };
     const o = document.createElement('a-sphere');
-    o.setAttribute('radius', `${r}`);
+    o.setAttribute('radius', `${r} `);
     o.setAttribute('segments-width', '8');
     o.setAttribute('segments-height', '2');
     o.setAttribute('metalness', '0.5');
@@ -49,14 +68,14 @@ export class ToneEntity {
   layoutDiamond(notes: string[]) {
     this.makeKey(notes[0]).setAttribute('position', `0 0.3 0`);
 
-    this.makeKey(notes[1]).setAttribute('position', `-0.1 0.2 0`);
+    this.makeKey(notes[1]).setAttribute('position', `- 0.1 0.2 0`);
     this.makeKey(notes[2]).setAttribute('position', `0.1 0.2 0`);
 
-    this.makeKey(notes[3], 0.04).setAttribute('position', `-0.2 0.1 0`);
+    this.makeKey(notes[3], 0.04).setAttribute('position', `- 0.2 0.1 0`);
     this.makeKey(notes[4]).setAttribute('position', `0 0.1 0`);
     this.makeKey(notes[5]).setAttribute('position', `0.2 0.1 0`);
 
-    this.makeKey(notes[6], 0.04).setAttribute('position', `-0.1 0.0 0`);
+    this.makeKey(notes[6], 0.04).setAttribute('position', `- 0.1 0.0 0`);
     this.makeKey(notes[7]).setAttribute('position', `0.1 0.0 0`);
   }
 }
