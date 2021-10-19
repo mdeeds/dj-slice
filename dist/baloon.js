@@ -753,15 +753,15 @@ class GameTime {
     getAudioTimeForGameTime(gameMs) {
         return this.audioCtxZero + gameMs / 1000;
     }
-    roundQuantizeAudioTime(audioTimeS) {
+    roundQuantizeAudioTime1n(audioTimeS) {
         const secondsPerBeat = 4 * 60 / this.bpm;
         const beat = Math.round((audioTimeS - this.audioCtxZero) / secondsPerBeat);
         return beat * secondsPerBeat;
     }
-    nextQuantizeAudioTime(audioTimeS) {
+    nextQuantizeAudioTime8n(audioTimeS) {
         const secondsPerBeat = 60 / this.bpm / 2;
         const beat = Math.ceil((audioTimeS - this.audioCtxZero) / secondsPerBeat);
-        return beat * secondsPerBeat;
+        return beat * secondsPerBeat + this.audioCtxZero;
     }
     timeSummaryNow(lookaheadS) {
         const audioTimeNowS = common_1.Common.audioContext().currentTime;
@@ -943,6 +943,53 @@ PositronConfig.patchSoftBass = PositronConfig.fromString(`
     "filterScale": 5,
     "noise": 0.3,
     "distortion": 3
+  }
+  `);
+PositronConfig.patchSynthLead = PositronConfig.fromString(`
+  {
+    "env": {
+      "attack": 0.07,
+      "decay": 1.0000000000000007,
+      "sustain": 0.8000000000000003,
+      "release": 1.640000000000001,
+      "attackCurve": "exponential",
+      "releaseCurve": "exponential",
+      "decayCurve": "exponential",
+      "context": {}
+    },
+    "freqEnv": {
+      "attack": 0,
+      "decay": 0,
+      "sustain": 0,
+      "release": 0,
+      "baseFrequency": "a1",
+      "octaves": 0,
+      "attackCurve": "exponential",
+      "releaseCurve": "exponential",
+      "decayCurve": "exponential",
+      "context": {},
+      "exponent": 2
+    },
+    "filterEnv": {
+      "attack": 0.6300000000000003,
+      "decay": 1.270000000000001,
+      "sustain": 0.26,
+      "release": 0,
+      "baseFrequency": "a1",
+      "octaves": 0,
+      "attackCurve": "exponential",
+      "releaseCurve": "exponential",
+      "decayCurve": "exponential",
+      "context": {},
+      "exponent": 2
+    },
+    "osc1": "sawtooth",
+    "osc2": "sine",
+    "osc2Detune": 2,
+    "filter": "bandpass",
+    "filterScale": 2.0599999999999987,
+    "noise": 0,
+    "distortion": 0
   }
   `);
 class Positron {
@@ -1204,7 +1251,7 @@ class Sample {
     stop() {
         if (this.previousNode) {
             const quantizedAudioTimeS = this.gameTime.
-                roundQuantizeAudioTime(common_1.Common.audioContext().currentTime);
+                roundQuantizeAudioTime1n(common_1.Common.audioContext().currentTime);
             this.previousNode.stop(quantizedAudioTimeS);
             this.previousNode = null;
         }
@@ -1468,19 +1515,35 @@ class ToneEntity {
         this.leftStick = leftStick;
         this.rightStick = rightStick;
         this.gameTime = gameTime;
-        this.synth = new positron_1.Positron(positron_1.PositronConfig.patchSoftBass);
+        this.voices = [];
+        this.currentVoice = 0;
+        this.voiceMap = new Map();
+        for (let i = 0; i < 6; ++i) {
+            this.voices.push(new positron_1.Positron(positron_1.PositronConfig.patchSoftBass));
+        }
         const notes = ['F3', 'G3', 'A3', 'Bb3', 'C4', 'D4', 'E4', 'F4'];
         this.layoutDiamond(notes);
     }
+    getSynth(n) {
+        let voiceNumber = this.currentVoice;
+        if (this.voiceMap.has(n)) {
+            voiceNumber = this.voiceMap.get(n);
+        }
+        else {
+            this.voiceMap.set(n, voiceNumber);
+            this.currentVoice = (this.currentVoice + 1) % this.voices.length;
+        }
+        return this.voices[voiceNumber];
+    }
     makeKey(n, r = 0.05) {
         const hitHandler = (direction) => {
-            this.synth.triggerAttack(n, this.gameTime.nextQuantizeAudioTime(Tone.now()));
+            this.getSynth(n).triggerAttack(n, this.gameTime.nextQuantizeAudioTime8n(Tone.now()));
         };
         const releaseHandler = (direction) => {
-            this.synth.triggerRelease(n, this.gameTime.nextQuantizeAudioTime(Tone.now()));
+            this.getSynth(n).triggerRelease(n, this.gameTime.nextQuantizeAudioTime8n(Tone.now()));
         };
         const o = document.createElement('a-sphere');
-        o.setAttribute('radius', `${r}`);
+        o.setAttribute('radius', `${r} `);
         o.setAttribute('segments-width', '8');
         o.setAttribute('segments-height', '2');
         o.setAttribute('metalness', '0.5');
@@ -1501,12 +1564,12 @@ class ToneEntity {
     }
     layoutDiamond(notes) {
         this.makeKey(notes[0]).setAttribute('position', `0 0.3 0`);
-        this.makeKey(notes[1]).setAttribute('position', `-0.1 0.2 0`);
+        this.makeKey(notes[1]).setAttribute('position', `- 0.1 0.2 0`);
         this.makeKey(notes[2]).setAttribute('position', `0.1 0.2 0`);
-        this.makeKey(notes[3], 0.04).setAttribute('position', `-0.2 0.1 0`);
+        this.makeKey(notes[3], 0.04).setAttribute('position', `- 0.2 0.1 0`);
         this.makeKey(notes[4]).setAttribute('position', `0 0.1 0`);
         this.makeKey(notes[5]).setAttribute('position', `0.2 0.1 0`);
-        this.makeKey(notes[6], 0.04).setAttribute('position', `-0.1 0.0 0`);
+        this.makeKey(notes[6], 0.04).setAttribute('position', `- 0.1 0.0 0`);
         this.makeKey(notes[7]).setAttribute('position', `0.1 0.0 0`);
     }
 }
