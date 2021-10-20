@@ -164,7 +164,12 @@ function streetsOnly(gameTime) {
 }
 function tron(gameTime) {
     return (i) => {
-        return new chunk_1.TronChunk();
+        if (i % 5 === 0) {
+            return new chunk_1.TronChunk();
+        }
+        else {
+            return new chunk_1.StreetChunk();
+        }
     };
 }
 function addTones(player, theta, gameTime) {

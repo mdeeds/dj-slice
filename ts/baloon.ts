@@ -107,7 +107,11 @@ function streetsOnly(gameTime: GameTime) {
 
 function tron(gameTime: GameTime) {
   return (i: number): Chunk => {
-    return new TronChunk();
+    if (i % 5 === 0) {
+      return new TronChunk();
+    } else {
+      return new StreetChunk();
+    }
   }
 }
 
