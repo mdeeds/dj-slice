@@ -23,7 +23,8 @@ function makeBalloon(player: AFRAME.Entity) {
   player.appendChild(baloon);
 
   const basket = document.createElement('a-entity') as AFRAME.Entity;
-  basket.setAttribute('obj-model', "obj: url(obj/basket-pipe.obj);");
+  basket.setAttribute('obj-model',
+    "obj: url(obj/basket.obj); mtl: url(obj/basket.mtl);");
   basket.setAttribute('material', 'color: #222; vertexColors: none');
   player.appendChild(basket);
 

@@ -84,7 +84,7 @@ function makeBalloon(player) {
     baloon.setAttribute('position', '0 11 0');
     player.appendChild(baloon);
     const basket = document.createElement('a-entity');
-    basket.setAttribute('obj-model', "obj: url(obj/basket-pipe.obj);");
+    basket.setAttribute('obj-model', "obj: url(obj/basket.obj); mtl: url(obj/basket.mtl);");
     basket.setAttribute('material', 'color: #222; vertexColors: none');
     player.appendChild(basket);
     const c = document.createElement('a-cylinder');
@@ -760,6 +760,11 @@ class GameTime {
     }
     nextQuantizeAudioTime8n(audioTimeS) {
         const secondsPerBeat = 60 / this.bpm / 2;
+        const beat = Math.ceil((audioTimeS - this.audioCtxZero) / secondsPerBeat);
+        return beat * secondsPerBeat + this.audioCtxZero;
+    }
+    nextQuantizeAudioTime16n(audioTimeS) {
+        const secondsPerBeat = 60 / this.bpm / 4;
         const beat = Math.ceil((audioTimeS - this.audioCtxZero) / secondsPerBeat);
         return beat * secondsPerBeat + this.audioCtxZero;
     }
@@ -1518,11 +1523,14 @@ class ToneEntity {
         this.voices = [];
         this.currentVoice = 0;
         this.voiceMap = new Map();
+        this.activeVoices = new Set();
+        this.keyNumber = 1;
         for (let i = 0; i < 6; ++i) {
             this.voices.push(new positron_1.Positron(positron_1.PositronConfig.patchSoftBass));
         }
         const notes = ['F3', 'G3', 'A3', 'Bb3', 'C4', 'D4', 'E4', 'F4'];
         this.layoutDiamond(notes);
+        // this.layoutHorizontal(notes);
     }
     getSynth(n) {
         let voiceNumber = this.currentVoice;
@@ -1530,17 +1538,28 @@ class ToneEntity {
             voiceNumber = this.voiceMap.get(n);
         }
         else {
-            this.voiceMap.set(n, voiceNumber);
+            for (let i = 0; i < this.voices.length; ++i) {
+                if (!this.activeVoices.has(this.currentVoice)) {
+                    break;
+                }
+            }
+            this.voiceMap.set(n, this.currentVoice);
+            this.activeVoices.add(this.currentVoice);
+            voiceNumber = this.currentVoice;
             this.currentVoice = (this.currentVoice + 1) % this.voices.length;
         }
         return this.voices[voiceNumber];
     }
+    releaseSynth(n) {
+        this.voiceMap.delete(n);
+    }
     makeKey(n, r = 0.05) {
         const hitHandler = (direction) => {
-            this.getSynth(n).triggerAttack(n, this.gameTime.nextQuantizeAudioTime8n(Tone.now()));
+            this.getSynth(n).triggerAttack(n, this.gameTime.nextQuantizeAudioTime16n(Tone.now()));
         };
         const releaseHandler = (direction) => {
-            this.getSynth(n).triggerRelease(n, this.gameTime.nextQuantizeAudioTime8n(Tone.now()));
+            this.getSynth(n).triggerRelease(n, this.gameTime.nextQuantizeAudioTime16n(Tone.now()));
+            this.releaseSynth(n);
         };
         const o = document.createElement('a-sphere');
         o.setAttribute('radius', `${r} `);
@@ -1552,6 +1571,20 @@ class ToneEntity {
         this.collisionHandler.addPair(o, this.leftStick, 0.05, hitHandler, releaseHandler);
         this.collisionHandler.addPair(o, this.rightStick, 0.05, hitHandler, releaseHandler);
         this.container.appendChild(o);
+        // Really hacky keyboard handler for testing.
+        const body = document.getElementsByTagName('body')[0];
+        ((k) => {
+            body.addEventListener('keydown', (ev) => {
+                if (ev.code === k) {
+                    hitHandler('down');
+                }
+            });
+            body.addEventListener('keyup', (ev) => {
+                if (ev.code === k) {
+                    releaseHandler('down');
+                }
+            });
+        })(`Digit${this.keyNumber++}`);
         return o;
     }
     layoutHorizontal(notes) {
@@ -1564,12 +1597,12 @@ class ToneEntity {
     }
     layoutDiamond(notes) {
         this.makeKey(notes[0]).setAttribute('position', `0 0.3 0`);
-        this.makeKey(notes[1]).setAttribute('position', `- 0.1 0.2 0`);
+        this.makeKey(notes[1]).setAttribute('position', `-0.1 0.2 0`);
         this.makeKey(notes[2]).setAttribute('position', `0.1 0.2 0`);
-        this.makeKey(notes[3], 0.04).setAttribute('position', `- 0.2 0.1 0`);
+        this.makeKey(notes[3], 0.04).setAttribute('position', `-0.2 0.1 0`);
         this.makeKey(notes[4]).setAttribute('position', `0 0.1 0`);
         this.makeKey(notes[5]).setAttribute('position', `0.2 0.1 0`);
-        this.makeKey(notes[6], 0.04).setAttribute('position', `- 0.1 0.0 0`);
+        this.makeKey(notes[6], 0.04).setAttribute('position', `-0.1 0.0 0`);
         this.makeKey(notes[7]).setAttribute('position', `0.1 0.0 0`);
     }
 }
