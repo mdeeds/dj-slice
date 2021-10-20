@@ -131,7 +131,7 @@ var tickers = [];
 var chunkSeries;
 var totalElapsed = 0;
 var numTicks = 0;
-function chunkFactoryFactory(gameTime) {
+function worldA(gameTime) {
     return (i) => {
         if (i > -10) {
             return new chunk_1.OrchardChunk();
@@ -155,6 +155,16 @@ function chunkFactoryFactory(gameTime) {
                 return new chunk_1.BuildingChunk();
             }
         }
+    };
+}
+function streetsOnly(gameTime) {
+    return (i) => {
+        return new chunk_1.StreetChunk();
+    };
+}
+function tron(gameTime) {
+    return (i) => {
+        return new chunk_1.TronChunk();
     };
 }
 function addTones(player, theta, gameTime) {
@@ -198,6 +208,20 @@ function addRing(container, gametime) {
     });
 }
 ;
+var buildChunkSeries = function (gameTime) {
+    const u = new URL(document.URL);
+    switch (u.searchParams.get('world')) {
+        case 'tron':
+            chunkSeries = new chunkSeries_1.ChunkSeries(tron(gameTime), 300, world);
+            break;
+        case 'street':
+            chunkSeries = new chunkSeries_1.ChunkSeries(streetsOnly(gameTime), 300, world);
+            break;
+        default:
+            chunkSeries = new chunkSeries_1.ChunkSeries(worldA(gameTime), 300, world);
+            break;
+    }
+};
 AFRAME.registerComponent("go", {
     init: function () {
         return __awaiter(this, void 0, void 0, function* () {
@@ -207,7 +231,7 @@ AFRAME.registerComponent("go", {
             const assets = document.querySelector('a-assets');
             const gameTime = yield gameTime_1.GameTime.make(115);
             yield gameTime.start();
-            chunkSeries = new chunkSeries_1.ChunkSeries(chunkFactoryFactory(gameTime), 300, world);
+            buildChunkSeries(gameTime);
             tickers.push(gameTime);
             const samplePack = yield samplePack_1.SamplePack.load('funk', gameTime, assets);
             debug_1.Debug.init(document.querySelector('a-camera'));
@@ -244,7 +268,7 @@ AFRAME.registerComponent("go", {
     },
     tick: function (timeMs, timeDeltaMs) {
         const p = (timeMs / 1000 / 60 / 3) % 1; // percentage of three minutes
-        const h = Math.sin(Math.PI * p) * 100; // 100m maximum height
+        const h = Math.sin(Math.PI * p) * 10; // 10m maximum height
         const r = 0.5 * (1 - Math.cos(Math.PI * p)) * 2000; // glide 2km
         if (world) {
             world.object3D.position.set(0, -h, r);
@@ -320,7 +344,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.MountainChunk = exports.OrchardChunk = exports.WoodlandChunk = exports.StreetChunk = exports.BuildingChunk = void 0;
+exports.TronChunk = exports.MountainChunk = exports.OrchardChunk = exports.WoodlandChunk = exports.StreetChunk = exports.BuildingChunk = void 0;
 const AFRAME = __importStar(__webpack_require__(449));
 class BuildingChunk {
     render(container) {
@@ -353,7 +377,7 @@ class StreetChunk {
     render(container) {
         const geometry = new AFRAME.THREE.Group();
         const streetTex = new AFRAME.THREE.MeshStandardMaterial({
-            color: Math.trunc(Math.random() * 256 * 256 * 256)
+            color: 0x331122
         });
         const street = new AFRAME.THREE.PlaneGeometry(500, 10)
             .rotateX(-Math.PI / 2);
@@ -461,6 +485,48 @@ class MountainChunk {
     }
 }
 exports.MountainChunk = MountainChunk;
+class TronChunk {
+    render(container) {
+        const wallTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x555555 });
+        const neonTex = new AFRAME.THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        const geometry = new AFRAME.THREE.Group();
+        const l = -Math.random() * 40 - 2;
+        const r = Math.random() * 40 + 2;
+        const h = 20 + Math.random() * 10;
+        const w = 50;
+        {
+            const left = new AFRAME.THREE.BoxGeometry(w + l, h, 1)
+                .translate((l - w) / 2, h / 2, 0);
+            const right = new AFRAME.THREE.BoxGeometry(w - r, h, 1)
+                .translate((r + w) / 2, h / 2, 0);
+            const header = 50 - h;
+            const top = new AFRAME.THREE.BoxGeometry(w * 2, header, 1)
+                .translate(0, h + header / 2, 0);
+            geometry.add(new AFRAME.THREE.Mesh(left, wallTex));
+            geometry.add(new AFRAME.THREE.Mesh(right, wallTex));
+            geometry.add(new AFRAME.THREE.Mesh(top, wallTex));
+        }
+        const left = new AFRAME.THREE.BoxGeometry(0.10, h, 1)
+            .translate(l - 0.3, h / 2, 0.1);
+        const right = new AFRAME.THREE.BoxGeometry(0.10, h, 1)
+            .translate(r + 0.3, h / 2, 0.1);
+        const top = new AFRAME.THREE.BoxGeometry(r - l, 0.10, 1)
+            .translate((l + r) / 2, h + 0.3, 0.1);
+        geometry.add(new AFRAME.THREE.Mesh(left, neonTex));
+        geometry.add(new AFRAME.THREE.Mesh(right, neonTex));
+        geometry.add(new AFRAME.THREE.Mesh(top, neonTex));
+        // Floor
+        const streetTex = new AFRAME.THREE.MeshStandardMaterial({
+            color: 0x221133
+        });
+        const street = new AFRAME.THREE.PlaneGeometry(500, 10)
+            .rotateX(-Math.PI / 2);
+        const blackStreet = new AFRAME.THREE.Mesh(street, streetTex);
+        geometry.add(blackStreet);
+        container.object3D = geometry;
+    }
+}
+exports.TronChunk = TronChunk;
 //# sourceMappingURL=chunk.js.map
 
 /***/ }),

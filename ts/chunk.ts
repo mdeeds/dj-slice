@@ -41,7 +41,7 @@ export class StreetChunk implements Chunk {
   render(container: AFRAME.Entity): void {
     const geometry = new AFRAME.THREE.Group();
     const streetTex = new AFRAME.THREE.MeshStandardMaterial({
-      color: Math.trunc(Math.random() * 256 * 256 * 256)
+      color: 0x331122
     });
     const street = new AFRAME.THREE.PlaneGeometry(500, 10)
       .rotateX(-Math.PI / 2);
@@ -151,6 +151,57 @@ export class MountainChunk implements Chunk {
     geometry.add(blueFloor);
     geometry.add(this.mountain(hillTex, 1));
     geometry.add(this.mountain(hillTex, -1));
+    container.object3D = geometry;
+  }
+}
+
+export class TronChunk implements Chunk {
+  render(container: AFRAME.Entity): void {
+    const wallTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x555555 });
+    const neonTex = new AFRAME.THREE.MeshBasicMaterial({ color: 0x00ff00 });
+
+    const geometry = new AFRAME.THREE.Group();
+    const l = -Math.random() * 40 - 2;
+    const r = Math.random() * 40 + 2;
+    const h = 20 + Math.random() * 10;
+    const w = 50;
+    {
+      const left = new AFRAME.THREE.BoxGeometry(w + l, h, 1)
+        .translate((l - w) / 2, h / 2, 0);
+      const right = new AFRAME.THREE.BoxGeometry(w - r, h, 1)
+        .translate((r + w) / 2, h / 2, 0);
+      const header = 50 - h;
+      const top = new AFRAME.THREE.BoxGeometry(
+        w * 2, header, 1)
+        .translate(0, h + header / 2, 0);
+
+      geometry.add(new AFRAME.THREE.Mesh(left, wallTex));
+      geometry.add(new AFRAME.THREE.Mesh(right, wallTex));
+      geometry.add(new AFRAME.THREE.Mesh(top, wallTex));
+    }
+
+    const left = new AFRAME.THREE.BoxGeometry(0.10, h, 1)
+      .translate(l - 0.3, h / 2, 0.1);
+    const right = new AFRAME.THREE.BoxGeometry(0.10, h, 1)
+      .translate(r + 0.3, h / 2, 0.1);
+    const top = new AFRAME.THREE.BoxGeometry(
+      r - l, 0.10, 1)
+      .translate((l + r) / 2, h + 0.3, 0.1);
+
+    geometry.add(new AFRAME.THREE.Mesh(left, neonTex));
+    geometry.add(new AFRAME.THREE.Mesh(right, neonTex));
+    geometry.add(new AFRAME.THREE.Mesh(top, neonTex));
+
+    // Floor
+    const streetTex = new AFRAME.THREE.MeshStandardMaterial({
+      color: 0x221133
+    });
+    const street = new AFRAME.THREE.PlaneGeometry(500, 10)
+      .rotateX(-Math.PI / 2);
+    const blackStreet = new AFRAME.THREE.Mesh(street, streetTex);
+    geometry.add(blackStreet);
+
+
     container.object3D = geometry;
   }
 }
