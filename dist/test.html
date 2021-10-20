@@ -6,18 +6,16 @@
 
 <body>
     <a-scene>
-        <a-scene stats></a-scene>
+        <a-sky src="img/tron-sky.jpg"></a-sky>
+        <a-entity light="type: point; intensity: 0.75; distance: 50; decay: 2" position="0 10 10"></a-entity>
         <a-image src="img/grid.png" width="0.4" height="0.2" position="-0.3 1.5 -1.01"></a-image>
         <a-image src="img/vr-vocals-square.png" width="0.4" height="0.2" position="-0.3 1.5 -1"></a-image>
         <a-image src="img/hello_world.png" width="0.4" height="0.2" position="-0.3 1.5 -0.99"></a-image>
-        <a-entity obj-model="obj: url(obj/trapezoid.obj);" material="shader: flat; color: #FFF; vertexColors: none"
-            position="0.3 1.5 -1">
+        <a-entity obj-model="obj: url(obj/tron-block-neon.obj);"
+            material="shader: flat; color: #0F0; vertexColors: none" scale="0.3 0.3 0.3" position="1 1 0"></a-entity>
+        <a-entity obj-model="obj: url(obj/tron-block-dark.obj);" material="color: #070; vertexColors: none"
+            scale="0.3 0.3 0.3" position="1 1 0">
         </a-entity>
-        <a-entity obj-model="obj: url(obj/basket.obj); mtl: url(obj/basket.mtl);"
-            material="color: #222; vertexColors: none">
-        </a-entity>
-        <a-sky color=" #550088">
-        </a-sky>
     </a-scene>
 </body>
 
