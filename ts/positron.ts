@@ -110,6 +110,54 @@ export class PositronConfig {
   }
   `);
 
+  static patchPlucky = PositronConfig.fromString(`
+  {
+    "env": {
+      "attack": 0.26000000000000006,
+      "decay": 0.2699999999999999,
+      "sustain": 0.48999999999999966,
+      "release": 0.7800000000000002,
+      "attackCurve": "exponential",
+      "releaseCurve": "exponential",
+      "decayCurve": "exponential",
+      "context": {}
+    },
+    "freqEnv": {
+      "attack": 0,
+      "decay": 0,
+      "sustain": 0,
+      "release": 0,
+      "baseFrequency": "a1",
+      "octaves": 0,
+      "attackCurve": "exponential",
+      "releaseCurve": "exponential",
+      "decayCurve": "exponential",
+      "context": {},
+      "exponent": 2
+    },
+    "filterEnv": {
+      "attack": 0,
+      "decay": 0.21999999999999997,
+      "sustain": 0.1099999999999999,
+      "release": 0.29000000000000004,
+      "baseFrequency": "a1",
+      "octaves": 6,
+      "attackCurve": "exponential",
+      "releaseCurve": "exponential",
+      "decayCurve": "exponential",
+      "context": {},
+      "exponent": 2
+    },
+    "osc1": "sawtooth",
+    "osc2": "square",
+    "osc2Detune": 1,
+    "filter": "lowpass",
+    "filterScale": 1.7099999999999995,
+    "noise": 0,
+    "distortion": 0
+  }
+  `)
+
   static patchSynthLead = PositronConfig.fromString(`
   {
     "env": {
