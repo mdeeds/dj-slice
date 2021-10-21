@@ -125,12 +125,26 @@ class Foot {
 }
 
 var feet: Foot[] = [];
+var dogObject = null;
 
 function walk() {
   feet.push(new Foot(
     new Pod([9, 7]), document.querySelector('#foot1')));
   feet.push(new Foot(
     new Pod([1, 7, 8]), document.querySelector('#foot2')));
+}
+
+function stomp() {
+  // ####.#####
+  // #########.
+  feet.push(new Foot(
+    new Pod([4, 1, 5]), document.querySelector('#foot1')));
+  feet.push(new Foot(
+    new Pod([9, 1]), document.querySelector('#foot2')));
+  feet.push(new Foot(
+    new Pod([9, 1]), document.querySelector('#foot3')));
+  feet.push(new Foot(
+    new Pod([4, 1, 5]), document.querySelector('#foot4')));
 }
 
 function run() {
@@ -151,7 +165,7 @@ function skip() {
     new Pod([0, 1, 2, 3]), document.querySelector('#foot2')));
 }
 
-function trot() {
+function amble() {
   // ##..
   // .##.
   // #..#
@@ -166,15 +180,52 @@ function trot() {
     new Pod([0, 2, 2]), document.querySelector('#foot4')));
 }
 
+function trot() {
+  // ##..
+  // ..##
+  // ..##
+  // ##..
+  feet.push(new Foot(
+    new Pod([2, 2]), document.querySelector('#foot1')));
+  feet.push(new Foot(
+    new Pod([0, 2, 2]), document.querySelector('#foot2')));
+  feet.push(new Foot(
+    new Pod([0, 2, 2]), document.querySelector('#foot3')));
+  feet.push(new Foot(
+    new Pod([2, 2]), document.querySelector('#foot4')));
+}
+
+function bound() {
+  // ...#
+  // ...#
+  // ###.
+  // ###.
+  feet.push(new Foot(
+    new Pod([0, 3, 1]), document.querySelector('#foot1')));
+  feet.push(new Foot(
+    new Pod([0, 3, 1]), document.querySelector('#foot2')));
+  feet.push(new Foot(
+    new Pod([3, 1]), document.querySelector('#foot3')));
+  feet.push(new Foot(
+    new Pod([3, 1]), document.querySelector('#foot4')));
+}
 
 AFRAME.registerComponent("go", {
   init: async function () {
-    trot();
+    bound();
+    dogObject = document.querySelector('#dog').object3D;
   },
   tick: function (timeMs, timeDeltaMs) {
-    const p = (timeMs / 800) % 1; // percentage of two seconds
+    const gaitDurationMs = 800;
+    const p = (timeMs / gaitDurationMs) % 1; // percentage of 800ms
     for (const foot of feet) {
       foot.setPosition(p);
+    }
+
+    if (dogObject != null) {
+      const seconds = ((timeMs % 3000) - 1500) / 1000;
+      const mps = 1 / 0.8;
+      dogObject.position.x = -mps * seconds;
     }
   }
 });
@@ -191,11 +242,13 @@ body.innerHTML = `
 <a-entity light="type: ambient; color: #222"></a-entity>
 <a-entity light="type:directional; color: #777" position="1800 5000 1200"></a-entity>
 <a-entity id='world'>
-<a-box id='body' width=2 depth=1.2 position="0 1 -4.75" ></a-box>
-<a-cylinder id='foot1' radius=0.25 position="-0.5 0 -5" ></a-cylinder>
-<a-cylinder id='foot2' radius=0.25 position="-0.5 0 -4.5" ></a-cylinder>
-<a-cylinder id='foot3' radius=0.25 position="0.5 0 -5" ></a-cylinder>
-<a-cylinder id='foot4' radius=0.25 position="0.5 0 -4.5" ></a-cylinder>
+  <a-entity id='dog'>
+    <a-box id='body' width=2 depth=1.2 position="0 1.3 -4.75" ></a-box>
+    <a-cylinder id='foot1' height=0.2 radius=0.25 position="-0.5 0 -5" ></a-cylinder>
+    <a-cylinder id='foot2' height=0.2 radius=0.25 position="-0.5 0 -4.5" ></a-cylinder>
+    <a-cylinder id='foot3' height=0.2 radius=0.25 position="0.5 0 -5" ></a-cylinder>
+    <a-cylinder id='foot4' height=0.2 radius=0.25 position="0.5 0 -4.5" ></a-cylinder>
+  </a-entity>
 </a-entity>
 <a-entity id='player'>
   <a-camera id="camera" position="0 1.6 0">
