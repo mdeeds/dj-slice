@@ -7,6 +7,14 @@ export interface Chunk {
   render(container: AFRAME.Entity): void;
 }
 
+function merge(geometries: any[], group: any, material: any) {
+  const mergedGeometry =
+    AFRAME.THREE.BufferGeometryUtils.mergeBufferGeometries(
+      geometries, false);
+  const mesh = new AFRAME.THREE.Mesh(mergedGeometry, material);
+  group.add(mesh);
+}
+
 export class BuildingChunk implements Chunk {
   render(container: AFRAME.Entity): void {
     const geometry = new AFRAME.THREE.Group();
@@ -56,12 +64,8 @@ export class WoodlandChunk implements Chunk {
   private neonTex = new AFRAME.THREE.MeshBasicMaterial({ color: 0xff33aa });
 
   render(container: AFRAME.Entity): void {
-    const geometry = new AFRAME.THREE.Group();
-    const floorTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x443311 });
-    const floor = new AFRAME.THREE.PlaneGeometry(500, 10)
-      .rotateX(-Math.PI / 2);
-    const brownFloor = new AFRAME.THREE.Mesh(floor, floorTex);
-    geometry.add(brownFloor);
+    const trees: any[] = [];
+    const lights: any[] = [];
 
     for (let x = -200; x <= 200; x += 35 + Math.random() * 20) {
       const h = Math.random() * 10 + 5;
@@ -73,19 +77,25 @@ export class WoodlandChunk implements Chunk {
           r, h, 3, 1, /*open-ended=*/true)
           .rotateY(theta)
           .translate(x, h / 2, z);
-        const greenTree = new AFRAME.THREE.Mesh(tree, this.treeTex);
-        geometry.add(greenTree);
+        trees.push(tree);
       }
       {
         const tree = new AFRAME.THREE.ConeGeometry(
           r * 0.9, h - 1, 3, 1, /*open-ended=*/true)
           .rotateY(theta + Math.PI / 4)
           .translate(x, h / 2, z);
-        const neonTree = new AFRAME.THREE.Mesh(tree, this.neonTex);
-        neonTree.layers.set(2);
-        geometry.add(neonTree);
+        lights.push(tree);
       }
     }
+    const geometry = new AFRAME.THREE.Group();
+    const floorTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x443311 });
+    const floor = new AFRAME.THREE.PlaneGeometry(500, 10)
+      .rotateX(-Math.PI / 2);
+    const brownFloor = new AFRAME.THREE.Mesh(floor, floorTex);
+    geometry.add(brownFloor);
+    merge(trees, geometry, this.treeTex);
+    merge(lights, geometry, this.neonTex);
+
     container.object3D = geometry;
   }
 }
@@ -95,12 +105,8 @@ export class OrchardChunk implements Chunk {
   private neonTex = new AFRAME.THREE.MeshBasicMaterial({ color: 0xff33aa });
 
   render(container: AFRAME.Entity): void {
-    const geometry = new AFRAME.THREE.Group();
-    const floorTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x443311 });
-    const floor = new AFRAME.THREE.PlaneGeometry(500, 10)
-      .rotateX(-Math.PI / 2);
-    const brownFloor = new AFRAME.THREE.Mesh(floor, floorTex);
-    geometry.add(brownFloor);
+    const trees: any[] = [];
+    const lights: any[] = [];
 
     for (let x = -200; x <= 200; x += 35 + Math.random() * 20) {
       const h = Math.random() * 2 + 3;
@@ -112,19 +118,25 @@ export class OrchardChunk implements Chunk {
           r, r, r)
           .rotateY(theta)
           .translate(x, h, z);
-        const greenTree = new AFRAME.THREE.Mesh(tree, this.treeTex);
-        geometry.add(greenTree);
+        trees.push(tree);
       }
       {
         const tree = new AFRAME.THREE.BoxGeometry(
           0.1, h, 0.1)
           .rotateY(theta + Math.PI / 4)
           .translate(x, h / 2, z);
-        const neonTree = new AFRAME.THREE.Mesh(tree, this.neonTex);
-        // neonTree.layers.set(1);
-        geometry.add(neonTree);
+        lights.push(tree);
       }
     }
+    const geometry = new AFRAME.THREE.Group();
+    const floorTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x443311 });
+    const floor = new AFRAME.THREE.PlaneGeometry(500, 10)
+      .rotateX(-Math.PI / 2);
+    const brownFloor = new AFRAME.THREE.Mesh(floor, floorTex);
+    geometry.add(brownFloor);
+    merge(trees, geometry, this.treeTex);
+    merge(lights, geometry, this.neonTex);
+
     container.object3D = geometry;
   }
 }
@@ -160,7 +172,8 @@ export class TronChunk implements Chunk {
     const wallTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x555555 });
     const neonTex = new AFRAME.THREE.MeshBasicMaterial({ color: 0x00ff00 });
 
-    const geometry = new AFRAME.THREE.Group();
+    const walls: any[] = [];
+    const lights: any[] = [];
     const l = -Math.random() * 40 - 2;
     const r = Math.random() * 40 + 2;
     const h = 20 + Math.random() * 10;
@@ -175,9 +188,7 @@ export class TronChunk implements Chunk {
         w * 2, header, 1)
         .translate(0, h + header / 2, 0);
 
-      geometry.add(new AFRAME.THREE.Mesh(left, wallTex));
-      geometry.add(new AFRAME.THREE.Mesh(right, wallTex));
-      geometry.add(new AFRAME.THREE.Mesh(top, wallTex));
+      walls.push(left, right, top);
     }
 
     const left = new AFRAME.THREE.BoxGeometry(0.10, h, 1)
@@ -187,20 +198,16 @@ export class TronChunk implements Chunk {
     const top = new AFRAME.THREE.BoxGeometry(
       r - l, 0.10, 1)
       .translate((l + r) / 2, h + 0.3, 0.1);
-
-    geometry.add(new AFRAME.THREE.Mesh(left, neonTex));
-    geometry.add(new AFRAME.THREE.Mesh(right, neonTex));
-    geometry.add(new AFRAME.THREE.Mesh(top, neonTex));
+    lights.push(left, right, top)
 
     // Floor
-    const streetTex = new AFRAME.THREE.MeshStandardMaterial({
-      color: 0x221133
-    });
     const street = new AFRAME.THREE.PlaneGeometry(500, 10)
       .rotateX(-Math.PI / 2);
-    const blackStreet = new AFRAME.THREE.Mesh(street, streetTex);
-    geometry.add(blackStreet);
+    walls.push(street);
 
+    const geometry = new AFRAME.THREE.Group();
+    merge(walls, geometry, wallTex);
+    merge(lights, neonTex, geometry);
 
     container.object3D = geometry;
   }
