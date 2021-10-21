@@ -1,7 +1,7 @@
 import * as AFRAME from "aframe";
 
 import { AssetLibrary } from "./assetLibrary";
-import { Chunk, MountainChunk, WoodlandChunk, StreetChunk, BuildingChunk, OrchardChunk, TronChunk } from "./chunk";
+import { Chunk, CityChunk, MountainChunk, WoodlandChunk, StreetChunk, BuildingChunk, OrchardChunk, TronChunk } from "./chunk";
 import { ChunkSeries } from "./chunkSeries";
 import { CollisionHandler } from "./collisionHandler";
 import { Debug } from "./debug";
@@ -105,6 +105,15 @@ function streetsOnly(gameTime: GameTime) {
   }
 }
 
+function city(gameTime: GameTime) {
+  return (i: number): Chunk => {
+    if (i % 50 === 0) {
+      return new CityChunk();
+    } else {
+      return new StreetChunk();
+    }
+  }
+}
 function tron(gameTime: GameTime) {
   return (i: number): Chunk => {
     if (i % 5 === 0) {
@@ -165,6 +174,9 @@ var buildChunkSeries = function (gameTime: GameTime) {
       break;
     case 'street':
       chunkSeries = new ChunkSeries(streetsOnly(gameTime), 300, world);
+      break;
+    case 'city':
+      chunkSeries = new ChunkSeries(city(gameTime), 300, world);
       break;
     default:
       chunkSeries = new ChunkSeries(worldA(gameTime), 300, world);

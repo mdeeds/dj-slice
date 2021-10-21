@@ -205,3 +205,14 @@ export class TronChunk implements Chunk {
     container.object3D = geometry;
   }
 }
+
+export class CityChunk implements Chunk {
+  render(container: AFRAME.Entity): void {
+    const city = document.createElement('a-entity') as AFRAME.Entity;
+    city.setAttribute('obj-model',
+      "obj: url(obj/city.obj); mtl: url(obj/city.mtl);");
+    city.setAttribute('rotation', '0 180 0');
+    console.log('city');
+    container.appendChild(city);
+  }
+}

@@ -162,6 +162,16 @@ function streetsOnly(gameTime) {
         return new chunk_1.StreetChunk();
     };
 }
+function city(gameTime) {
+    return (i) => {
+        if (i % 50 === 0) {
+            return new chunk_1.CityChunk();
+        }
+        else {
+            return new chunk_1.StreetChunk();
+        }
+    };
+}
 function tron(gameTime) {
     return (i) => {
         if (i % 5 === 0) {
@@ -221,6 +231,9 @@ var buildChunkSeries = function (gameTime) {
             break;
         case 'street':
             chunkSeries = new chunkSeries_1.ChunkSeries(streetsOnly(gameTime), 300, world);
+            break;
+        case 'city':
+            chunkSeries = new chunkSeries_1.ChunkSeries(city(gameTime), 300, world);
             break;
         default:
             chunkSeries = new chunkSeries_1.ChunkSeries(worldA(gameTime), 300, world);
@@ -349,7 +362,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.TronChunk = exports.MountainChunk = exports.OrchardChunk = exports.WoodlandChunk = exports.StreetChunk = exports.BuildingChunk = void 0;
+exports.CityChunk = exports.TronChunk = exports.MountainChunk = exports.OrchardChunk = exports.WoodlandChunk = exports.StreetChunk = exports.BuildingChunk = void 0;
 const AFRAME = __importStar(__webpack_require__(449));
 class BuildingChunk {
     render(container) {
@@ -532,6 +545,16 @@ class TronChunk {
     }
 }
 exports.TronChunk = TronChunk;
+class CityChunk {
+    render(container) {
+        const city = document.createElement('a-entity');
+        city.setAttribute('obj-model', "obj: url(obj/city.obj); mtl: url(obj/city.mtl);");
+        city.setAttribute('rotation', '0 180 0');
+        console.log('city');
+        container.appendChild(city);
+    }
+}
+exports.CityChunk = CityChunk;
 //# sourceMappingURL=chunk.js.map
 
 /***/ }),
