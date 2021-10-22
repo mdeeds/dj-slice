@@ -1,7 +1,7 @@
 import * as AFRAME from "aframe";
 
 import { AssetLibrary } from "./assetLibrary";
-import { Chunk, MountainChunk, WoodlandChunk, StreetChunk, BuildingChunk, OrchardChunk } from "./chunk";
+import { Chunk, CityChunk, MountainChunk, WoodlandChunk, StreetChunk, BuildingChunk, OrchardChunk, TronChunk } from "./chunk";
 import { ChunkSeries } from "./chunkSeries";
 import { CollisionHandler } from "./collisionHandler";
 import { Debug } from "./debug";
@@ -77,7 +77,7 @@ var chunkSeries: ChunkSeries;
 var totalElapsed = 0;
 var numTicks = 0;
 
-function chunkFactoryFactory(gameTime: GameTime) {
+function worldA(gameTime: GameTime) {
   return (i: number): Chunk => {
     if (i > -10) {
       return new OrchardChunk();
@@ -95,6 +95,31 @@ function chunkFactoryFactory(gameTime: GameTime) {
       } else {
         return new BuildingChunk();
       }
+    }
+  }
+}
+
+function streetsOnly(gameTime: GameTime) {
+  return (i: number): Chunk => {
+    return new StreetChunk();
+  }
+}
+
+function city(gameTime: GameTime) {
+  return (i: number): Chunk => {
+    if (i % 50 === 0) {
+      return new CityChunk();
+    } else {
+      return new StreetChunk();
+    }
+  }
+}
+function tron(gameTime: GameTime) {
+  return (i: number): Chunk => {
+    if (i % 5 === 0) {
+      return new TronChunk();
+    } else {
+      return new StreetChunk();
     }
   }
 }
@@ -141,6 +166,25 @@ function addRing(container: AFRAME.Entity, gametime: GameTime) {
   });
 };
 
+var buildChunkSeries = function (gameTime: GameTime) {
+  const u = new URL(document.URL);
+  switch (u.searchParams.get('world')) {
+    case 'tron':
+      chunkSeries = new ChunkSeries(tron(gameTime), 300, world);
+      break;
+    case 'street':
+      chunkSeries = new ChunkSeries(streetsOnly(gameTime), 300, world);
+      break;
+    case 'city':
+      chunkSeries = new ChunkSeries(city(gameTime), 300, world);
+      break;
+    default:
+      chunkSeries = new ChunkSeries(worldA(gameTime), 300, world);
+      break;
+  }
+}
+
+
 AFRAME.registerComponent("go", {
   init: async function () {
     world = document.querySelector('#world');
@@ -149,8 +193,7 @@ AFRAME.registerComponent("go", {
     const assets = document.querySelector('a-assets');
     const gameTime = await GameTime.make(115);
     await gameTime.start();
-    chunkSeries = new ChunkSeries(
-      chunkFactoryFactory(gameTime), 300, world);
+    buildChunkSeries(gameTime);
     tickers.push(gameTime);
     const samplePack = await SamplePack.load('funk', gameTime, assets)
     Debug.init(document.querySelector('a-camera'));
@@ -196,7 +239,7 @@ AFRAME.registerComponent("go", {
   tick: function (timeMs, timeDeltaMs) {
     const p = (timeMs / 1000 / 60 / 3) % 1; // percentage of three minutes
 
-    const h = Math.sin(Math.PI * p) * 100;  // 100m maximum height
+    const h = Math.sin(Math.PI * p) * 10;  // 10m maximum height
     const r = 0.5 * (1 - Math.cos(Math.PI * p)) * 2000;  // glide 2km
     if (world) {
       world.object3D.position.set(0, -h, r);
