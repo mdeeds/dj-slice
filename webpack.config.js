@@ -5,7 +5,7 @@ module.exports = {
     index: "./src/index.js",
     open: "./src/open.js",
     loops: "./src/loops.js",
-    baloon: "./src/baloon.js",
+    balloon: "./src/balloon.js",
     synth: "./src/synth.js",
     gait: "./src/gait.js",
   },
@@ -56,10 +56,10 @@ module.exports = {
       chunks: ['loops']
     }),
     new HtmlWebPackPlugin({
-      name: "baloon",
-      filename: 'baloon.html',
-      template: 'src/baloon.html',
-      chunks: ['baloon']
+      name: "balloon",
+      filename: 'balloon.html',
+      template: 'src/balloon.html',
+      chunks: ['balloon']
     }),
     new HtmlWebPackPlugin({
       name: "synth",
