@@ -1,5 +1,6 @@
 import * as AFRAME from "aframe";
 import { runInContext } from "vm";
+import { PositronConfig } from "./positron";
 
 class Motion {
   constructor(
@@ -108,7 +109,7 @@ class Pod {
 
 class Foot {
   private initialPosition: any;
-  private static kLift = 0.2;
+  private static kLift = 0.02;
   constructor(private pod: Pod, private foot: AFRAME.Entity) {
     this.initialPosition = new AFRAME.THREE.Vector3();
     this.initialPosition.copy(foot.object3D.position);
@@ -226,6 +227,23 @@ function stomp() {
 //     new Pod([0, 2, 2]), document.querySelector('#foot4')));
 // }
 
+function lizardTrot() {
+  feet = new Feet(0.15, 600, document.querySelector('#body'));
+  // https://www.researchgate.net/figure/Hildebrand-style-gait-diagrams-A-and-B-and-axial-skeleton-displacement-patterns-C-and_fig3_236460049
+  // LH ###########.........
+  // LF ##........##########
+  // RF ###########........#
+  // RH .........###########
+  feet.add(new Foot(
+    new Pod([11, 9]), document.querySelector('#foot1')));
+  feet.add(new Foot(
+    new Pod([2, 9, 9]), document.querySelector('#foot2')));
+  feet.add(new Foot(
+    new Pod([11, 8, 1]), document.querySelector('#foot3')));
+  feet.add(new Foot(
+    new Pod([0, 9, 11]), document.querySelector('#foot4')));
+}
+
 // function trot() {
 //   // ##..
 //   // ..##
@@ -258,11 +276,13 @@ function stomp() {
 
 AFRAME.registerComponent("go", {
   init: async function () {
-    stomp();
+    lizardTrot();
     dogObject = document.querySelector('#dog').object3D;
   },
   tick: function (timeMs, timeDeltaMs) {
-    feet.setPositions(timeMs);
+    if (feet != null) {
+      feet.setPositions(timeMs);
+    }
   }
 });
 
@@ -279,11 +299,11 @@ body.innerHTML = `
 <a-entity light="type:directional; color: #777" position="1800 5000 1200"></a-entity>
 <a-entity id='world'>
   <a-entity id='dog'>
-    <a-box id='body' width=2 depth=1.2 height=0.3 position="0 0.2 -4.75" >
-      <a-cylinder id='foot1' height=0.2 radius=0.25 position="-0.7 -0.1 0.8" ></a-cylinder>
-      <a-cylinder id='foot2' height=0.2 radius=0.25 position="-0.7 -0.1 -0.8" ></a-cylinder>
-      <a-cylinder id='foot3' height=0.2 radius=0.25 position="0.7 -0.1 -0.8" ></a-cylinder>
-      <a-cylinder id='foot4' height=0.2 radius=0.25 position="0.7 -0.1  0.8" ></a-cylinder>
+    <a-box id='body' width=0.2 depth=0.08 height=0.01 position="0 1.5 -1" >
+      <a-cylinder id='foot1' height=0.01 radius=0.01 position= "0.07 -0.02  0.08" ></a-cylinder>
+      <a-cylinder id='foot2' height=0.01 radius=0.01 position="-0.07 -0.02  0.08" ></a-cylinder>
+      <a-cylinder id='foot3' height=0.01 radius=0.01 position="-0.07 -0.02 -0.08" ></a-cylinder>
+      <a-cylinder id='foot4' height=0.01 radius=0.01 position= "0.07 -0.02 -0.08" ></a-cylinder>
     </a-box>
     </a-entity>
 </a-entity>

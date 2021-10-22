@@ -143,53 +143,151 @@ class Foot {
         this.initialPosition = new AFRAME.THREE.Vector3();
         this.initialPosition.copy(foot.object3D.position);
     }
-    setPosition(p) {
+    setPosition(p, gaitM) {
         const [x, dx] = this.pod.getXdX(p);
         this.foot.object3D.position.copy(this.initialPosition);
-        this.foot.object3D.position.x += x;
+        this.foot.object3D.position.x += x * gaitM;
         if (dx < 0) {
             this.foot.object3D.position.y += Foot.kLift;
         }
     }
 }
-Foot.kLift = 0.2;
-var feet = [];
+Foot.kLift = 0.02;
+class Feet {
+    // `gaitM` : Distance traveled in one cycle of the gait.
+    // `gaitMS` : Duration of the gait in milliseconds
+    constructor(gaitM, gaitMS, body) {
+        this.gaitM = gaitM;
+        this.gaitMS = gaitMS;
+        this.body = body;
+        this.feet = [];
+    }
+    add(foot) {
+        this.feet.push(foot);
+    }
+    setPositions(timeMs) {
+        const p = (timeMs / this.gaitMS) % 1; // percentage of 800ms
+        for (const foot of this.feet) {
+            foot.setPosition(p, this.gaitM);
+        }
+        const seconds = ((timeMs % 3000) - 1500) / 1000;
+        const mps = this.gaitM / (this.gaitMS / 1000);
+        this.body.object3D.position.x = -mps * seconds;
+    }
+}
+var feet = null;
+var dogObject = null;
 function walk() {
-    feet.push(new Foot(new Pod([9, 7]), document.querySelector('#foot1')));
-    feet.push(new Foot(new Pod([1, 7, 8]), document.querySelector('#foot2')));
+    // #########.......
+    // #.......########
+    // #########.......
+    // #.......########  
+    feet = new Feet(0.30, 600, document.querySelector('#body'));
+    feet.add(new Foot(new Pod([9, 7]), document.querySelector('#foot1')));
+    feet.add(new Foot(new Pod([1, 7, 8]), document.querySelector('#foot2')));
+    feet.add(new Foot(new Pod([9, 7]), document.querySelector('#foot3')));
+    feet.add(new Foot(new Pod([1, 7, 8]), document.querySelector('#foot4')));
 }
-function run() {
-    // ##....
-    // ...##.
-    feet.push(new Foot(new Pod([2, 4]), document.querySelector('#foot1')));
-    feet.push(new Foot(new Pod([0, 3, 2, 1]), document.querySelector('#foot2')));
+function scamper() {
+    // #########.......
+    // #.......########
+    // .#########......
+    // .......#########  
+    feet = new Feet(0.30, 600, document.querySelector('#body'));
+    feet.add(new Foot(new Pod([9, 7]), document.querySelector('#foot1')));
+    feet.add(new Foot(new Pod([1, 7, 8]), document.querySelector('#foot2')));
+    feet.add(new Foot(new Pod([0, 9, 6]), document.querySelector('#foot3')));
+    feet.add(new Foot(new Pod([0, 7, 9]), document.querySelector('#foot4')));
 }
-function skip() {
-    // ##....
-    // .##...
-    feet.push(new Foot(new Pod([2, 4]), document.querySelector('#foot1')));
-    feet.push(new Foot(new Pod([0, 1, 2, 3]), document.querySelector('#foot2')));
+function stomp() {
+    // ####.#####
+    // #########.
+    feet = new Feet(0.30, 600, document.querySelector('#body'));
+    feet.add(new Foot(new Pod([4, 1, 5]), document.querySelector('#foot1')));
+    feet.add(new Foot(new Pod([9, 1]), document.querySelector('#foot2')));
+    feet.add(new Foot(new Pod([9, 1]), document.querySelector('#foot3')));
+    feet.add(new Foot(new Pod([4, 1, 5]), document.querySelector('#foot4')));
 }
-function trot() {
-    // ##..
-    // .##.
-    // #..#
-    // ..##
-    feet.push(new Foot(new Pod([2, 2]), document.querySelector('#foot1')));
-    feet.push(new Foot(new Pod([0, 1, 2, 1]), document.querySelector('#foot2')));
-    feet.push(new Foot(new Pod([1, 2, 1]), document.querySelector('#foot3')));
-    feet.push(new Foot(new Pod([0, 2, 2]), document.querySelector('#foot4')));
+// function run() {
+//   // ##....
+//   // ...##.
+//   feet.push(new Foot(
+//     new Pod([2, 4]), document.querySelector('#foot1')));
+//   feet.push(new Foot(
+//     new Pod([0, 3, 2, 1]), document.querySelector('#foot2')));
+// }
+// function skip() {
+//   // ##....
+//   // .##...
+//   feet.push(new Foot(
+//     new Pod([2, 4]), document.querySelector('#foot1')));
+//   feet.push(new Foot(
+//     new Pod([0, 1, 2, 3]), document.querySelector('#foot2')));
+// }
+// function amble() {
+//   // ##..
+//   // .##.
+//   // #..#
+//   // ..##
+//   feet.push(new Foot(
+//     new Pod([2, 2]), document.querySelector('#foot1')));
+//   feet.push(new Foot(
+//     new Pod([0, 1, 2, 1]), document.querySelector('#foot2')));
+//   feet.push(new Foot(
+//     new Pod([1, 2, 1]), document.querySelector('#foot3')));
+//   feet.push(new Foot(
+//     new Pod([0, 2, 2]), document.querySelector('#foot4')));
+// }
+function lizardTrot() {
+    feet = new Feet(0.15, 600, document.querySelector('#body'));
+    // https://www.researchgate.net/figure/Hildebrand-style-gait-diagrams-A-and-B-and-axial-skeleton-displacement-patterns-C-and_fig3_236460049
+    // LH ###########.........
+    // LF ##........##########
+    // RF ###########........#
+    // RH .........###########
+    feet.add(new Foot(new Pod([11, 9]), document.querySelector('#foot1')));
+    feet.add(new Foot(new Pod([2, 9, 9]), document.querySelector('#foot2')));
+    feet.add(new Foot(new Pod([11, 8, 1]), document.querySelector('#foot3')));
+    feet.add(new Foot(new Pod([0, 9, 11]), document.querySelector('#foot4')));
 }
+// function trot() {
+//   // ##..
+//   // ..##
+//   // ..##
+//   // ##..
+//   feet.push(new Foot(
+//     new Pod([2, 2]), document.querySelector('#foot1')));
+//   feet.push(new Foot(
+//     new Pod([0, 2, 2]), document.querySelector('#foot2')));
+//   feet.push(new Foot(
+//     new Pod([0, 2, 2]), document.querySelector('#foot3')));
+//   feet.push(new Foot(
+//     new Pod([2, 2]), document.querySelector('#foot4')));
+// }
+// function bound() {
+//   // ...#
+//   // ...#
+//   // ###.
+//   // ###.
+//   feet.push(new Foot(
+//     new Pod([0, 3, 1]), document.querySelector('#foot1')));
+//   feet.push(new Foot(
+//     new Pod([0, 3, 1]), document.querySelector('#foot2')));
+//   feet.push(new Foot(
+//     new Pod([3, 1]), document.querySelector('#foot3')));
+//   feet.push(new Foot(
+//     new Pod([3, 1]), document.querySelector('#foot4')));
+// }
 AFRAME.registerComponent("go", {
     init: function () {
         return __awaiter(this, void 0, void 0, function* () {
-            trot();
+            lizardTrot();
+            dogObject = document.querySelector('#dog').object3D;
         });
     },
     tick: function (timeMs, timeDeltaMs) {
-        const p = (timeMs / 800) % 1; // percentage of two seconds
-        for (const foot of feet) {
-            foot.setPosition(p);
+        if (feet != null) {
+            feet.setPositions(timeMs);
         }
     }
 });
@@ -205,11 +303,14 @@ body.innerHTML = `
 <a-entity light="type: ambient; color: #222"></a-entity>
 <a-entity light="type:directional; color: #777" position="1800 5000 1200"></a-entity>
 <a-entity id='world'>
-<a-box id='body' width=2 depth=1.2 position="0 1 -4.75" ></a-box>
-<a-cylinder id='foot1' radius=0.25 position="-0.5 0 -5" ></a-cylinder>
-<a-cylinder id='foot2' radius=0.25 position="-0.5 0 -4.5" ></a-cylinder>
-<a-cylinder id='foot3' radius=0.25 position="0.5 0 -5" ></a-cylinder>
-<a-cylinder id='foot4' radius=0.25 position="0.5 0 -4.5" ></a-cylinder>
+  <a-entity id='dog'>
+    <a-box id='body' width=0.2 depth=0.08 height=0.01 position="0 1.5 -1" >
+      <a-cylinder id='foot1' height=0.01 radius=0.01 position= "0.07 -0.02  0.08" ></a-cylinder>
+      <a-cylinder id='foot2' height=0.01 radius=0.01 position="-0.07 -0.02  0.08" ></a-cylinder>
+      <a-cylinder id='foot3' height=0.01 radius=0.01 position="-0.07 -0.02 -0.08" ></a-cylinder>
+      <a-cylinder id='foot4' height=0.01 radius=0.01 position= "0.07 -0.02 -0.08" ></a-cylinder>
+    </a-box>
+    </a-entity>
 </a-entity>
 <a-entity id='player'>
   <a-camera id="camera" position="0 1.6 0">
