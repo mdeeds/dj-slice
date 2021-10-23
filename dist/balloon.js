@@ -265,6 +265,9 @@ var buildChunkSeries = function (gameTime, assetLibrary) {
         case 'woodland':
             chunkSeries = new chunkSeries_1.ChunkSeries(woodland(assetLibrary), 300, world);
             break;
+        case 'a':
+            chunkSeries = new chunkSeries_1.ChunkSeries(worldA(gameTime, assetLibrary), 300, world);
+            break;
         default:
             chunkSeries = new chunkSeries_1.ChunkSeries(woodland(assetLibrary), 300, world);
             break;
@@ -321,7 +324,9 @@ AFRAME.registerComponent("go", {
         if (world) {
             world.object3D.position.set(0, -h, r);
         }
-        chunkSeries.setPosition(-r);
+        if (chunkSeries) {
+            chunkSeries.setPosition(-r);
+        }
         for (const ticker of tickers) {
             ticker.tick(timeMs, timeDeltaMs);
         }
