@@ -13,16 +13,33 @@ class AssetLibrary {
         this.assetCollection = assetCollection;
         this.idMap = new Map();
     }
-    getId(url) {
-        if (this.idMap.has(url)) {
-            return this.idMap.get(url);
-        }
+    addImage(url) {
         const img = document.createElement('img');
         img.setAttribute('src', url);
         img.id = `asset${this.idMap.size}`;
         this.assetCollection.appendChild(img);
         this.idMap.set(url, img.id);
         return img.id;
+    }
+    addItem(url) {
+        // <a-asset-item id="horse-obj" src="horse.obj"></a-asset-item>
+        // <a-asset-item id="horse-mtl" src="horse.mtl"></a-asset-item>
+        const item = document.createElement('a-asset-item');
+        item.setAttribute('src', url);
+        item.id = `asset${this.idMap.size}`;
+        this.assetCollection.appendChild(item);
+        this.idMap.set(url, item.id);
+        return item.id;
+    }
+    getId(url) {
+        if (this.idMap.has(url)) {
+            return this.idMap.get(url);
+        }
+        if (url.toLowerCase().endsWith('.obj') ||
+            url.toLocaleLowerCase().endsWith('.mtl')) {
+            return this.addItem(url);
+        }
+        return this.addImage(url);
     }
 }
 exports.AssetLibrary = AssetLibrary;
@@ -131,13 +148,13 @@ var tickers = [];
 var chunkSeries;
 var totalElapsed = 0;
 var numTicks = 0;
-function worldA(gameTime) {
+function worldA(gameTime, assetLibrary) {
     return (i) => {
         if (i > -10) {
-            return new chunk_1.OrchardChunk();
+            return new chunk_1.TronOrchard(assetLibrary);
         }
         else if (i > -30) {
-            if (i % 7 === 0) {
+            if (i % 11 === 0) {
                 return new chunk_1.MountainChunk();
             }
             else {
@@ -145,7 +162,7 @@ function worldA(gameTime) {
             }
         }
         else if (i > -50) {
-            return new chunk_1.WoodlandChunk();
+            return new chunk_1.TronOrchard(assetLibrary);
         }
         else {
             if (i % 5 === 0) {
@@ -162,10 +179,10 @@ function streetsOnly(gameTime) {
         return new chunk_1.StreetChunk();
     };
 }
-function city(gameTime) {
+function city(gameTime, assetLibrary) {
     return (i) => {
         if (i % 50 === 0) {
-            return new chunk_1.CityChunk();
+            return new chunk_1.CityChunk(assetLibrary);
         }
         else {
             return new chunk_1.StreetChunk();
@@ -223,7 +240,7 @@ function addRing(container, gametime) {
     });
 }
 ;
-var buildChunkSeries = function (gameTime) {
+var buildChunkSeries = function (gameTime, assetLibrary) {
     const u = new URL(document.URL);
     switch (u.searchParams.get('world')) {
         case 'tron':
@@ -233,10 +250,10 @@ var buildChunkSeries = function (gameTime) {
             chunkSeries = new chunkSeries_1.ChunkSeries(streetsOnly(gameTime), 300, world);
             break;
         case 'city':
-            chunkSeries = new chunkSeries_1.ChunkSeries(city(gameTime), 300, world);
+            chunkSeries = new chunkSeries_1.ChunkSeries(city(gameTime, assetLibrary), 300, world);
             break;
         default:
-            chunkSeries = new chunkSeries_1.ChunkSeries(worldA(gameTime), 300, world);
+            chunkSeries = new chunkSeries_1.ChunkSeries(worldA(gameTime, assetLibrary), 300, world);
             break;
     }
 };
@@ -249,7 +266,8 @@ AFRAME.registerComponent("go", {
             const assets = document.querySelector('a-assets');
             const gameTime = yield gameTime_1.GameTime.make(115);
             yield gameTime.start();
-            buildChunkSeries(gameTime);
+            const assetLibrary = new assetLibrary_1.AssetLibrary(document.querySelector('a-assets'));
+            buildChunkSeries(gameTime, assetLibrary);
             tickers.push(gameTime);
             const samplePack = yield samplePack_1.SamplePack.load('funk', gameTime, assets);
             debug_1.Debug.init(document.querySelector('a-camera'));
@@ -258,7 +276,6 @@ AFRAME.registerComponent("go", {
             leftStick = addStick(document.querySelector('#leftHand'), gameTime);
             rightStick = addStick(document.querySelector('#rightHand'), gameTime);
             addTones(player, -Math.PI / 2, gameTime);
-            const assetLibrary = new assetLibrary_1.AssetLibrary(document.querySelector('a-assets'));
             let theta = 0;
             for (const track of samplePack.tracks) {
                 const container = document.createElement('a-entity');
@@ -321,8 +338,10 @@ body.innerHTML = `
 <a-entity id='player'>
   <a-entity id='robot' position = "-2 0 -2" rotation = "0 180 0"></a-entity>
   <a-sphere position="180 100 120" radius=20 color=#fff shader=flat></a-sphere>
-
   <a-camera id="camera" position="0 1.6 0">
+    <a-cylinder id='arora' position="0 0 -450" rotation="0 0 90" 
+      radius=200 color=#0f0 height=1000 segments-height=1 
+      shader=flat material="side: double" open-ended=false></a-cylinder>
     <a-entity light="type:point; intensity: 0.75; distance: 4; decay: 2" position="0 0.1 -0.1">
   </a-camera>
   <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 5;" line="color: #44d"
@@ -362,7 +381,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CityChunk = exports.TronChunk = exports.MountainChunk = exports.OrchardChunk = exports.WoodlandChunk = exports.StreetChunk = exports.BuildingChunk = void 0;
+exports.CityChunk = exports.TronChunk = exports.MountainChunk = exports.TronOrchard = exports.OrchardChunk = exports.WoodlandChunk = exports.StreetChunk = exports.BuildingChunk = void 0;
 const AFRAME = __importStar(__webpack_require__(449));
 function merge(geometries, group, material) {
     const mergedGeometry = AFRAME.THREE.BufferGeometryUtils.mergeBufferGeometries(geometries, false);
@@ -486,6 +505,26 @@ class OrchardChunk {
     }
 }
 exports.OrchardChunk = OrchardChunk;
+class TronOrchard {
+    constructor(assetLibrary) {
+        this.assetLibrary = assetLibrary;
+        this.treeTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x33ff55 });
+    }
+    render(container) {
+        const tree = document.createElement('a-entity');
+        tree.setAttribute('obj-model', `obj: #${this.assetLibrary.getId('obj/tron-tree.obj')}; ` +
+            `mtl: #${this.assetLibrary.getId('obj/tron-tree.mtl')}`);
+        tree.setAttribute('position', '1 1 0');
+        container.appendChild(tree);
+        const floor = document.createElement('a-plane');
+        floor.setAttribute('width', '600');
+        floor.setAttribute('height', '10');
+        floor.setAttribute('color', '#431');
+        floor.setAttribute('rotation', '-90 0 0');
+        container.appendChild(floor);
+    }
+}
+exports.TronOrchard = TronOrchard;
 class MountainChunk {
     constructor() { }
     mountain(hillTex, sign) {
@@ -549,9 +588,13 @@ class TronChunk {
 }
 exports.TronChunk = TronChunk;
 class CityChunk {
+    constructor(assetLibrary) {
+        this.assetLibrary = assetLibrary;
+    }
     render(container) {
         const city = document.createElement('a-entity');
-        city.setAttribute('obj-model', "obj: url(obj/city.obj); mtl: url(obj/city.mtl);");
+        city.setAttribute('obj-model', `obj: #${this.assetLibrary.getId('obj/city.obj')}; ` +
+            `mtl: #${this.assetLibrary.getId('obj/city.mtl')};`);
         city.setAttribute('rotation', '0 180 0');
         console.log('city');
         container.appendChild(city);
@@ -1296,20 +1339,31 @@ class Robot {
         this.rightRef = rightRef;
         this.container = container;
         this.gameTime = gameTime;
-        this.head = document.createElement('a-box');
-        this.head.setAttribute('color', '#fff');
-        this.head.setAttribute('width', '0.5');
-        this.head.setAttribute('height', '0.25');
-        this.head.setAttribute('depth', '0.25');
-        this.head.setAttribute('position', '0 0 0');
+        this.head = document.createElement('a-entity');
+        {
+            const headNeon = document.createElement('a-entity');
+            headNeon.setAttribute('obj-model', 'obj: url(obj/robot-head-neon.obj);');
+            headNeon.setAttribute('position', '0 0 0');
+            headNeon.setAttribute('rotation', '0 -90 0');
+            headNeon.setAttribute('scale', '0.15 0.15 0.15');
+            headNeon.setAttribute('material', 'shader: flat; color: #00f;');
+            this.head.appendChild(headNeon);
+            const headMain = document.createElement('a-entity');
+            headMain.setAttribute('obj-model', 'obj: url(obj/robot-head-dark.obj);');
+            headMain.setAttribute('position', '0 0 0');
+            headMain.setAttribute('rotation', '0 -90 0');
+            headMain.setAttribute('scale', '0.15 0.15 0.15');
+            headMain.setAttribute('material', 'color: #006;');
+            this.head.appendChild(headMain);
+        }
         this.left = document.createElement('a-box');
-        this.left.setAttribute('color', '#fff');
+        this.left.setAttribute('color', '#006');
         this.left.setAttribute('width', '0.15');
         this.left.setAttribute('height', '0.15');
         this.left.setAttribute('depth', '0.15');
         this.left.setAttribute('position', '0 0 0');
         this.right = document.createElement('a-box');
-        this.right.setAttribute('color', '#fff');
+        this.right.setAttribute('color', '#006');
         this.right.setAttribute('width', '0.15');
         this.right.setAttribute('height', '0.15');
         this.right.setAttribute('depth', '0.15');
