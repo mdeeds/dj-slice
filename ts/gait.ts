@@ -189,6 +189,20 @@ function stomp() {
   feet.add(new Foot(
     new Pod([9, 1]), document.querySelector('#foot2')));
   feet.add(new Foot(
+    new Pod([4, 1, 5]), document.querySelector('#foot3')));
+  feet.add(new Foot(
+    new Pod([9, 1]), document.querySelector('#foot4')));
+}
+
+function frogWalk() {
+  // ####.#####
+  // .#######..
+  feet = new Feet(0.30, 600, document.querySelector('#body'));
+  feet.add(new Foot(
+    new Pod([4, 1, 5]), document.querySelector('#foot1')));
+  feet.add(new Foot(
+    new Pod([0, 1, 7, 2]), document.querySelector('#foot2')));
+  feet.add(new Foot(
     new Pod([9, 1]), document.querySelector('#foot3')));
   feet.add(new Foot(
     new Pod([4, 1, 5]), document.querySelector('#foot4')));
@@ -276,7 +290,7 @@ function lizardTrot() {
 
 AFRAME.registerComponent("go", {
   init: async function () {
-    lizardTrot();
+    stomp();
     dogObject = document.querySelector('#dog').object3D;
   },
   tick: function (timeMs, timeDeltaMs) {
