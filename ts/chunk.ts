@@ -163,6 +163,20 @@ export class TronOrchard implements Chunk {
   }
 }
 
+export class TronWoodland implements Chunk {
+  private treeTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x33ff55 });
+
+  constructor(private assetLibrary: AssetLibrary) { }
+  render(container: AFRAME.Entity) {
+    const tree = document.createElement('a-entity');
+    tree.setAttribute('obj-model',
+      `obj: #${this.assetLibrary.getId('obj/tron-woodland.obj')}; ` +
+      `mtl: #${this.assetLibrary.getId('obj/tron-woodland.mtl')}`);
+    tree.setAttribute('position', '1 1 0');
+    container.appendChild(tree);
+  }
+}
+
 export class MountainChunk implements Chunk {
   constructor() { }
   private mountain(hillTex: any, sign: number): any {

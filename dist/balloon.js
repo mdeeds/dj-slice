@@ -199,6 +199,11 @@ function tron(gameTime) {
         }
     };
 }
+function woodland(assetLibrary) {
+    return (i) => {
+        return new chunk_1.TronWoodland(assetLibrary);
+    };
+}
 function addTones(player, theta, gameTime) {
     const container = document.createElement('a-entity');
     const x = 0.7 * Math.sin(theta);
@@ -251,6 +256,9 @@ var buildChunkSeries = function (gameTime, assetLibrary) {
             break;
         case 'city':
             chunkSeries = new chunkSeries_1.ChunkSeries(city(gameTime, assetLibrary), 300, world);
+            break;
+        case 'woodland':
+            chunkSeries = new chunkSeries_1.ChunkSeries(woodland(assetLibrary), 300, world);
             break;
         default:
             chunkSeries = new chunkSeries_1.ChunkSeries(worldA(gameTime, assetLibrary), 300, world);
@@ -381,7 +389,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CityChunk = exports.TronChunk = exports.MountainChunk = exports.TronOrchard = exports.OrchardChunk = exports.WoodlandChunk = exports.StreetChunk = exports.BuildingChunk = void 0;
+exports.CityChunk = exports.TronChunk = exports.MountainChunk = exports.TronWoodland = exports.TronOrchard = exports.OrchardChunk = exports.WoodlandChunk = exports.StreetChunk = exports.BuildingChunk = void 0;
 const AFRAME = __importStar(__webpack_require__(449));
 function merge(geometries, group, material) {
     const mergedGeometry = AFRAME.THREE.BufferGeometryUtils.mergeBufferGeometries(geometries, false);
@@ -525,6 +533,20 @@ class TronOrchard {
     }
 }
 exports.TronOrchard = TronOrchard;
+class TronWoodland {
+    constructor(assetLibrary) {
+        this.assetLibrary = assetLibrary;
+        this.treeTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x33ff55 });
+    }
+    render(container) {
+        const tree = document.createElement('a-entity');
+        tree.setAttribute('obj-model', `obj: #${this.assetLibrary.getId('obj/tron-woodland.obj')}; ` +
+            `mtl: #${this.assetLibrary.getId('obj/tron-woodland.mtl')}`);
+        tree.setAttribute('position', '1 1 0');
+        container.appendChild(tree);
+    }
+}
+exports.TronWoodland = TronWoodland;
 class MountainChunk {
     constructor() { }
     mountain(hillTex, sign) {
@@ -632,7 +654,7 @@ class ChunkSeries {
     }
     pushChunk(i) {
         const entity = document.createElement('a-entity');
-        entity.setAttribute('position', `0 0 ${i * 10}`);
+        entity.setAttribute('position', `0 0 ${i * ChunkSeries.kChunkSpacing}`);
         const chunk = this.factory(i);
         chunk.render(entity);
         this.scene.appendChild(entity);
@@ -644,8 +666,8 @@ class ChunkSeries {
             return;
         }
         this.previousPosition = i;
-        const firstIndex = Math.round((z - this.radius) / 10);
-        const lastIndex = Math.round((z + this.radius) / 10);
+        const firstIndex = Math.round((z - this.radius) / ChunkSeries.kChunkSpacing);
+        const lastIndex = Math.round((z + this.radius) / ChunkSeries.kChunkSpacing);
         const chunksToDelete = [];
         for (const c of this.chunks) {
             if (c.i < firstIndex || c.i > lastIndex) {
@@ -667,6 +689,7 @@ class ChunkSeries {
     }
 }
 exports.ChunkSeries = ChunkSeries;
+ChunkSeries.kChunkSpacing = 50;
 //# sourceMappingURL=chunkSeries.js.map
 
 /***/ }),
