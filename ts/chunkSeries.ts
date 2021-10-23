@@ -9,6 +9,8 @@ class ChunkInSlot {
 }
 
 export class ChunkSeries {
+  static kChunkSpacing = 50;
+
   private chunks = new Set<ChunkInSlot>();
   private minIndex = 0;
   private maxIndex = 0;
@@ -21,7 +23,7 @@ export class ChunkSeries {
 
   private pushChunk(i: number) {
     const entity = document.createElement('a-entity');
-    entity.setAttribute('position', `0 0 ${i * 10}`);
+    entity.setAttribute('position', `0 0 ${i * ChunkSeries.kChunkSpacing}`);
     const chunk = this.factory(i);
     chunk.render(entity);
     this.scene.appendChild(entity);
@@ -34,8 +36,8 @@ export class ChunkSeries {
     if (i === this.previousPosition) { return; }
     this.previousPosition = i;
 
-    const firstIndex = Math.round((z - this.radius) / 10);
-    const lastIndex = Math.round((z + this.radius) / 10);
+    const firstIndex = Math.round((z - this.radius) / ChunkSeries.kChunkSpacing);
+    const lastIndex = Math.round((z + this.radius) / ChunkSeries.kChunkSpacing);
 
     const chunksToDelete: ChunkInSlot[] = [];
     for (const c of this.chunks) {

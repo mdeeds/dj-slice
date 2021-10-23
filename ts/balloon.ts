@@ -1,7 +1,7 @@
 import * as AFRAME from "aframe";
 
 import { AssetLibrary } from "./assetLibrary";
-import { Chunk, CityChunk, MountainChunk, WoodlandChunk, StreetChunk, BuildingChunk, OrchardChunk, TronChunk, TronOrchard } from "./chunk";
+import { Chunk, CityChunk, MountainChunk, WoodlandChunk, StreetChunk, BuildingChunk, OrchardChunk, TronChunk, TronOrchard, TronWoodland } from "./chunk";
 import { ChunkSeries } from "./chunkSeries";
 import { CollisionHandler } from "./collisionHandler";
 import { Debug } from "./debug";
@@ -123,6 +123,11 @@ function tron(gameTime: GameTime) {
     }
   }
 }
+function woodland(assetLibrary: AssetLibrary) {
+  return (i: number): Chunk => {
+    return new TronWoodland(assetLibrary);
+  }
+}
 
 function addTones(player: AFRAME.Entity, theta: number, gameTime: GameTime) {
   const container = document.createElement('a-entity');
@@ -177,6 +182,9 @@ var buildChunkSeries = function (gameTime: GameTime, assetLibrary: AssetLibrary)
       break;
     case 'city':
       chunkSeries = new ChunkSeries(city(gameTime, assetLibrary), 300, world);
+      break;
+    case 'woodland':
+      chunkSeries = new ChunkSeries(woodland(assetLibrary), 300, world);
       break;
     default:
       chunkSeries = new ChunkSeries(worldA(gameTime, assetLibrary), 300, world);
