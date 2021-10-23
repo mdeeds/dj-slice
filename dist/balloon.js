@@ -266,7 +266,7 @@ var buildChunkSeries = function (gameTime, assetLibrary) {
             chunkSeries = new chunkSeries_1.ChunkSeries(woodland(assetLibrary), 300, world);
             break;
         default:
-            chunkSeries = new chunkSeries_1.ChunkSeries(worldA(gameTime, assetLibrary), 300, world);
+            chunkSeries = new chunkSeries_1.ChunkSeries(woodland(assetLibrary), 300, world);
             break;
     }
 };
