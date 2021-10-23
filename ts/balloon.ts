@@ -125,7 +125,11 @@ function tron(gameTime: GameTime) {
 }
 function woodland(assetLibrary: AssetLibrary) {
   return (i: number): Chunk => {
-    return new TronWoodland(assetLibrary);
+    if (i % 1 === 0) {
+      return new TronWoodland(assetLibrary);
+    } else {
+      return new StreetChunk();
+    }
   }
 }
 
@@ -186,8 +190,11 @@ var buildChunkSeries = function (gameTime: GameTime, assetLibrary: AssetLibrary)
     case 'woodland':
       chunkSeries = new ChunkSeries(woodland(assetLibrary), 300, world);
       break;
-    default:
+    case 'a':
       chunkSeries = new ChunkSeries(worldA(gameTime, assetLibrary), 300, world);
+      break;
+    default:
+      chunkSeries = new ChunkSeries(woodland(assetLibrary), 300, world);
       break;
   }
 }
@@ -252,7 +259,9 @@ AFRAME.registerComponent("go", {
     if (world) {
       world.object3D.position.set(0, -h, r);
     }
-    chunkSeries.setPosition(-r);
+    if (chunkSeries) {
+      chunkSeries.setPosition(-r);
+    }
     for (const ticker of tickers) {
       ticker.tick(timeMs, timeDeltaMs);
     }
@@ -283,11 +292,11 @@ body.innerHTML = `
 <a-entity id='player'>
   <a-entity id='robot' position = "-2 0 -2" rotation = "0 180 0"></a-entity>
   <a-sphere position="180 100 120" radius=20 color=#fff shader=flat></a-sphere>
-  <a-camera id="camera" position="0 1.6 0">
-    <a-cylinder id='arora' position="0 0 -450" rotation="0 0 90" 
-      radius=200 color=#0f0 height=1000 segments-height=1 
-      shader=flat material="side: double" open-ended=false></a-cylinder>
-    <a-entity light="type:point; intensity: 0.75; distance: 4; decay: 2" position="0 0.1 -0.1">
+  <a-cylinder id='arora' position="0 0 -450" rotation="0 0 90" 
+  radius=200 color=#0f0 height=1000 segments-height=1 
+  shader=flat material="side: double" open-ended=false></a-cylinder>
+<a-entity light="type:point; intensity: 0.75; distance: 4; decay: 2" position="0 0.1 -0.1">
+<a-camera id="camera" position="0 1.6 0">
   </a-camera>
   <a-entity id="leftHand" laser-controls="hand: left" raycaster="objects: .clickable; far: 5;" line="color: #44d"
     pointer></a-entity>
