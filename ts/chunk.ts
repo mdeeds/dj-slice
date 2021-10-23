@@ -1,4 +1,5 @@
 import * as AFRAME from "aframe";
+import { AssetLibrary } from "./assetLibrary";
 import { GameTime, TimeSummary } from "./gameTime";
 
 export interface Chunk {
@@ -141,6 +142,27 @@ export class OrchardChunk implements Chunk {
   }
 }
 
+export class TronOrchard implements Chunk {
+  private treeTex = new AFRAME.THREE.MeshStandardMaterial({ color: 0x33ff55 });
+
+  constructor(private assetLibrary: AssetLibrary) { }
+  render(container: AFRAME.Entity) {
+    const tree = document.createElement('a-entity');
+    tree.setAttribute('obj-model',
+      `obj: #${this.assetLibrary.getId('obj/tron-tree.obj')}; ` +
+      `mtl: #${this.assetLibrary.getId('obj/tron-tree.mtl')}`);
+    tree.setAttribute('position', '1 1 0');
+    container.appendChild(tree);
+
+    const floor = document.createElement('a-plane');
+    floor.setAttribute('width', '600');
+    floor.setAttribute('height', '10');
+    floor.setAttribute('color', '#431');
+    floor.setAttribute('rotation', '-90 0 0');
+    container.appendChild(floor);
+  }
+}
+
 export class MountainChunk implements Chunk {
   constructor() { }
   private mountain(hillTex: any, sign: number): any {
@@ -214,10 +236,12 @@ export class TronChunk implements Chunk {
 }
 
 export class CityChunk implements Chunk {
+  constructor(private assetLibrary: AssetLibrary) { }
   render(container: AFRAME.Entity): void {
     const city = document.createElement('a-entity') as AFRAME.Entity;
     city.setAttribute('obj-model',
-      "obj: url(obj/city.obj); mtl: url(obj/city.mtl);");
+      `obj: #${this.assetLibrary.getId('obj/city.obj')}; ` +
+      `mtl: #${this.assetLibrary.getId('obj/city.mtl')};`);
     city.setAttribute('rotation', '0 180 0');
     console.log('city');
     container.appendChild(city);

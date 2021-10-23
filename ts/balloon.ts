@@ -1,7 +1,7 @@
 import * as AFRAME from "aframe";
 
 import { AssetLibrary } from "./assetLibrary";
-import { Chunk, CityChunk, MountainChunk, WoodlandChunk, StreetChunk, BuildingChunk, OrchardChunk, TronChunk } from "./chunk";
+import { Chunk, CityChunk, MountainChunk, WoodlandChunk, StreetChunk, BuildingChunk, OrchardChunk, TronChunk, TronOrchard } from "./chunk";
 import { ChunkSeries } from "./chunkSeries";
 import { CollisionHandler } from "./collisionHandler";
 import { Debug } from "./debug";
@@ -77,10 +77,10 @@ var chunkSeries: ChunkSeries;
 var totalElapsed = 0;
 var numTicks = 0;
 
-function worldA(gameTime: GameTime) {
+function worldA(gameTime: GameTime, assetLibrary: AssetLibrary) {
   return (i: number): Chunk => {
     if (i > -10) {
-      return new OrchardChunk();
+      return new TronOrchard(assetLibrary);
     } else if (i > -30) {
       if (i % 7 === 0) {
         return new MountainChunk();
@@ -88,7 +88,7 @@ function worldA(gameTime: GameTime) {
         return new StreetChunk();
       }
     } else if (i > -50) {
-      return new WoodlandChunk();
+      return new TronOrchard(assetLibrary);
     } else {
       if (i % 5 === 0) {
         return new StreetChunk();
@@ -105,10 +105,10 @@ function streetsOnly(gameTime: GameTime) {
   }
 }
 
-function city(gameTime: GameTime) {
+function city(gameTime: GameTime, assetLibrary: AssetLibrary) {
   return (i: number): Chunk => {
     if (i % 50 === 0) {
-      return new CityChunk();
+      return new CityChunk(assetLibrary);
     } else {
       return new StreetChunk();
     }
@@ -166,7 +166,7 @@ function addRing(container: AFRAME.Entity, gametime: GameTime) {
   });
 };
 
-var buildChunkSeries = function (gameTime: GameTime) {
+var buildChunkSeries = function (gameTime: GameTime, assetLibrary: AssetLibrary) {
   const u = new URL(document.URL);
   switch (u.searchParams.get('world')) {
     case 'tron':
@@ -176,10 +176,10 @@ var buildChunkSeries = function (gameTime: GameTime) {
       chunkSeries = new ChunkSeries(streetsOnly(gameTime), 300, world);
       break;
     case 'city':
-      chunkSeries = new ChunkSeries(city(gameTime), 300, world);
+      chunkSeries = new ChunkSeries(city(gameTime, assetLibrary), 300, world);
       break;
     default:
-      chunkSeries = new ChunkSeries(worldA(gameTime), 300, world);
+      chunkSeries = new ChunkSeries(worldA(gameTime, assetLibrary), 300, world);
       break;
   }
 }
@@ -193,7 +193,9 @@ AFRAME.registerComponent("go", {
     const assets = document.querySelector('a-assets');
     const gameTime = await GameTime.make(115);
     await gameTime.start();
-    buildChunkSeries(gameTime);
+    const assetLibrary = new AssetLibrary(document.querySelector('a-assets'));
+
+    buildChunkSeries(gameTime, assetLibrary);
     tickers.push(gameTime);
     const samplePack = await SamplePack.load('funk', gameTime, assets)
     Debug.init(document.querySelector('a-camera'));
@@ -203,8 +205,6 @@ AFRAME.registerComponent("go", {
     rightStick = addStick(document.querySelector('#rightHand'), gameTime);
 
     addTones(player, -Math.PI / 2, gameTime);
-
-    const assetLibrary = new AssetLibrary(document.querySelector('a-assets'));
 
     let theta = 0;
     for (const track of samplePack.tracks) {
