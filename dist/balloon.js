@@ -201,7 +201,12 @@ function tron(gameTime) {
 }
 function woodland(assetLibrary) {
     return (i) => {
-        return new chunk_1.TronWoodland(assetLibrary);
+        if (i % 10 === 0) {
+            return new chunk_1.TronWoodland(assetLibrary);
+        }
+        else {
+            return new chunk_1.StreetChunk();
+        }
     };
 }
 function addTones(player, theta, gameTime) {
