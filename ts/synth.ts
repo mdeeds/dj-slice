@@ -3,7 +3,7 @@ import { GameTime, TimeSummary } from "./gameTime";
 
 import { Positron, PositronConfig } from "./positron";
 
-const config = PositronConfig.patch808;
+const config = PositronConfig.patchSoftBass;
 let positronPtr = {
   pos: new Positron(config)
 };
@@ -59,15 +59,22 @@ loopDiv.addEventListener('pointerdown', (ev: PointerEvent) => {
 });
 body.appendChild(loopDiv);
 
-const notes = ['c3', 'c3', 'a3', 'g3', 'd3', 'd3', 'e3', 'd3'];
+const notes = ['c3', '', '', 'g3', 'd3', 'd3', 'e3', 'd3'];
+const durations = ['2n', '', '', '8n', '8n', '8n', '4n', '8n']
 var gameTime: GameTime = null;
 async function startGameTimer() {
   gameTime = await GameTime.make(120);
   gameTime.start();
   gameTime.addBeatCallback((ts: TimeSummary) => {
     if (loopDiv.classList.contains('looping')) {
-      const n = notes[ts.beatInt % notes.length];
-      positronPtr.pos.triggerAttackRelease(n, '8n', ts.audioTimeS);
+      const i = ts.beatInt % notes.length;
+      const n = notes[i];
+      const d = durations[i];
+      if (n === '') {
+        return;
+      }
+      positronPtr.pos.synchronize(gameTime.getBpm(), ts.audioTimeS);
+      positronPtr.pos.triggerAttackRelease(n, d, ts.audioTimeS);
     }
   })
 }
@@ -122,6 +129,7 @@ makeKnob('F attack', ['filterEnv', 'attack']);
 makeKnob('F decay', ['filterEnv', 'decay']);
 makeKnob('F sustain', ['filterEnv', 'sustain']);
 makeKnob('F release', ['filterEnv', 'release']);
+makeKnob('Env Depth', ['filterEnv', 'octaves']);
 
 makeKnob('Freq', ['filterScale']);
 
