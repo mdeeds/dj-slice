@@ -17,7 +17,7 @@ export class ToneEntity {
     private gameTime: GameTime) {
 
     for (let i = 0; i < 6; ++i) {
-      this.voices.push(new Positron(PositronConfig.patchSoftBass));
+      this.voices.push(new Positron(PositronConfig.patchPluckedGlass));
     }
 
     const notes = ['F3', 'G3', 'A3', 'Bb3', 'C4', 'D4', 'E4', 'F4'];

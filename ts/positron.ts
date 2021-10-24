@@ -58,10 +58,10 @@ export class PositronConfig {
   {
     "filterQ": 3,
     "env": {
-      "attack": 0.01,
-      "decay": 0.2,
-      "sustain": 0.7200000000000004,
-      "release": 0.8900000000000007,
+      "attack": 0.25000000000000006,
+      "decay": 0.08,
+      "sustain": 0.8800000000000006,
+      "release": 0.19000000000000006,
       "attackCurve": "exponential",
       "releaseCurve": "exponential",
       "decayCurve": "exponential",
@@ -81,25 +81,25 @@ export class PositronConfig {
       "exponent": 2
     },
     "filterEnv": {
-      "attack": 0.05,
-      "decay": 0.1,
-      "sustain": 0,
-      "release": 0.02,
+      "attack": 0.2,
+      "decay": 0,
+      "sustain": 1,
+      "release": 1,
       "baseFrequency": "a1",
-      "octaves": 0.4300000000000002,
+      "octaves": 5,
       "attackCurve": "exponential",
       "releaseCurve": "exponential",
       "decayCurve": "exponential",
       "context": {},
       "exponent": 2
     },
-    "osc1": "sawtooth",
+    "osc1": "triangle",
     "osc2": "sine",
     "osc2Detune": 0.5,
     "filter": "lowpass",
-    "filterScale": 5,
-    "noise": 0,
-    "distortion": 0
+    "filterScale": 1,
+    "noise": 0.02,
+    "distortion": 0.02
   }  `);
 
   static patchPlucky = PositronConfig.fromString(`
@@ -198,6 +198,54 @@ export class PositronConfig {
   }
   `);
 
+  static patchPluckedGlass = PositronConfig.fromString(`
+  {
+    "filterQ": 2,
+    "env": {
+      "attack": 0.38000000000000017,
+      "decay": 0.2800000000000001,
+      "sustain": 0.6200000000000003,
+      "release": 0.6600000000000005,
+      "attackCurve": "exponential",
+      "releaseCurve": "exponential",
+      "decayCurve": "exponential",
+      "context": {}
+    },
+    "freqEnv": {
+      "attack": 0,
+      "decay": 0,
+      "sustain": 0,
+      "release": 0,
+      "baseFrequency": "a1",
+      "octaves": 0,
+      "attackCurve": "exponential",
+      "releaseCurve": "exponential",
+      "decayCurve": "exponential",
+      "context": {},
+      "exponent": 2
+    },
+    "filterEnv": {
+      "attack": 0,
+      "decay": 0.8000000000000005,
+      "sustain": 0.15,
+      "release": 0.7799999999999998,
+      "baseFrequency": "a1",
+      "octaves": 1.1900000000000632,
+      "attackCurve": "exponential",
+      "releaseCurve": "exponential",
+      "decayCurve": "exponential",
+      "context": {},
+      "exponent": 2
+    },
+    "osc1": "triangle",
+    "osc2": "sine",
+    "osc2Detune": 0,
+    "filter": "highpass",
+    "filterScale": 0.9300000000000006,
+    "noise": 0,
+    "distortion": 0.1
+  }`)
+
   static fromString(config: string) {
     const result = new PositronConfig();
     Object.assign(result, JSON.parse(config));
@@ -237,8 +285,8 @@ export class Positron {
     const gainNode = new Tone.Gain(0);
     this.lfo = new Tone.LFO(2, 0, 1);
     this.lfo.start();
-    this.lfo.type = 'sawtooth';
-    const lfoScale = new Tone.Scale(1, 0);
+    this.lfo.type = 'triangle';
+    const lfoScale = new Tone.Scale(0.5, 1);
     this.lfo.connect(lfoScale);
     const lfoGain = new Tone.Gain(1);
     lfoScale.connect(lfoGain.gain);
@@ -267,8 +315,8 @@ export class Positron {
   synchronize(bpm: number, audioTimeS: number) {
     if (audioTimeS > this.lastSync) {
       this.lastSync = audioTimeS;
-      // * 2 for eighth notes.
-      this.lfo.frequency.setValueAtTime(bpm / 60 * 2, audioTimeS);
+      // * 4 for sixteeth notes.
+      this.lfo.frequency.setValueAtTime(bpm / 60 * 4, audioTimeS);
       this.lfo.start(audioTimeS);
     }
   }

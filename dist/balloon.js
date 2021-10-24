@@ -1039,11 +1039,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Positron = exports.PositronConfig = void 0;
 const Tone = __importStar(__webpack_require__(784));
 class PositronConfig {
+    constructor() {
+        this.filterQ = 0;
+    }
     static fromString(config) {
         const result = new PositronConfig();
         Object.assign(result, JSON.parse(config));
         result.env.context = Tone.getContext();
-        result.freqEnv.context = Tone.getContext();
         result.filterEnv.context = Tone.getContext();
         return result;
     }
@@ -1054,11 +1056,6 @@ PositronConfig.patch808 = {
         attack: 0.01, decay: 0.4, sustain: 0, release: 0.3,
         attackCurve: "exponential", releaseCurve: "exponential", decayCurve: "exponential",
         context: Tone.getContext(),
-    },
-    freqEnv: {
-        attack: 0.01, decay: 0.2, sustain: 0, release: 0.2, baseFrequency: 'a1', octaves: 1.5,
-        attackCurve: "exponential", releaseCurve: "exponential", decayCurve: "exponential",
-        context: Tone.getContext(), exponent: 2,
     },
     filterEnv: {
         attack: 0.01, decay: 0.2, sustain: 0, release: 0.2, baseFrequency: 'a1', octaves: 1.5,
@@ -1072,17 +1069,13 @@ PositronConfig.patch808 = {
     filterScale: 1.0,
     noise: 0.2,
     distortion: 2.0,
+    filterQ: 0,
 };
 PositronConfig.patchSaw = {
     env: {
         attack: 0.1, decay: 0.1, sustain: 0.5, release: 0.5,
         attackCurve: "exponential", releaseCurve: "exponential", decayCurve: "exponential",
         context: Tone.getContext(),
-    },
-    freqEnv: {
-        attack: 0, decay: 0, sustain: 0, release: 0, baseFrequency: 'a1', octaves: 0,
-        attackCurve: "exponential", releaseCurve: "exponential", decayCurve: "exponential",
-        context: Tone.getContext(), exponent: 2,
     },
     filterEnv: {
         attack: 0, decay: 0, sustain: 0, release: 0, baseFrequency: 'a1', octaves: 0,
@@ -1096,14 +1089,16 @@ PositronConfig.patchSaw = {
     filterScale: 32,
     noise: 0,
     distortion: 0,
+    filterQ: 0,
 };
 PositronConfig.patchSoftBass = PositronConfig.fromString(`
   {
+    "filterQ": 3,
     "env": {
-      "attack": 0.01,
-      "decay": 0.2,
-      "sustain": 0.1,
-      "release": 0.1,
+      "attack": 0.25000000000000006,
+      "decay": 0.08,
+      "sustain": 0.8800000000000006,
+      "release": 0.19000000000000006,
       "attackCurve": "exponential",
       "releaseCurve": "exponential",
       "decayCurve": "exponential",
@@ -1123,27 +1118,26 @@ PositronConfig.patchSoftBass = PositronConfig.fromString(`
       "exponent": 2
     },
     "filterEnv": {
-      "attack": 0.05,
-      "decay": 0.1,
-      "sustain": 0,
-      "release": 0.02,
+      "attack": 0.2,
+      "decay": 0,
+      "sustain": 1,
+      "release": 1,
       "baseFrequency": "a1",
-      "octaves": 0,
+      "octaves": 5,
       "attackCurve": "exponential",
       "releaseCurve": "exponential",
       "decayCurve": "exponential",
       "context": {},
       "exponent": 2
     },
-    "osc1": "sawtooth",
+    "osc1": "triangle",
     "osc2": "sine",
     "osc2Detune": 0.5,
     "filter": "lowpass",
-    "filterScale": 5,
-    "noise": 0.3,
-    "distortion": 3
-  }
-  `);
+    "filterScale": 1,
+    "noise": 0.02,
+    "distortion": 0.02
+  }  `);
 PositronConfig.patchPlucky = PositronConfig.fromString(`
   {
     "env": {
@@ -1243,24 +1237,26 @@ class Positron {
         this.lastSync = -1;
         Tone.start();
         this.env = new Tone.Envelope(config.env);
-        this.freqEnv = new Tone.FrequencyEnvelope(config.freqEnv);
         this.filterEnv = new Tone.FrequencyEnvelope(config.filterEnv);
         this.filterScale = new Tone.Scale(0, config.filterScale);
+        this.baseFrequency = new Tone.Signal(220, 'hertz');
         this.osc1 = new Tone.Oscillator(220, config.osc1).start();
         this.harmonic = new Tone.Scale(0, config.osc2Detune);
+        this.baseFrequency.connect(this.osc1.frequency);
+        this.baseFrequency.connect(this.harmonic);
         this.osc2 = new Tone.Oscillator(1000, config.osc2).start();
         const noise = new Tone.Noise("white").start();
         this.filter = new Tone.Filter(0, config.filter);
         const gainNode = new Tone.Gain(0);
         this.lfo = new Tone.LFO(2, 0, 1);
         this.lfo.start();
-        this.lfo.type = 'sine';
+        this.lfo.type = 'triangle';
+        const lfoScale = new Tone.Scale(0.5, 1);
+        this.lfo.connect(lfoScale);
         const lfoGain = new Tone.Gain(1);
-        this.lfo.connect(lfoGain.gain);
+        lfoScale.connect(lfoGain.gain);
         this.noiseGain = new Tone.Gain(config.noise);
         this.dist = new Tone.Distortion(config.distortion);
-        this.freqEnv.connect(this.osc1.frequency);
-        this.freqEnv.connect(this.harmonic);
         this.harmonic.connect(this.osc2.frequency);
         this.filterEnv.connect(this.filterScale);
         this.filterScale.connect(this.filter.frequency);
@@ -1270,21 +1266,21 @@ class Positron {
         this.osc1.connect(this.filter);
         this.osc2.connect(this.filter);
         this.filter.connect(gainNode);
-        // gainNode.connect(this.dist);
         gainNode.connect(lfoGain);
-        lfoGain.toDestination();
+        lfoGain.connect(this.dist);
+        this.dist.toDestination();
+        this.setConfig(config);
     }
     synchronize(bpm, audioTimeS) {
         if (audioTimeS > this.lastSync) {
             this.lastSync = audioTimeS;
-            // * 2 for eighth notes.
-            this.lfo.frequency.setValueAtTime(bpm / 60 * 2, audioTimeS);
+            // * 4 for sixteeth notes.
+            this.lfo.frequency.setValueAtTime(bpm / 60 * 4, audioTimeS);
             this.lfo.start(audioTimeS);
         }
     }
     setConfig(config) {
         this.env.set(config.env);
-        this.freqEnv.set(config.freqEnv);
         this.filterEnv.set(config.filterEnv);
         this.filterScale.max = config.filterScale;
         this.osc1.type = config.osc1;
@@ -1293,26 +1289,23 @@ class Positron {
         this.filter.type = config.filter;
         this.noiseGain.gain.setValueAtTime(config.noise, Tone.now());
         this.dist.distortion = config.distortion;
+        this.filter.Q.setValueAtTime(config.filterQ, Tone.now());
     }
     triggerAttackRelease(note, duration, time) {
-        this.freqEnv.baseFrequency = note;
+        this.baseFrequency.setValueAtTime(Tone.Frequency(note).toFrequency(), time);
         this.filterEnv.baseFrequency = note;
         this.env.triggerAttackRelease(duration, time);
-        this.freqEnv.triggerAttackRelease(duration, time);
         this.filterEnv.triggerAttackRelease(duration, time);
     }
     triggerAttack(note, time) {
-        this.freqEnv.baseFrequency = note;
+        this.baseFrequency.setValueAtTime(Tone.Frequency(note).toFrequency(), time);
         this.filterEnv.baseFrequency = note;
         this.env.triggerAttack(time);
-        this.freqEnv.triggerAttack(time);
         this.filterEnv.triggerAttack(time);
     }
     triggerRelease(note, time) {
-        this.freqEnv.baseFrequency = note;
         this.filterEnv.baseFrequency = note;
         this.env.triggerRelease(time);
-        this.freqEnv.triggerRelease(time);
         this.filterEnv.triggerRelease(time);
     }
 }
