@@ -245,7 +245,7 @@ export class Positron {
     const gainNode = new Tone.Gain(0);
     this.lfo = new Tone.LFO(2, 0, 1);
     this.lfo.start();
-    this.lfo.type = 'square';
+    this.lfo.type = 'sine';
     const lfoGain = new Tone.Gain(1);
     this.lfo.connect(lfoGain.gain);
 
