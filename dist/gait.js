@@ -205,6 +205,15 @@ function stomp() {
     feet = new Feet(0.30, 600, document.querySelector('#body'));
     feet.add(new Foot(new Pod([4, 1, 5]), document.querySelector('#foot1')));
     feet.add(new Foot(new Pod([9, 1]), document.querySelector('#foot2')));
+    feet.add(new Foot(new Pod([4, 1, 5]), document.querySelector('#foot3')));
+    feet.add(new Foot(new Pod([9, 1]), document.querySelector('#foot4')));
+}
+function frogWalk() {
+    // ####.#####
+    // .#######..
+    feet = new Feet(0.30, 600, document.querySelector('#body'));
+    feet.add(new Foot(new Pod([4, 1, 5]), document.querySelector('#foot1')));
+    feet.add(new Foot(new Pod([0, 1, 7, 2]), document.querySelector('#foot2')));
     feet.add(new Foot(new Pod([9, 1]), document.querySelector('#foot3')));
     feet.add(new Foot(new Pod([4, 1, 5]), document.querySelector('#foot4')));
 }
@@ -278,16 +287,42 @@ function lizardTrot() {
 //   feet.push(new Foot(
 //     new Pod([3, 1]), document.querySelector('#foot4')));
 // }
+var blocks = [];
+var wall = function () {
+    const scene = document.querySelector('a-scene');
+    const kSize = 30;
+    const kBlockSize = 0.05;
+    for (let i = 0; i < kSize; ++i) {
+        for (let j = 0; j < kSize; ++j) {
+            const box = document.createElement('a-box');
+            box.setAttribute('width', kBlockSize);
+            box.setAttribute('height', kBlockSize);
+            box.setAttribute('depth', kBlockSize);
+            const x = (i - kSize / 2) * (kBlockSize + 0.001);
+            const y = j * (kBlockSize + 0.001) + 0.4;
+            box.setAttribute('position', `${x} ${y} -1`);
+            blocks.push(box);
+            scene.appendChild(box);
+        }
+    }
+};
 AFRAME.registerComponent("go", {
     init: function () {
         return __awaiter(this, void 0, void 0, function* () {
-            lizardTrot();
+            stomp();
             dogObject = document.querySelector('#dog').object3D;
+            wall();
         });
     },
     tick: function (timeMs, timeDeltaMs) {
         if (feet != null) {
             feet.setPositions(timeMs);
+        }
+        if (blocks.length > 0) {
+            for (let j = 0; j < 10; ++j) {
+                const i = Math.trunc(Math.random() * blocks.length);
+                blocks[i].object3D.rotation.x += 0.05;
+            }
         }
     }
 });

@@ -1232,6 +1232,53 @@ PositronConfig.patchSynthLead = PositronConfig.fromString(`
     "distortion": 0
   }
   `);
+PositronConfig.patchPluckedGlass = PositronConfig.fromString(`
+  {
+    "filterQ": 2,
+    "env": {
+      "attack": 0.38000000000000017,
+      "decay": 0.2800000000000001,
+      "sustain": 0.6200000000000003,
+      "release": 0.6600000000000005,
+      "attackCurve": "exponential",
+      "releaseCurve": "exponential",
+      "decayCurve": "exponential",
+      "context": {}
+    },
+    "freqEnv": {
+      "attack": 0,
+      "decay": 0,
+      "sustain": 0,
+      "release": 0,
+      "baseFrequency": "a1",
+      "octaves": 0,
+      "attackCurve": "exponential",
+      "releaseCurve": "exponential",
+      "decayCurve": "exponential",
+      "context": {},
+      "exponent": 2
+    },
+    "filterEnv": {
+      "attack": 0,
+      "decay": 0.8000000000000005,
+      "sustain": 0.15,
+      "release": 0.7799999999999998,
+      "baseFrequency": "a1",
+      "octaves": 1.1900000000000632,
+      "attackCurve": "exponential",
+      "releaseCurve": "exponential",
+      "decayCurve": "exponential",
+      "context": {},
+      "exponent": 2
+    },
+    "osc1": "triangle",
+    "osc2": "sine",
+    "osc2Detune": 0,
+    "filter": "highpass",
+    "filterScale": 0.9300000000000006,
+    "noise": 0,
+    "distortion": 0.1
+  }`);
 class Positron {
     constructor(config) {
         this.lastSync = -1;
@@ -1807,7 +1854,7 @@ class ToneEntity {
         this.keyNumber = 1;
         this.keysDown = new Set();
         for (let i = 0; i < 6; ++i) {
-            this.voices.push(new positron_1.Positron(positron_1.PositronConfig.patchSoftBass));
+            this.voices.push(new positron_1.Positron(positron_1.PositronConfig.patchPluckedGlass));
         }
         const notes = ['F3', 'G3', 'A3', 'Bb3', 'C4', 'D4', 'E4', 'F4'];
         this.layoutDiamond(notes);
