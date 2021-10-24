@@ -227,6 +227,7 @@ export class Positron {
   private filter: Tone.Filter;
   private noiseGain: Tone.Gain;
   private dist: Tone.Distortion;
+  private lfo: Tone.LFO;
 
   constructor(config: PositronConfig) {
     Tone.start();
@@ -242,9 +243,14 @@ export class Positron {
     const noise = new Tone.Noise("white").start();
     this.filter = new Tone.Filter(0, config.filter);
     const gainNode = new Tone.Gain(0);
+    this.lfo = new Tone.LFO(2, 0, 1);
+    this.lfo.start();
+    this.lfo.type = 'square';
+    const lfoGain = new Tone.Gain(1);
+    this.lfo.connect(lfoGain.gain);
+
     this.noiseGain = new Tone.Gain(config.noise);
     this.dist = new Tone.Distortion(config.distortion);
-
     this.freqEnv.connect(this.osc1.frequency);
     this.freqEnv.connect(this.harmonic);
     this.harmonic.connect(this.osc2.frequency);
@@ -258,8 +264,19 @@ export class Positron {
     this.osc1.connect(this.filter);
     this.osc2.connect(this.filter);
     this.filter.connect(gainNode);
-    gainNode.connect(this.dist);
-    gainNode.toDestination();
+    // gainNode.connect(this.dist);
+    gainNode.connect(lfoGain);
+    lfoGain.toDestination();
+  }
+
+  private lastSync = -1;
+  synchronize(bpm: number, audioTimeS: number) {
+    if (audioTimeS > this.lastSync) {
+      this.lastSync = audioTimeS;
+      // * 2 for eighth notes.
+      this.lfo.frequency.setValueAtTime(bpm / 60 * 2, audioTimeS);
+      this.lfo.start(audioTimeS);
+    }
   }
 
   setConfig(config: PositronConfig) {

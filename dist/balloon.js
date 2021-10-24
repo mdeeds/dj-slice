@@ -864,6 +864,25 @@ Debug.text = null;
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -875,6 +894,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GameTime = exports.TimeSummary = void 0;
+const Tone = __importStar(__webpack_require__(784));
 const common_1 = __webpack_require__(648);
 class TimeSummary {
     constructor(audioTimeS, beatInt, beatFrac) {
@@ -918,6 +938,7 @@ class GameTime {
         return this.bpm;
     }
     setBpm(bpm) {
+        Tone.Transport.bpm.value = bpm;
         this.bpm = bpm;
     }
     getElapsedMs() {
@@ -1219,6 +1240,7 @@ PositronConfig.patchSynthLead = PositronConfig.fromString(`
   `);
 class Positron {
     constructor(config) {
+        this.lastSync = -1;
         Tone.start();
         this.env = new Tone.Envelope(config.env);
         this.freqEnv = new Tone.FrequencyEnvelope(config.freqEnv);
@@ -1230,6 +1252,11 @@ class Positron {
         const noise = new Tone.Noise("white").start();
         this.filter = new Tone.Filter(0, config.filter);
         const gainNode = new Tone.Gain(0);
+        this.lfo = new Tone.LFO(2, 0, 1);
+        this.lfo.start();
+        this.lfo.type = 'square';
+        const lfoGain = new Tone.Gain(1);
+        this.lfo.connect(lfoGain.gain);
         this.noiseGain = new Tone.Gain(config.noise);
         this.dist = new Tone.Distortion(config.distortion);
         this.freqEnv.connect(this.osc1.frequency);
@@ -1243,8 +1270,17 @@ class Positron {
         this.osc1.connect(this.filter);
         this.osc2.connect(this.filter);
         this.filter.connect(gainNode);
-        gainNode.connect(this.dist);
-        gainNode.toDestination();
+        // gainNode.connect(this.dist);
+        gainNode.connect(lfoGain);
+        lfoGain.toDestination();
+    }
+    synchronize(bpm, audioTimeS) {
+        if (audioTimeS > this.lastSync) {
+            this.lastSync = audioTimeS;
+            // * 2 for eighth notes.
+            this.lfo.frequency.setValueAtTime(bpm / 60 * 2, audioTimeS);
+            this.lfo.start(audioTimeS);
+        }
     }
     setConfig(config) {
         this.env.set(config.env);
@@ -1776,12 +1812,18 @@ class ToneEntity {
         this.voiceMap = new Map();
         this.activeVoices = new Set();
         this.keyNumber = 1;
+        this.keysDown = new Set();
         for (let i = 0; i < 6; ++i) {
             this.voices.push(new positron_1.Positron(positron_1.PositronConfig.patchSoftBass));
         }
         const notes = ['F3', 'G3', 'A3', 'Bb3', 'C4', 'D4', 'E4', 'F4'];
         this.layoutDiamond(notes);
         // this.layoutHorizontal(notes);
+        gameTime.addBeatCallback((ts) => {
+            for (let i = 0; i < this.voices.length; ++i) {
+                this.voices[i].synchronize(this.gameTime.getBpm(), ts.audioTimeS);
+            }
+        });
     }
     getSynth(n) {
         let voiceNumber = this.currentVoice;
@@ -1814,8 +1856,8 @@ class ToneEntity {
         };
         const o = document.createElement('a-sphere');
         o.setAttribute('radius', `${r} `);
-        o.setAttribute('segments-width', '8');
-        o.setAttribute('segments-height', '2');
+        o.setAttribute('segments-width', '16');
+        o.setAttribute('segments-height', '7');
         o.setAttribute('metalness', '0.5');
         o.setAttribute('roughness', '0.3');
         o.setAttribute('rotation', '30 0 0');
@@ -1827,11 +1869,15 @@ class ToneEntity {
         ((k) => {
             body.addEventListener('keydown', (ev) => {
                 if (ev.code === k) {
-                    hitHandler('down');
+                    if (!this.keysDown.has(k)) {
+                        hitHandler('down');
+                        this.keysDown.add(k);
+                    }
                 }
             });
             body.addEventListener('keyup', (ev) => {
                 if (ev.code === k) {
+                    this.keysDown.delete(k);
                     releaseHandler('down');
                 }
             });
@@ -1907,7 +1953,7 @@ Track.idNumber = 0;
 
 /***/ }),
 
-/***/ 792:
+/***/ 291:
 /***/ ((module) => {
 
 function _arrayLikeToArray(arr, len) {
@@ -2048,7 +2094,7 @@ module.exports["default"] = module.exports, module.exports.__esModule = true;
 /***/ 510:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-var arrayLikeToArray = __webpack_require__(792);
+var arrayLikeToArray = __webpack_require__(291);
 
 function _unsupportedIterableToArray(o, minLen) {
   if (!o) return;

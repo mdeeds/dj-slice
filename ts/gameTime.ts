@@ -1,3 +1,4 @@
+import * as Tone from "tone";
 import { Common } from "./common";
 import { Debug } from "./debug";
 
@@ -52,6 +53,7 @@ export class GameTime {
   }
 
   setBpm(bpm: number) {
+    Tone.Transport.bpm.value = bpm;
     this.bpm = bpm;
   }
 

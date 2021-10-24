@@ -2,7 +2,7 @@ import * as AFRAME from "aframe";
 import * as Tone from "tone";
 
 import { CollisionDirection, CollisionHandler } from "./collisionHandler";
-import { GameTime } from "./gameTime";
+import { GameTime, TimeSummary } from "./gameTime";
 import { Positron, PositronConfig } from "./positron";
 
 export class ToneEntity {
@@ -23,6 +23,13 @@ export class ToneEntity {
     const notes = ['F3', 'G3', 'A3', 'Bb3', 'C4', 'D4', 'E4', 'F4'];
     this.layoutDiamond(notes);
     // this.layoutHorizontal(notes);
+
+    gameTime.addBeatCallback((ts: TimeSummary) => {
+      for (let i = 0; i < this.voices.length; ++i) {
+        this.voices[i].synchronize(this.gameTime.getBpm(),
+          ts.audioTimeS);
+      }
+    });
   }
 
   private getSynth(n: string): Positron {
@@ -48,6 +55,7 @@ export class ToneEntity {
   }
 
   private keyNumber = 1;
+  private keysDown = new Set<string>();
   makeKey(n: string, r = 0.05): AFRAME.Entity {
     const hitHandler = (direction: CollisionDirection) => {
       this.getSynth(n).triggerAttack(n,
@@ -60,8 +68,8 @@ export class ToneEntity {
     };
     const o = document.createElement('a-sphere');
     o.setAttribute('radius', `${r} `);
-    o.setAttribute('segments-width', '8');
-    o.setAttribute('segments-height', '2');
+    o.setAttribute('segments-width', '16');
+    o.setAttribute('segments-height', '7');
     o.setAttribute('metalness', '0.5');
     o.setAttribute('roughness', '0.3');
     o.setAttribute('rotation', '30 0 0')
@@ -76,11 +84,15 @@ export class ToneEntity {
     ((k: string) => {
       body.addEventListener('keydown', (ev: KeyboardEvent) => {
         if (ev.code === k) {
-          hitHandler('down');
+          if (!this.keysDown.has(k)) {
+            hitHandler('down');
+            this.keysDown.add(k);
+          }
         }
       });
       body.addEventListener('keyup', (ev: KeyboardEvent) => {
         if (ev.code === k) {
+          this.keysDown.delete(k);
           releaseHandler('down');
         }
       });

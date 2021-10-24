@@ -85,14 +85,14 @@ export class Robot implements Ticker {
       headNeon.setAttribute('position', '0 0 0');
       headNeon.setAttribute('rotation', '0 -90 0');
       headNeon.setAttribute('scale', '0.15 0.15 0.15');
-      headNeon.setAttribute('material', 'shader: flat; color: #00f;');
+      headNeon.setAttribute('material', 'shader: flat; color: #06f;');
       this.head.appendChild(headNeon);
       const headMain = document.createElement('a-entity');
       headMain.setAttribute('obj-model', 'obj: url(obj/robot-head-dark.obj);')
       headMain.setAttribute('position', '0 0 0');
       headMain.setAttribute('rotation', '0 -90 0');
       headMain.setAttribute('scale', '0.15 0.15 0.15');
-      headMain.setAttribute('material', 'color: #006;');
+      headMain.setAttribute('material', 'color: #038;');
       this.head.appendChild(headMain);
     }
 
