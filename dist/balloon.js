@@ -1379,14 +1379,14 @@ class Robot {
             headNeon.setAttribute('position', '0 0 0');
             headNeon.setAttribute('rotation', '0 -90 0');
             headNeon.setAttribute('scale', '0.15 0.15 0.15');
-            headNeon.setAttribute('material', 'shader: flat; color: #00f;');
+            headNeon.setAttribute('material', 'shader: flat; color: #06f;');
             this.head.appendChild(headNeon);
             const headMain = document.createElement('a-entity');
             headMain.setAttribute('obj-model', 'obj: url(obj/robot-head-dark.obj);');
             headMain.setAttribute('position', '0 0 0');
             headMain.setAttribute('rotation', '0 -90 0');
             headMain.setAttribute('scale', '0.15 0.15 0.15');
-            headMain.setAttribute('material', 'color: #006;');
+            headMain.setAttribute('material', 'color: #038;');
             this.head.appendChild(headMain);
         }
         this.left = document.createElement('a-box');
@@ -1524,6 +1524,11 @@ exports.Sample = Sample;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SampleEntity = void 0;
 const modelUtil_1 = __webpack_require__(892);
+// Provides the UX connection to a TrackEntity.  All the controls
+// for starting, stopping, and switching tracks are implemented in 
+// this class.
+//
+// TODO: Add affordance for moving to the next and previous track.
 class SampleEntity {
     constructor(track, container, collisionHandler, leftStick, rightStick, gameTime, assets) {
         this.track = track;
@@ -1532,10 +1537,12 @@ class SampleEntity {
         this.leftStick = leftStick;
         this.rightStick = rightStick;
         this.assets = assets;
+        // Image entities that control which track is displayed visually
         this.images = [];
-        this.lights = [];
+        this.light = null;
         this.nextLoopStart = 0;
-        this.selectedSampleIndex = -1;
+        this.selectedSampleIndex = 0;
+        this.playing = false;
         this.lastBeatMod = -1;
         this.beatCallback = (ts) => {
             if (ts.beatInt > this.nextLoopStart) {
@@ -1543,12 +1550,13 @@ class SampleEntity {
             }
             else if (ts.beatInt === this.nextLoopStart) {
                 this.nextLoopStart += 8;
-                if (this.selectedSampleIndex >= 0) {
+                if (this.playing) {
                     this.track.stop();
                     this.track.getSample(this.selectedSampleIndex).playAt(ts.audioTimeS);
                 }
             }
-            if (this.selectedSampleIndex >= 0) {
+            // Update the dial
+            if (this.playing) {
                 const newBeatMod = ts.beatInt % 8;
                 if (newBeatMod != this.lastBeatMod) {
                     this.lastBeatMod = newBeatMod;
@@ -1562,18 +1570,70 @@ class SampleEntity {
                 this.dial.setAttribute('src', `#${this.assets.getId('img/dial/dial_off.png')}`);
             }
         };
+        this.imageContainer = document.createElement('a-entity');
+        container.appendChild(this.imageContainer);
+        this.addAffordances();
         gameTime.addBeatCallback(this.beatCallback);
-        this.addSample(container, 0);
+        for (let i = 0; i < track.numSamples(); ++i) {
+            this.addClip(i);
+        }
+        this.setTrack(0);
     }
-    addSample(container, sampleIndex) {
-        this.addClip(container, this.track, sampleIndex);
-        this.addHandlers(container, this.collisionHandler, this.leftStick, this.rightStick, sampleIndex);
-    }
-    depress(sampleIndex) {
-        this.popUp();
+    setTrack(sampleIndex) {
         this.selectedSampleIndex = sampleIndex;
-        this.images[sampleIndex].object3D.position.y = -0.04;
-        this.lights[sampleIndex].setAttribute('shader', 'flat');
+        for (let i = 0; i < this.images.length; ++i) {
+            if (i === sampleIndex) {
+                this.images[i].setAttribute('visible', 'true');
+            }
+            else {
+                this.images[i].setAttribute('visible', 'false');
+            }
+        }
+    }
+    addAffordances() {
+        this.addDisplays();
+        this.addControls();
+    }
+    addDisplays() {
+        const o = document.createElement('a-sphere');
+        // o.setAttribute('segments-radial', '6');
+        o.setAttribute('segments-width', '6');
+        o.setAttribute('segments-height', '3');
+        o.setAttribute('color', 'green');
+        o.setAttribute('height', '0.02');
+        // o.setAttribute('shader', 'flat');
+        o.setAttribute('metalness', '0.8');
+        o.setAttribute('roughness', '0.1');
+        o.setAttribute('shader', 'standard');
+        o.setAttribute('position', '0 -0.1 0');
+        o.setAttribute('radius', '0.04');
+        o.setAttribute('scale', '1 0.3 1');
+        this.light = o;
+        this.container.appendChild(o);
+        this.dial = document.createElement('a-image');
+        this.dial.setAttribute('height', '0.2');
+        this.dial.setAttribute('width', '0.2');
+        this.dial.setAttribute('src', `#${this.assets.getId('img/dial/dial_off.png')}`);
+        this.dial.setAttribute('transparent', 'true');
+        this.dial.setAttribute('shader', 'flat');
+        this.dial.setAttribute('position', '0 0 -0.01');
+        this.imageContainer.appendChild(this.dial);
+    }
+    addControls() {
+        const topZoid = modelUtil_1.ModelUtil.makeGlowingModel('trapezoid');
+        this.imageContainer.appendChild(topZoid);
+        // const bottomZoid = ModelUtil.makeGlowingModel('trapezoid');
+        // bottomZoid.setAttribute('rotation', '0 0 180');
+        // imageContainer.appendChild(bottomZoid);
+        // const hex = ModelUtil.makeGlowingModel('triggers');
+        // imageContainer.appendChild(hex);
+        this.addHandlers(this.container, this.collisionHandler, this.leftStick, this.rightStick);
+    }
+    depress() {
+        this.popUp();
+        this.images[this.selectedSampleIndex].object3D.position.y = -0.04;
+        this.light.setAttribute('shader', 'flat');
+        this.playing = true;
     }
     popUp() {
         for (let sampleIndex = 0; sampleIndex < this.images.length; ++sampleIndex) {
@@ -1581,84 +1641,44 @@ class SampleEntity {
             if (image) {
                 image.object3D.position.y = 0;
             }
-            const light = this.lights[sampleIndex];
-            if (light) {
-                light.setAttribute('shader', 'standard');
-                light.setAttribute('metalness', '0.8');
-                light.setAttribute('roughness', '0.1');
+            if (this.light) {
+                this.light.setAttribute('shader', 'standard');
+                this.light.setAttribute('metalness', '0.8');
+                this.light.setAttribute('roughness', '0.1');
             }
         }
+        this.playing = false;
     }
-    addHandlers(container, collisionHandler, leftStick, rightStick, sampleIndex) {
+    addHandlers(container, collisionHandler, leftStick, rightStick) {
         collisionHandler.addPair(container, leftStick, 0.1, (direction) => {
             if (direction == 'down') {
-                this.depress(sampleIndex);
+                this.depress();
             }
             else {
-                this.selectedSampleIndex = -1;
                 this.popUp();
             }
         });
         collisionHandler.addPair(container, rightStick, 0.1, (direction) => {
             if (direction == 'down') {
-                this.depress(sampleIndex);
+                this.depress();
             }
             else {
-                this.selectedSampleIndex = -1;
                 this.popUp();
             }
         });
+        // TODO: Add next/prev handlers here
     }
-    addClip(container, track, sampleIndex) {
-        const imageContainer = document.createElement('a-entity');
-        container.appendChild(imageContainer);
-        {
-            this.dial = document.createElement('a-image');
-            this.dial.setAttribute('height', '0.2');
-            this.dial.setAttribute('width', '0.2');
-            this.dial.setAttribute('src', `#${this.assets.getId('img/dial/dial_off.png')}`);
-            this.dial.setAttribute('transparent', 'true');
-            this.dial.setAttribute('shader', 'flat');
-            this.dial.setAttribute('position', '0 0 -0.01');
-            imageContainer.appendChild(this.dial);
-        }
-        {
-            const o = document.createElement('a-image');
-            o.setAttribute('height', '0.2');
-            o.setAttribute('width', '0.2');
-            o.setAttribute('src', `#${this.assets.getId(track.getImage(sampleIndex))}`);
-            o.setAttribute('transparent', 'true');
-            o.setAttribute('opacity', '0.5');
-            o.setAttribute('shader', 'flat');
-            imageContainer.appendChild(o);
-        }
-        {
-            const topZoid = modelUtil_1.ModelUtil.makeGlowingModel('trapezoid');
-            imageContainer.appendChild(topZoid);
-            // const bottomZoid = ModelUtil.makeGlowingModel('trapezoid');
-            // bottomZoid.setAttribute('rotation', '0 0 180');
-            // imageContainer.appendChild(bottomZoid);
-            // const hex = ModelUtil.makeGlowingModel('triggers');
-            // imageContainer.appendChild(hex);
-        }
-        this.images[sampleIndex] = imageContainer;
-        {
-            const o = document.createElement('a-sphere');
-            // o.setAttribute('segments-radial', '6');
-            o.setAttribute('segments-width', '6');
-            o.setAttribute('segments-height', '3');
-            o.setAttribute('color', 'green');
-            o.setAttribute('height', '0.02');
-            // o.setAttribute('shader', 'flat');
-            o.setAttribute('metalness', '0.8');
-            o.setAttribute('roughness', '0.1');
-            o.setAttribute('shader', 'standard');
-            o.setAttribute('position', '0 -0.1 0');
-            o.setAttribute('radius', '0.04');
-            o.setAttribute('scale', '1 0.3 1');
-            this.lights.push(o);
-            container.appendChild(o);
-        }
+    // Constructs the geometry and entities that represent the 
+    addClip(sampleIndex) {
+        const o = document.createElement('a-image');
+        o.setAttribute('height', '0.2');
+        o.setAttribute('width', '0.2');
+        o.setAttribute('src', `#${this.assets.getId(this.track.getImage(sampleIndex))}`);
+        o.setAttribute('transparent', 'true');
+        o.setAttribute('opacity', '0.5');
+        o.setAttribute('shader', 'flat');
+        this.imageContainer.appendChild(o);
+        this.images[sampleIndex] = o;
     }
 }
 exports.SampleEntity = SampleEntity;
