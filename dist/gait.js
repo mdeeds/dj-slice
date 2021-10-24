@@ -288,7 +288,30 @@ function lizardTrot() {
 //     new Pod([3, 1]), document.querySelector('#foot4')));
 // }
 var blocks = [];
-var wall = function () {
+var wallOfObjects = function () {
+    const scene = document.querySelector('a-scene');
+    const wall = document.createElement('a-entity');
+    const blockTex = new AFRAME.THREE.MeshStandardMaterial({
+        color: 0x331122
+    });
+    const kSize = 30;
+    const kBlockSize = 0.05;
+    const geometry = new AFRAME.THREE.Group();
+    for (let i = 0; i < kSize; ++i) {
+        for (let j = 0; j < kSize; ++j) {
+            const box = new AFRAME.THREE.BoxGeometry(kBlockSize, kBlockSize, kBlockSize);
+            const x = (i - kSize / 2) * (kBlockSize + 0.001);
+            const y = j * (kBlockSize + 0.001) + 0.4;
+            box.translate(x, y, -1);
+            const boxMesh = new AFRAME.THREE.Mesh(box, blockTex);
+            blocks.push(boxMesh);
+            geometry.add(boxMesh);
+        }
+    }
+    wall.object3D = geometry;
+    scene.appendChild(wall);
+};
+var wallOfEntities = function () {
     const scene = document.querySelector('a-scene');
     const kSize = 30;
     const kBlockSize = 0.05;
@@ -302,7 +325,7 @@ var wall = function () {
             const y = j * (kBlockSize + 0.001) + 0.4;
             box.setAttribute('position', `${x} ${y} -1`);
             blocks.push(box);
-            scene.appendChild(box);
+            scene.appendChild(box.object3D);
         }
     }
 };
@@ -311,7 +334,7 @@ AFRAME.registerComponent("go", {
         return __awaiter(this, void 0, void 0, function* () {
             stomp();
             dogObject = document.querySelector('#dog').object3D;
-            wall();
+            wallOfObjects();
         });
     },
     tick: function (timeMs, timeDeltaMs) {
@@ -321,7 +344,7 @@ AFRAME.registerComponent("go", {
         if (blocks.length > 0) {
             for (let j = 0; j < 10; ++j) {
                 const i = Math.trunc(Math.random() * blocks.length);
-                blocks[i].object3D.rotation.x += 0.05;
+                blocks[i].rotation.x += 0.01;
             }
         }
     }
