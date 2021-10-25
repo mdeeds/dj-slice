@@ -287,7 +287,46 @@ function lizardTrot() {
 //   feet.push(new Foot(
 //     new Pod([3, 1]), document.querySelector('#foot4')));
 // }
-var blocks = [];
+var blocks = (/* unused pure expression or super */ null && ([]));
+var canvas = null;
+var wallTex = null;
+var updateCanvas = function (timeMs) {
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const kWidth = 30;
+    const boxWidth = canvas.width / kWidth;
+    ctx.fillStyle = 'pink';
+    for (let i = 0; i < kWidth; ++i) {
+        for (let j = 0; j < kWidth; ++j) {
+            ctx.fillRect(i * boxWidth + 1, j * boxWidth + 1, boxWidth - 2, boxWidth - 2);
+        }
+    }
+    ctx.fillStyle = 'blue';
+    for (let i = 0; i < kWidth; ++i) {
+        for (let j = 0; j < kWidth; ++j) {
+            if (Math.random() > 0.5) {
+                ctx.fillRect(i * boxWidth + 1, j * boxWidth + 1, boxWidth - 2, boxWidth - 2);
+            }
+        }
+    }
+};
+var wallOfCanvas = function () {
+    const scene = document.querySelector('a-scene');
+    const wall = document.createElement('a-entity');
+    canvas = document.createElement('canvas');
+    canvas.width = 1024;
+    canvas.height = 1024;
+    wallTex = new AFRAME.THREE.CanvasTexture(canvas);
+    const wallMaterial = new AFRAME.THREE.MeshBasicMaterial({
+        map: wallTex, transparent: true
+    });
+    const wallGeometry = new AFRAME.THREE.PlaneGeometry(3, 3);
+    wallGeometry.translate(0, 1.9, -2);
+    const wallMesh = new AFRAME.THREE.Mesh(wallGeometry, wallMaterial);
+    wall.object3D = wallMesh;
+    scene.appendChild(wall);
+    updateCanvas(0);
+};
 var wallOfObjects = function () {
     const scene = document.querySelector('a-scene');
     const wall = document.createElement('a-entity');
@@ -334,18 +373,16 @@ AFRAME.registerComponent("go", {
         return __awaiter(this, void 0, void 0, function* () {
             stomp();
             dogObject = document.querySelector('#dog').object3D;
-            wallOfObjects();
+            wallOfCanvas();
         });
     },
     tick: function (timeMs, timeDeltaMs) {
         if (feet != null) {
             feet.setPositions(timeMs);
         }
-        if (blocks.length > 0) {
-            for (let j = 0; j < 10; ++j) {
-                const i = Math.trunc(Math.random() * blocks.length);
-                blocks[i].rotation.x += 0.01;
-            }
+        if (canvas != null) {
+            updateCanvas(timeMs);
+            wallTex.needsUpdate = true;
         }
     }
 });
