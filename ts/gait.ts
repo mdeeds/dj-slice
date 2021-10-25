@@ -339,51 +339,19 @@ var wallOfCanvas = function () {
   updateCanvas(0);
 }
 
-var wallOfObjects = function () {
-  const scene = document.querySelector('a-scene');
-  const wall = document.createElement('a-entity');
+var leftHand = null;
+var leftBrush;
+var rightHand;
+var rightBrush;
 
-  const blockTex = new AFRAME.THREE.MeshStandardMaterial({
-    color: 0x331122
-  });
+var leftMinusRight = new AFRAME.THREE.Vector3();
 
-  const kSize = 30;
-  const kBlockSize = 0.05;
-  const geometry = new AFRAME.THREE.Group();
-
-  for (let i = 0; i < kSize; ++i) {
-    for (let j = 0; j < kSize; ++j) {
-      const box = new AFRAME.THREE.BoxGeometry(
-        kBlockSize, kBlockSize, kBlockSize);
-      const x = (i - kSize / 2) * (kBlockSize + 0.001);
-      const y = j * (kBlockSize + 0.001) + 0.4;
-      box.translate(x, y, -1);
-      const boxMesh = new AFRAME.THREE.Mesh(box, blockTex);
-      blocks.push(boxMesh);
-      geometry.add(boxMesh);
-    }
+var clamp = function (vec: any) {
+  if (vec.y < 0) {
+    vec.y = 0;
   }
-  wall.object3D = geometry;
-  scene.appendChild(wall);
-}
-
-
-var wallOfEntities = function () {
-  const scene = document.querySelector('a-scene');
-  const kSize = 30;
-  const kBlockSize = 0.05;
-  for (let i = 0; i < kSize; ++i) {
-    for (let j = 0; j < kSize; ++j) {
-      const box = document.createElement('a-box');
-      box.setAttribute('width', kBlockSize);
-      box.setAttribute('height', kBlockSize);
-      box.setAttribute('depth', kBlockSize);
-      const x = (i - kSize / 2) * (kBlockSize + 0.001);
-      const y = j * (kBlockSize + 0.001) + 0.4;
-      box.setAttribute('position', `${x} ${y} -1`);
-      blocks.push(box);
-      scene.appendChild(box.object3D);
-    }
+  if (vec.z < -2) {
+    vec.z = -2;
   }
 }
 
@@ -391,15 +359,26 @@ AFRAME.registerComponent("go", {
   init: async function () {
     stomp();
     dogObject = document.querySelector('#dog').object3D;
+    leftHand = document.querySelector('#leftHand').object3D;
+    leftBrush = document.querySelector('#leftBrush').object3D;
+    rightHand = document.querySelector('#rightHand').object3D;
+    rightBrush = document.querySelector('#rightBrush').object3D;
     wallOfCanvas();
   },
   tick: function (timeMs, timeDeltaMs) {
     if (feet != null) {
       feet.setPositions(timeMs);
     }
-    if (canvas != null) {
-      updateCanvas(timeMs);
-      wallTex.needsUpdate = true;
+    if (leftHand != null) {
+      leftMinusRight.copy(leftHand.position);
+      leftMinusRight.sub(rightHand.position);
+      leftMinusRight.multiplyScalar(3);
+      leftBrush.position.copy(leftHand.position);
+      leftBrush.position.add(leftMinusRight);
+      rightBrush.position.copy(rightHand.position);
+      rightBrush.position.sub(leftMinusRight);
+      clamp(leftBrush.position);
+      clamp(rightBrush.position);
     }
   }
 });
@@ -429,9 +408,13 @@ body.innerHTML = `
   <a-camera id="camera" position="0 1.6 0">
     <a-entity light="type:point; intensity: 0.1; distance: 4; decay: 2" position="0 0.1 -0.1">
   </a-camera>
-  <a-entity id="leftHand" hand-controls="hand: left; handModelStyle: lowPoly; color: #ffcccc"></a-entity>
-  <a-entity id="rightHand" hand-controls="hand: right; handModelStyle: lowPoly; color: #ffcccc"></a-entity>
-</a-entity>
+  <a-entity id="leftHand" hand-controls="hand: left; handModelStyle: lowPoly; color: #ffcccc">
+  </a-entity>
+  <a-sphere id="leftBrush" radius=0.05> </a-sphere>
+  <a-entity id="rightHand" hand-controls="hand: right; handModelStyle: lowPoly; color: #ffcccc">
+  </a-entity>
+  <a-sphere id="rightBrush" radius=0.05> </a-sphere>
+  </a-entity>
 
 </a-scene>
 `;
